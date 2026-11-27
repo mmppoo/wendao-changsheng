@@ -1,0 +1,24 @@
+{
+  "name": "wendao-changsheng",
+  "version": "1.0.0",
+  "description": "《问道长生》—— ink 风格互动叙事修仙模拟器：灵根抽取、境界突破、随机奇遇、宗门选择、隐藏成就与多结局。",
+  "type": "module",
+  "private": false,
+  "scripts": {
+    "serve": "python3 -m http.server 4173",
+    "test": "node --test tests/engine.test.mjs",
+    "test:ui": "node tests/ui.spec.mjs",
+    "validate": "node tests/validate.mjs",
+    "simulate": "node tests/simulate.mjs 12",
+    "test:all": "node --test tests/engine.test.mjs && node tests/validate.mjs",
+    "build": "node scripts/build-single.mjs"
+  },
+  "keywords": [
+    "ink",
+    "interactive-fiction",
+    "xiuxian",
+    "game",
+    "web"
+  ],
+  "license": "MIT"
+}
