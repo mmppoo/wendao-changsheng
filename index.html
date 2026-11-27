@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>问道长生 · 修仙模拟器</title>
+<meta name="description" content="一款 ink 风格的互动叙事修仙模拟器：抽灵根、闯境界、遇奇遇、入宗门，走向属于你的结局。" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2314120f'/%3E%3Ctext x='32' y='44' font-size='36' text-anchor='middle' fill='%23c8a45c' font-family='serif'%3E道%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- 标题 / 启动 -->
+  <section id="title-screen" class="screen title-screen">
+    <div class="title-inner">
+      <p class="eyebrow">交互叙事 · 修仙模拟</p>
+      <h1 class="game-title">问道长生</h1>
+      <p class="title-sub">一条命，一条道。走到哪里算哪里。</p>
+      <div class="title-actions">
+        <button id="btn-continue" class="btn btn-primary" hidden>继续今生</button>
+        <button id="btn-new" class="btn btn-ghost">踏入仙途</button>
+        <button id="btn-gallery" class="btn btn-ghost">命途图鉴</button>
+      </div>
+      <p class="title-meta" id="title-meta"></p>
+    </div>
+    <div class="title-vertical" aria-hidden="true">道可道，非常道</div>
+  </section>
+
+  <!-- 建角 -->
+  <section id="create-screen" class="screen create-screen" hidden>
+    <div class="create-panel">
+      <header class="create-head">
+        <h2>择一出身</h2>
+        <p>出身决定你从哪里出发，灵根决定你能走多远。二者皆不可选，只能认。</p>
+      </header>
+
+      <div class="field-row">
+        <label class="field">
+          <span>道号</span>
+          <input id="input-name" maxlength="8" placeholder="无名" autocomplete="off" />
+        </label>
+        <div class="field">
+          <span>性别</span>
+          <div class="segmented" role="group" aria-label="性别">
+            <button type="button" class="seg is-active" data-gender="女">女</button>
+            <button type="button" class="seg" data-gender="男">男</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="origin-grid" id="origin-grid" role="radiogroup" aria-label="出身"></div>
+
+      <div class="talent-block">
+        <div class="talent-head">
+          <h3>轮回天赋</h3>
+          <span id="karma-points">轮回点 0</span>
+        </div>
+        <p class="talent-sub">每死一次，得一点。点亮的天赋，此后每一世都跟着你。</p>
+        <div class="talent-grid" id="talent-grid"></div>
+      </div>
+
+      <div class="create-foot">
+        <p class="hint" id="create-hint">选中一个出身，然后抽灵根。</p>
+        <div class="create-actions">
+          <button id="btn-roll" class="btn btn-primary" disabled>抽灵根</button>
+          <button id="btn-back-title" class="btn btn-ghost">返回</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 主界面 -->
+  <main id="game-screen" class="screen game-screen" hidden>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">道</span>
+        <div class="brand-text">
+          <strong>问道长生</strong>
+          <span id="top-realm">炼气一层</span>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button id="btn-save" class="icon-btn" title="存档">存</button>
+        <button id="btn-load" class="icon-btn" title="读档">读</button>
+        <button id="btn-codex" class="icon-btn" title="图鉴">鉴</button>
+        <button id="btn-menu" class="icon-btn" title="菜单">≡</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="rail rail-left" id="char-panel" aria-label="角色属性"></aside>
+
+      <section class="story" aria-live="polite">
+        <div class="story-scroll" id="story-scroll">
+          <div class="scene-head">
+            <span class="scene-kicker" id="scene-kicker">人间</span>
+            <h2 class="scene-title" id="scene-title">青牛村</h2>
+          </div>
+          <div class="scene-text" id="scene-text"></div>
+          <div class="scene-lines" id="scene-lines"></div>
+          <div class="choices" id="choices" role="group" aria-label="选择"></div>
+        </div>
+        <footer class="story-foot">
+          <span id="hint-line">按 1–9 选择 · 空格继续</span>
+          <span id="turn-line"></span>
+        </footer>
+      </section>
+
+      <aside class="rail rail-right" id="log-panel" aria-label="行止录">
+        <div class="rail-head">
+          <h3>行止录</h3>
+          <span class="rail-sub" id="log-sub">此生</span>
+        </div>
+        <ol class="log-list" id="log-list"></ol>
+      </aside>
+    </div>
+  </main>
+
+  <!-- 抽灵根 -->
+  <div class="overlay" id="roll-overlay" hidden>
+    <div class="roll-box">
+      <p class="roll-kicker">灵根</p>
+      <div class="roll-result" id="roll-result">?</div>
+      <p class="roll-desc" id="roll-desc">天意难测。</p>
+      <div class="roll-actions" id="roll-actions"></div>
+    </div>
+  </div>
+
+  <!-- 存档 -->
+  <div class="overlay" id="save-overlay" hidden>
+    <div class="modal">
+      <header class="modal-head">
+        <h3 id="save-title">存档</h3>
+        <button class="icon-btn" data-close="save-overlay">×</button>
+      </header>
+      <div class="slots" id="slot-list"></div>
+      <footer class="modal-foot">
+        <button class="btn btn-ghost" id="btn-export">导出存档</button>
+        <label class="btn btn-ghost file-btn">导入存档<input type="file" id="import-file" accept="application/json" hidden /></label>
+      </footer>
+    </div>
+  </div>
+
+  <!-- 图鉴 -->
+  <div class="overlay" id="codex-overlay" hidden>
+    <div class="modal modal-wide">
+      <header class="modal-head">
+        <h3>命途图鉴</h3>
+        <button class="icon-btn" data-close="codex-overlay">×</button>
+      </header>
+      <div class="tabs" id="codex-tabs">
+        <button class="tab is-active" data-tab="achievements">成就</button>
+        <button class="tab" data-tab="endings">结局</button>
+        <button class="tab" data-tab="roots">灵根</button>
+      </div>
+      <div class="codex-body" id="codex-body"></div>
+    </div>
+  </div>
+
+  <!-- 菜单 -->
+  <div class="overlay" id="menu-overlay" hidden>
+    <div class="modal modal-narrow">
+      <header class="modal-head">
+        <h3>暂歇</h3>
+        <button class="icon-btn" data-close="menu-overlay">×</button>
+      </header>
+      <div class="menu-list">
+        <button class="menu-item" id="menu-restart">重开一世</button>
+        <button class="menu-item" id="menu-help">玩法说明</button>
+        <button class="menu-item" id="menu-about">关于</button>
+      </div>
+      <div class="menu-body" id="menu-body"></div>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toast-stack" aria-live="polite"></div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
