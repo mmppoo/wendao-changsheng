@@ -109,7 +109,7 @@ export class Game {
     if (!node) return [];
     const s = this.state;
     if (s.scene.result && !s.scene.result.combatPrompt) {
-      return [{ index: 0, label: s.scene.result.ending ? '看完此生' : '继续', hint: '', action: 'continue', effect: 'primary' }];
+      return [{ index: 0, label: s.scene.result.ending ? '观此生终章' : '继续前行', hint: '', action: 'continue', effect: 'primary' }];
     }
     const list = node.choices || [];
     const out = [];
@@ -305,12 +305,11 @@ export class Game {
     const c = this.state.char;
     const realm = REALMS[c.realm];
     const pool = [
-      '灵气顺着经脉走了一圈，像一条温热的蛇。',
-      '你听见自己的血流声，慢慢和呼吸对上了。',
-      '丹田里的那团气又大了一点，边缘变得清晰。',
-      '窗外从黑到白，你没有睁眼。',
-      '有一瞬间，你觉得自己不是坐在蒲团上，而是浮在半空。',
-      `${realm.name}的关口像一堵墙，你每天用额头撞它一下，墙没动，你也没退。`,
+      '灵气循周天经脉游走，如春水润物，缓缓沉入丹田气海。',
+      '一呼一吸与山风相应，识海澄净，尘念俱消。',
+      '丹田气旋又凝实了一圈，灵压隐隐外溢，衣袂无风自动。',
+      '月升日落，静室灯火明灭，你双目微阖，神游太虚。',
+      `灵力一遍遍冲刷着${realm.name}壁垒，虽未即刻破关，根基已更见浑厚。`,
     ];
     return pool[this.rng.int(0, pool.length - 1)];
   }
@@ -328,11 +327,11 @@ export class Game {
       return;
     }
     const flavor = [
-      '你在山道上走了半日，只遇见一个挑柴的老翁。他看了你一眼，说：年轻人，山里有雾。',
-      '溪水很凉。你洗了把脸，看见水里自己的影子比昨天瘦。',
-      '林子里有野兽的脚印，比你的手掌还大。你跟了一段，脚印消失了。',
-      '你在破庙里躲雨，神像的脸被人凿掉了。供桌上还有半块冷掉的饼。',
-      '远处的城镇亮着灯。你忽然不想过去。',
+      '山道雾重，你偶遇一名负薪老者。他遥指云深处，叮嘱你前山妖气未散。',
+      '寒潭水清如镜，你掬水洗尘，只觉周身疲惫一扫而空。',
+      '密林深处留着数道深逾三寸的兽爪印，你循迹追出三里，终究被山雾遮断。',
+      '你在荒废山神庙避雨，断碑残香间似乎残留着百年前某位剑修的剑痕。',
+      '远山灯火如星，尘世烟火近在咫尺，你伫立片刻，终究转身重入云雾。',
     ];
     s.scene.result = { text: this.rng.pick(flavor), lines };
     this.afterAction();
@@ -663,8 +662,8 @@ export class Game {
     s.char.demon = Math.max(0, s.char.demon - d);
     s.char.injuries = Math.max(0, s.char.injuries - 1);
     s.counters.settle = (s.counters.settle || 0) + 1;
-    lines.push(`你静坐一月，心魔 -${d}。`);
-    s.scene.result = { text: '你什么也没做。这很难。', lines };
+    lines.push(`焚香调息三月，心魔 -${d}，内伤渐愈。`);
+    s.scene.result = { text: '你熄去灵火，于静室中独坐听松。识海翻涌的杂念如潮退去，道心重归清朗。', lines, fx: 'heal' };
     this.afterAction();
     this.emit();
   }

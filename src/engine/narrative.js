@@ -112,90 +112,11 @@ export function buildHub(game) {
   const realm = REALMS[c.realm];
   const monthCost = 1;
   const travelMonths = c.rootId === 'kongjian' ? 3 : c.rootId === 'feng' ? 5 : 6;
-  const choices = [
-    {
-      id: 'cultivate', label: '打坐修炼', hint: '半年 · 稳步积累修为',
-      action: 'cultivate', params: { months: 6 }, effect: 'quiet',
-    },
-    {
-      id: 'deep', label: '闭关苦修', hint: '两年 · 修为大涨，但心魔易生',
-      action: 'cultivate', params: { months: 24, demonRisk: true },
-    },
-    {
-      id: 'explore', label: '外出历练', hint: '三月 · 奇遇与凶险并存',
-      action: 'explore',
-    },
-    {
-      id: 'travel', label: '云游四方', hint: `${travelMonths}月 · 换一处山水，长几分见识`,
-      action: 'travel',
-    },
-  ];
+  const choices = [];
 
-  if (c.rootId === 'xue') {
-    choices.push({
-      id: 'blood_cultivate', label: '燃血修行', hint: '三月 · 血灵根专属，以气血换取巨额修为',
-      action: 'bloodCultivate', require: 'char.hp > char.maxHp * 0.35', requireHint: '气血不足，强行燃血恐伤本源',
-    });
-  }
-
-  if (c.goldenFingerId === 'gf_bottle') {
-    choices.push({
-      id: 'bottle_ripen', label: '绿瓶催熟灵药', hint: '两月 · 掌天小绿瓶专属，催熟灵草成丹',
-      action: 'bottleRipen',
-    });
-  }
-
-  if (c.realm >= 1 || c.stones >= 300) {
-    choices.push({
-      id: 'auction', label: '万宝拍卖会', hint: '一月 · 竞拍洗髓丹/古经/雷击木，切记财不露白',
-      action: 'auction',
-    });
-  }
-
-  if (c.realm >= 1) {
-    choices.push({
-      id: 'secret_realm', label: '探索秘境', hint: '半年 · 血色禁地/昆仑残墟/归墟海眼/太古剑冢',
-      action: 'secretRealm',
-    });
-  }
-
-  if (c.inventory.some((i) => (i.id === 'xuantie' || i.id === 'leimu') && i.qty > 0) || c.stones >= 350) {
-    choices.push({
-      id: 'refine', label: `祭炼本命法宝（${c.artifactName || '无名青锋'}）`, hint: '三月 · 耗玄铁/雷击木或灵石升阶本命神兵',
-      action: 'refine',
-    });
-  }
-
-  if (sect) {
-    choices.push({
-      id: 'sect_task', label: `宗门事务·${rank.name}`, hint: '三月 · 赚取贡献与灵石',
-      action: 'sectTask',
-    });
-  } else if (!state.flags.拜师季过) {
-    choices.push({
-      id: 'find_sect', label: '寻访仙门', hint: '一月 · 看看哪座山门愿意为你开',
-      action: 'sectRecruit',
-    });
-  }
-
-  if (c.sectId === 'danxia' || state.char.inventory.some((i) => i.id === 'lingcao' && i.qty > 0)) {
-    choices.push({
-      id: 'alchemy', label: '开炉炼丹', hint: '一月 · 耗百年灵草或宗门药材炼制丹药',
-      action: 'alchemy',
-    });
-  }
-
-  choices.push(
-    { id: 'market', label: '坊市走走', hint: '一月 · 买卖丹药法器', action: 'market' },
-    { id: 'comprehend', label: '参悟所学', hint: '半年 · 悟性见长，心境澄明', action: 'comprehend' },
-    {
-      id: 'settle', label: '沉淀心境', hint: '三月 · 压下心魔，抚平伤势',
-      action: 'settle', require: 'demon > 0 || char.injuries > 0', requireHint: '心境无碍',
-    },
-  );
   if (canBreakthrough(c)) {
     choices.push({
-      id: 'breakthrough', label: '冲击境界', hint: '修为已满，可叩关一试',
+      id: 'breakthrough', label: '冲击境界', hint: '修为圆满，即刻叩关破境！',
       action: 'breakthrough', effect: 'primary',
     });
   }
@@ -205,10 +126,94 @@ export function buildHub(game) {
       action: 'revisitGate', effect: 'primary',
     });
   }
-  if (c.realm >= 3 && !state.flags.开宗立派) {
-    choices.push({ id: 'found_sect', label: '开宗立派', hint: '自立山门，收徒讲道', action: 'foundSect', once: false });
+
+  choices.push(
+    {
+      id: 'cultivate', label: '吐纳打坐', hint: '半年 · 稳步炼气',
+      action: 'cultivate', params: { months: 6 }, effect: 'quiet',
+    },
+    {
+      id: 'deep', label: '闭关苦修', hint: '两年 · 进境极快，防心魔',
+      action: 'cultivate', params: { months: 24, demonRisk: true },
+    },
+    {
+      id: 'explore', label: '山野历练', hint: '三月 · 寻机缘，防杀劫',
+      action: 'explore',
+    },
+    {
+      id: 'travel', label: '游历四方', hint: `${travelMonths}月 · 换地界，长见识`,
+      action: 'travel',
+    },
+  );
+
+  if (c.rootId === 'xue') {
+    choices.push({
+      id: 'blood_cultivate', label: '燃血秘修', hint: '三月 · 焚血换取暴涨修为',
+      action: 'bloodCultivate', require: 'char.hp > char.maxHp * 0.35', requireHint: '气血不足，强行燃血恐伤本源',
+    });
   }
-  choices.push({ id: 'fate', label: '查看命途', hint: '成就 · 结局 · 此生行止', action: 'fate' });
+
+  if (c.goldenFingerId === 'gf_bottle') {
+    choices.push({
+      id: 'bottle_ripen', label: '绿瓶催灵', hint: '两月 · 催熟灵草凝丹',
+      action: 'bottleRipen',
+    });
+  }
+
+  if (c.realm >= 1 || c.stones >= 300) {
+    choices.push({
+      id: 'auction', label: '万宝拍卖', hint: '一月 · 竞拍稀世珍宝',
+      action: 'auction',
+    });
+  }
+
+  if (c.realm >= 1) {
+    choices.push({
+      id: 'secret_realm', label: '秘境探幽', hint: '半年 · 深入古境夺造化',
+      action: 'secretRealm',
+    });
+  }
+
+  if (c.inventory.some((i) => (i.id === 'xuantie' || i.id === 'leimu') && i.qty > 0) || c.stones >= 350) {
+    choices.push({
+      id: 'refine', label: `祭炼法宝`, hint: `三月 · 温养${c.artifactName || '本命青锋'}`,
+      action: 'refine',
+    });
+  }
+
+  if (sect) {
+    choices.push({
+      id: 'sect_task', label: `宗门差事`, hint: `三月 · ${rank.name}领俸挣贡献`,
+      action: 'sectTask',
+    });
+  } else if (!state.flags.拜师季过) {
+    choices.push({
+      id: 'find_sect', label: '拜入仙门', hint: '一月 · 叩问诸宗山门',
+      action: 'sectRecruit',
+    });
+  }
+
+  if (c.sectId === 'danxia' || state.char.inventory.some((i) => i.id === 'lingcao' && i.qty > 0)) {
+    choices.push({
+      id: 'alchemy', label: '开炉炼丹', hint: '一月 · 炼制灵丹妙药',
+      action: 'alchemy',
+    });
+  }
+
+  choices.push(
+    { id: 'market', label: '云桥坊市', hint: '一月 · 买卖丹药灵材', action: 'market' },
+    { id: 'comprehend', label: '参悟大道', hint: '半年 · 增悟性，明道心', action: 'comprehend' },
+  );
+  if (c.demon > 0 || c.injuries > 0) {
+    choices.push({
+      id: 'settle', label: '静心涤魔', hint: '三月 · 镇压心魔，疗内伤',
+      action: 'settle',
+    });
+  }
+  if (c.realm >= 3 && !state.flags.开宗立派) {
+    choices.push({ id: 'found_sect', label: '开宗立派', hint: '自立山门，广收门徒', action: 'foundSect', once: false });
+  }
+  choices.push({ id: 'fate', label: '此生履历', hint: '功业 · 因果 · 行止总览', action: 'fate' });
 
   return {
     id: 'hub',

@@ -37,15 +37,15 @@ function policy(g) {
   if (s.scene.id !== 'hub') return list[0];
 
   if (canBreakthrough(s.char)) return by('冲击境界') || list[0];
-  if (!s.char.sectId && by('寻访仙门')) return by('寻访仙门');
-  if (s.char.demon > 40 && by('沉淀心境')) return by('沉淀心境');
-  if (s.char.hp < s.char.maxHp * 0.4 && by('沉淀心境')) return by('沉淀心境');
-  // 交替：修炼、历练、宗门事务
+  if (!s.char.sectId && by('仙门')) return by('仙门');
+  if (s.char.demon > 40 && by('涤魔')) return by('涤魔');
+  if (s.char.hp < s.char.maxHp * 0.4 && by('涤魔')) return by('涤魔');
+  // 交替：修炼、历练、宗门差事
   const cycle = s.turn % 5;
-  if (cycle === 0 && by('外出历练')) return by('外出历练');
-  if (cycle === 1 && by('宗门事务')) return by('宗门事务');
-  if (cycle === 2 && by('坊市走走')) return by('坊市走走');
-  return by('打坐修炼') || list[0];
+  if (cycle === 0 && by('历练')) return by('历练');
+  if (cycle === 1 && by('宗门')) return by('宗门');
+  if (cycle === 2 && by('坊市')) return by('坊市');
+  return by('打坐') || list[0];
 }
 
 function run(seed) {

@@ -660,28 +660,32 @@ button { cursor: pointer; }
 
 .right-bag-wrap { margin-bottom: 1.05rem; padding-bottom: 0.95rem; border-bottom: 1px solid var(--line); }
 
-/* -------------------------------- 中央叙事舞台 -------------------------------- */
+/* -------------------------------- 中央叙事舞台（固定视口 + 底部行动栏） -------------------------------- */
 
 .story {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  height: 100%;
+  overflow: hidden;
   background: var(--ink-0);
 }
 
 .story-scroll {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  scroll-behavior: smooth;
-  padding-bottom: 2rem;
+  overscroll-behavior: contain;
+  padding-bottom: 0.9rem;
 }
 
 /* 像素实景横幅 */
 .scene-banner {
   position: relative;
+  flex-shrink: 0;
   margin: 0;
   width: 100%;
-  height: clamp(168px, 25vh, 246px);
+  height: clamp(140px, 21vh, 210px);
   overflow: hidden;
   border-bottom: 2px solid var(--line-strong);
   background: #090d14;
@@ -811,65 +815,81 @@ button { cursor: pointer; }
 .delta-pill.jade { border-color: var(--jade); background: rgba(88, 185, 138, 0.18); color: #8ce2b7; }
 
 .scene-text {
-  font-size: clamp(0.96rem, 1.15vw, 1.05rem);
-  line-height: 2.08;
+  font-size: clamp(0.95rem, 1.12vw, 1.04rem);
+  line-height: 1.98;
   color: #e6dec8;
   white-space: pre-wrap;
-  min-height: 3em;
-  cursor: pointer;
+  min-height: 2.4em;
 }
+.scene-text.is-reveal { animation: fade 0.16s ease both; }
 
 .scene-lines {
-  margin-top: 0.95rem;
+  margin-top: 0.8rem;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem 0.85rem;
-  font-size: 0.77rem;
+  gap: 0.36rem 0.78rem;
+  font-size: 0.76rem;
   color: var(--paper-dim);
   font-family: var(--font-mono);
 }
 .scene-lines:not(:empty) {
-  padding: 0.68rem 0.85rem;
+  padding: 0.58rem 0.78rem;
   border-left: 3px solid var(--jade);
   background: var(--ink-1);
 }
 .scene-lines span::before { content: "▸ "; color: var(--jade); }
 
+/* 底部固定行动栏（桌面居中，手机锁底） */
+.story-dock {
+  flex-shrink: 0;
+  border-top: 2px solid var(--line);
+  background: rgba(14, 19, 30, 0.96);
+  padding: 0.68rem clamp(0.9rem, 3.8vw, 3.2rem) 0.78rem;
+  max-height: 44%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
 .choices {
-  margin-top: 1.45rem;
+  max-width: 760px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 0.58rem;
+  gap: 0.46rem;
+}
+
+.choices.is-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.44rem;
 }
 
 .choice {
   display: flex;
   align-items: center;
-  gap: 0.82rem;
+  gap: 0.72rem;
   text-align: left;
-  min-height: 52px;
-  padding: 0.82rem 1rem;
+  min-height: 46px;
+  padding: 0.62rem 0.85rem;
   border: 2px solid var(--line);
   background: var(--ink-1);
   color: var(--paper);
   border-radius: var(--radius);
-  box-shadow: 0 3px 0 rgba(4, 7, 12, 0.65);
-  transition: border-color 0.14s, background 0.14s, transform 0.1s;
-  animation: fade-up 0.25s ease both;
+  box-shadow: 0 2px 0 rgba(4, 7, 12, 0.65);
+  transition: border-color 0.14s, background 0.14s, transform 0.08s;
 }
 .choice:hover:not(:disabled) {
   border-color: var(--gold);
   background: var(--ink-2);
-  transform: translateX(3px);
 }
-.choice:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 rgba(4, 7, 12, 0.65); }
+.choice:active:not(:disabled) { transform: translateY(1px); }
 .choice:disabled { opacity: 0.42; cursor: not-allowed; }
 .choice .num {
   font-family: var(--font-mono);
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   color: var(--gold);
-  width: 1.55rem;
-  height: 1.55rem;
+  width: 1.4rem;
+  height: 1.4rem;
   flex-shrink: 0;
   display: grid;
   place-items: center;
@@ -877,17 +897,19 @@ button { cursor: pointer; }
   background: var(--ink-0);
 }
 .choice-main { flex: 1; min-width: 0; }
-.choice .label { display: block; font-size: 0.95rem; letter-spacing: 0.04em; line-height: 1.4; }
-.choice .hint { display: block; margin-top: 0.22rem; font-size: 0.73rem; color: var(--paper-faint); line-height: 1.48; }
-.choice .arrow { color: var(--gold); font-family: var(--font-mono); font-size: 0.85rem; opacity: 0.45; }
+.choice .label { display: block; font-size: 0.92rem; letter-spacing: 0.04em; line-height: 1.3; }
+.choice .hint { display: block; margin-top: 0.16rem; font-size: 0.71rem; color: var(--paper-faint); line-height: 1.38; }
+.choice .arrow { color: var(--gold); font-family: var(--font-mono); font-size: 0.78rem; opacity: 0.45; }
 .choice:hover:not(:disabled) .arrow { opacity: 1; }
+
+.choices.is-hub-grid .choice.is-primary { grid-column: 1 / -1; }
 
 .choice.is-primary {
   border-color: var(--cinnabar);
-  background: rgba(212, 77, 56, 0.18);
+  background: rgba(212, 77, 56, 0.2);
 }
 .choice.is-primary .num { border-color: #f59c8b; color: #fff2e8; background: var(--cinnabar); }
-.choice.is-primary:hover:not(:disabled) { background: rgba(212, 77, 56, 0.28); border-color: #f59c8b; }
+.choice.is-primary:hover:not(:disabled) { background: rgba(212, 77, 56, 0.3); border-color: #f59c8b; }
 .choice .reason { color: #f29a8a; }
 
 .story-foot {
@@ -1132,18 +1154,43 @@ button { cursor: pointer; }
 /* -------------------------------- 移动端 / 平板响应式 -------------------------------- */
 
 @media (max-width: 1099px) {
-  .mobile-hud { display: block; }
-  .mobile-nav { display: grid; }
+  .game-screen {
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+  .topbar { flex-shrink: 0; position: static; }
+  .mobile-hud { display: block; flex-shrink: 0; position: static; }
+  .mobile-nav {
+    display: grid;
+    position: static;
+    flex-shrink: 0;
+  }
   .story-foot { display: none; }
 
   .layout {
-    display: block;
+    flex: 1;
+    min-height: 0;
     height: auto;
-    min-height: calc(100dvh - 116px);
-    padding-bottom: calc(4.8rem + var(--safe-bottom));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding-bottom: 0;
   }
-  .rail, .story { border: 0; height: auto; overflow: visible; }
-  .story-scroll { overflow: visible; padding-bottom: 1.5rem; }
+  .rail {
+    flex: 1;
+    min-height: 0;
+    border: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0.85rem 0.9rem 1.4rem;
+  }
+  .story {
+    flex: 1;
+    min-height: 0;
+    border: 0;
+    overflow: hidden;
+  }
 
   .game-screen[data-mobile-tab="story"] .rail-left,
   .game-screen[data-mobile-tab="story"] .rail-right { display: none; }
@@ -1163,23 +1210,45 @@ button { cursor: pointer; }
   .game-screen[data-mobile-tab="log"] .rail-right { display: block; }
   .game-screen[data-mobile-tab="log"] .rail-right .right-bag-wrap { display: none; }
 
-  .scene-banner { height: clamp(150px, 24vh, 210px); }
-  .scene-body { padding: 0.95rem 0.9rem 0; }
+  .scene-banner { height: 102px; }
+  .scene-banner.has-hud { height: 132px; }
+  .scene-combat-hud { top: 0.42rem; padding: 0.42rem 0.65rem; }
+  .rumor-bar { padding: 0.34rem 0.82rem; font-size: 0.7rem; }
+  .scene-body { padding: 0.68rem 0.85rem 0; }
+  .scene-head { margin-bottom: 0.5rem; }
+  .scene-title { font-size: 1.24rem; }
+  .scene-text { font-size: 0.93rem; line-height: 1.78; min-height: 1.8em; }
+  .story-dock {
+    padding: 0.52rem 0.72rem 0.58rem;
+    max-height: 48%;
+  }
+  .choices.is-hub-grid .choice {
+    min-height: 42px;
+    padding: 0.44rem 0.58rem;
+    gap: 0.46rem;
+  }
+  .choices.is-hub-grid .choice .num,
+  .choices.is-hub-grid .choice .arrow { display: none; }
+  .choices.is-hub-grid .choice .label { font-size: 0.86rem; }
+  .choices.is-hub-grid .choice .hint { font-size: 0.65rem; margin-top: 0.08rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .title-vertical { display: none; }
   .origin-grid { max-height: none; }
 }
 
 @media (max-width: 540px) {
-  .topbar { padding: 0.48rem 0.68rem; }
-  .brand-text strong { font-size: 0.83rem; letter-spacing: 0.12em; }
-  .icon-btn { min-width: 2.1rem; height: 2.1rem; font-size: 0.78rem; }
+  .topbar { padding: 0.4rem 0.65rem; }
+  .brand-mark { width: 1.85rem; height: 1.85rem; font-size: 0.88rem; }
+  .brand-text strong { font-size: 0.82rem; letter-spacing: 0.1em; }
+  .icon-btn { min-width: 2rem; height: 2rem; font-size: 0.76rem; }
   #btn-codex { display: none; }
+  .scene-banner-loc { display: none; }
+  .mobile-hud { padding: 0.38rem 0.72rem; }
   .game-title { font-size: clamp(2.7rem, 15vw, 3.9rem); }
   .title-inner { padding: 1.35rem 1rem; }
   .title-actions .btn { flex: 1 1 44%; padding: 0.7rem 0.85rem; white-space: nowrap; }
   #btn-continue { flex: 1 1 100%; }
-  .choice { padding: 0.78rem 0.86rem; gap: 0.68rem; }
-  .choice .label { font-size: 0.92rem; }
+  .choice { min-height: 42px; padding: 0.56rem 0.74rem; gap: 0.58rem; }
+  .choice .label { font-size: 0.89rem; }
   .ach-grid, .gf-grid { grid-template-columns: 1fr; }
 }
 
@@ -1285,7 +1354,6 @@ button { cursor: pointer; }
         </div>
       </div>
       <div class="topbar-actions">
-        <button id="btn-speed" class="icon-btn" title="切换文字速度">墨</button>
         <button id="btn-sound" class="icon-btn" title="音效开关">静</button>
         <button id="btn-save" class="icon-btn" title="存档 (S)">存</button>
         <button id="btn-load" class="icon-btn" title="读档 (L)">读</button>
@@ -1301,22 +1369,22 @@ button { cursor: pointer; }
       <!-- 左侧：像素道躯与属性 -->
       <aside class="rail rail-left" id="char-panel" aria-label="角色属性"></aside>
 
-      <!-- 中央：实时像素实景 + 风闻条 + 叙事交互舞台 -->
+      <!-- 中央：实时像素实景 + 风闻条 + 固定视口叙事区 + 底部固定行动栏 -->
       <section class="story" aria-live="polite">
+        <figure class="scene-banner" id="scene-banner">
+          <canvas id="scene-pixel-canvas" class="scene-pixel-canvas" width="280" height="118" aria-label="当前场景像素实景"></canvas>
+          <div class="scene-banner-grad"></div>
+          <div class="scene-banner-meta">
+            <span class="scene-kicker" id="scene-kicker">人间</span>
+            <span class="scene-banner-loc" id="scene-banner-loc">青牛村</span>
+          </div>
+          <div class="scene-combat-hud" id="scene-combat-hud" hidden></div>
+        </figure>
+
+        <!-- 天机阁修真界风闻栏 -->
+        <div class="rumor-bar" id="rumor-bar" aria-label="修真界风闻"></div>
+
         <div class="story-scroll" id="story-scroll">
-          <figure class="scene-banner" id="scene-banner">
-            <canvas id="scene-pixel-canvas" class="scene-pixel-canvas" width="280" height="118" aria-label="当前场景像素实景"></canvas>
-            <div class="scene-banner-grad"></div>
-            <div class="scene-banner-meta">
-              <span class="scene-kicker" id="scene-kicker">人间</span>
-              <span class="scene-banner-loc" id="scene-banner-loc">青牛村</span>
-            </div>
-            <div class="scene-combat-hud" id="scene-combat-hud" hidden></div>
-          </figure>
-
-          <!-- 天机阁修真界风闻滚动栏 -->
-          <div class="rumor-bar" id="rumor-bar" aria-label="修真界风闻"></div>
-
           <div class="scene-body">
             <div class="scene-head">
               <h2 class="scene-title" id="scene-title">青牛村</h2>
@@ -1324,11 +1392,15 @@ button { cursor: pointer; }
             </div>
             <div class="scene-text" id="scene-text"></div>
             <div class="scene-lines" id="scene-lines"></div>
-            <div class="choices" id="choices" role="group" aria-label="选择"></div>
           </div>
         </div>
+
+        <div class="story-dock" id="story-dock">
+          <div class="choices" id="choices" role="group" aria-label="选择"></div>
+        </div>
+
         <footer class="story-foot">
-          <span id="hint-line">按 1–9 选择 · 空格/点击正文跳过打字 · S 存档 · L 读档</span>
+          <span id="hint-line">按 1–9 选择 · 空格继续 · S 存档 · L 读档 · C 图鉴</span>
           <span id="turn-line"></span>
         </footer>
       </section>
@@ -1428,13 +1500,13 @@ button { cursor: pointer; }
   <div class="overlay" id="menu-overlay" hidden>
     <div class="modal modal-narrow px-frame">
       <header class="modal-head">
-        <h3>暂歇</h3>
+        <h3>道途菜单</h3>
         <button class="icon-btn" data-close="menu-overlay" aria-label="关闭">×</button>
       </header>
       <div class="menu-list">
-        <button class="menu-item" id="menu-restart">重开一世</button>
+        <button class="menu-item" id="menu-restart">重入轮回</button>
         <button class="menu-item" id="menu-title">返回卷首</button>
-        <button class="menu-item" id="menu-help">玩法说明</button>
+        <button class="menu-item" id="menu-help">修行指引</button>
         <button class="menu-item" id="menu-about">关于本作</button>
       </div>
       <div class="menu-body" id="menu-body"></div>
@@ -2172,21 +2244,21 @@ const GOLDEN_FINGERS = [
   {
     id: 'gf_bottle',
     name: '掌天小绿瓶',
-    tag: '苟道 · 凡人流',
+    tag: '苟道 · 炼药流',
     icon: '瓶',
     color: '#58b98a',
-    desc: '一只不知来历的墨绿小瓶，月夜吸纳星辉，每数月凝聚一滴绿液，可催熟灵草、滋养丹田。',
-    perk: '闭关与历练概率凝出百年灵草；服用丹药修为与恢复效果 +30%；可激活隐藏「催熟灵药」分支。',
+    desc: '一只来历成谜的墨绿小瓶，子夜承接星月清辉，凝露成液，可催熟灵草、滋养丹田。',
+    perk: '闭关与历练有概率凝出百年灵草；服丹效用 +30%；解锁「绿瓶催灵」专属行动。',
     apply: { items: ['lingcao', 'lingcao'], flag: { 金手指_绿瓶: true } },
   },
   {
     id: 'gf_sword_elder',
     name: '残剑老祖魂',
-    tag: '老爷爷 · 热血打脸',
+    tag: '剑道 · 随身老祖',
     icon: '剑',
     color: '#e6b95c',
-    desc: '随身古戒中沉睡着一缕上古剑尊残魂，毒舌挑剔却见识通天，常在绝境指点杀招。',
-    perk: '开局赠《太虚剑意》与青锋剑，战斗攻击 +20%，参悟悟性额外 +1，解锁老祖指点隐藏选项。',
+    desc: '古戒中蛰伏着一缕太古剑尊残魂，言语刻薄却眼界通天，常于危局指点剑招破绽。',
+    perk: '开局习得《太虚剑意》并携青锋剑，战力 +20%，参悟额外 +1 悟性，解锁老祖传音分支。',
     apply: {
       items: ['qingfeng_jian'],
       techniques: [{ id: 'taixu_jianyi', name: '《太虚剑意》', atk: 0.2, speed: 0.08 }],
@@ -2197,41 +2269,41 @@ const GOLDEN_FINGERS = [
   {
     id: 'gf_karma_mirror',
     name: '天机因果镜',
-    tag: '算计 · 情报捡漏',
+    tag: '天机 · 鉴宝捡漏',
     icon: '镜',
     color: '#7ab8d9',
-    desc: '一面蒙尘铜镜，能照见三息之后的死劫与宝光，坊市捡漏、拍卖压价、反杀伏击无往不利。',
-    perk: '神识 +6、气运 +6；坊市/拍卖折扣 -15%；奇遇与检定成算提升；开局赠护心符。',
+    desc: '一面蒙尘古铜镜，可映照三息后的吉凶死劫与灵宝真气，坊市鉴漏、暗拍压价皆先人一步。',
+    perk: '神识 +6、气运 +6；坊市与拍卖折扣 -15%；奇遇检定成算提升；开局携护心符。',
     apply: { items: ['huxin_fu'], attrs: { 神识: 6, 气运: 6 }, flag: { 金手指_天机镜: true } },
   },
   {
     id: 'gf_stealth',
     name: '龟息藏锋诀',
-    tag: '稳健师兄 · 扮猪吃虎',
+    tag: '稳健 · 藏锋隐息',
     icon: '龟',
     color: '#a3b88c',
-    desc: '上古散修所创匿息秘法，外人看你永远低两重境界。越是稳健，越能出其不意反杀夺宝。',
-    perk: '道心 +6、寿元 +30年；心魔增长减半；战斗防御减伤 18% 且遁走成算 +25%；触发「扮猪吃虎」奇遇。',
+    desc: '上古散修秘传匿息法门，外人窥之永远低两重境界。平日藏拙守静，动则雷霆反杀。',
+    perk: '道心 +6、寿元 +30年；心魔滋生减半；受创减伤 18% 且遁走成算 +25%；触发藏锋奇遇。',
     apply: { lifespan: 30, attrs: { 道心: 6 }, flag: { 金手指_苟道: true } },
   },
   {
     id: 'gf_signin',
     name: '万界道碑',
-    tag: '打卡 · 机缘滚雪球',
+    tag: '游历 · 碑文赐宝',
     icon: '碑',
     color: '#c08ae8',
-    desc: '识海深处矗立一座无字古碑，每踏足一处新地界或突破大境界，碑面便落下一道机缘赏赐。',
-    perk: '每首次云游新地点额外获赠灵石与丹药，突破大境界自动赐宝，开局赠 200 灵石与引气丹。',
+    desc: '识海深处矗立一座无字古碑，每踏足新地界或破开大境界，碑面便铭刻道纹、降下造化。',
+    perk: '首抵各地界获赠灵石与丹药；渡劫破境自动赐宝；开局携 200 灵石与两枚引气丹。',
     apply: { stones: 200, items: ['yinqi_dan', 'yinqi_dan'], flag: { 金手指_道碑: true } },
   },
   {
     id: 'gf_none',
-    name: '纯凡骨 · 无外物',
-    tag: '硬核 · 本心问道',
+    name: '纯凡骨 · 不借外物',
+    tag: '孤勇 · 本心问道',
     icon: '心',
     color: '#d44d38',
-    desc: '不借绿瓶，不靠老祖，只凭一颗向道之心与手中三尺青锋，硬生生杀出一条长生路。',
-    perk: '无开局外挂，但道心 +5、全奇遇名望 +25%，结局额外结算 +2 轮回点并授予「赤手问道」名号。',
+    desc: '不倚异宝，不托残魂，唯凭一颗向道赤心与三尺青锋，在漫漫仙途中自辟通天大道。',
+    perk: '无开局异宝加持，但道心 +5、名望获取 +25%，终章额外结算 +2 轮回点并赐名「赤手问道」。',
     apply: { attrs: { 道心: 5 }, title: '赤手问道', flag: { 金手指_无外物: true } },
   },
 ];
@@ -3056,90 +3128,11 @@ function buildHub(game) {
   const realm = REALMS[c.realm];
   const monthCost = 1;
   const travelMonths = c.rootId === 'kongjian' ? 3 : c.rootId === 'feng' ? 5 : 6;
-  const choices = [
-    {
-      id: 'cultivate', label: '打坐修炼', hint: '半年 · 稳步积累修为',
-      action: 'cultivate', params: { months: 6 }, effect: 'quiet',
-    },
-    {
-      id: 'deep', label: '闭关苦修', hint: '两年 · 修为大涨，但心魔易生',
-      action: 'cultivate', params: { months: 24, demonRisk: true },
-    },
-    {
-      id: 'explore', label: '外出历练', hint: '三月 · 奇遇与凶险并存',
-      action: 'explore',
-    },
-    {
-      id: 'travel', label: '云游四方', hint: `${travelMonths}月 · 换一处山水，长几分见识`,
-      action: 'travel',
-    },
-  ];
+  const choices = [];
 
-  if (c.rootId === 'xue') {
-    choices.push({
-      id: 'blood_cultivate', label: '燃血修行', hint: '三月 · 血灵根专属，以气血换取巨额修为',
-      action: 'bloodCultivate', require: 'char.hp > char.maxHp * 0.35', requireHint: '气血不足，强行燃血恐伤本源',
-    });
-  }
-
-  if (c.goldenFingerId === 'gf_bottle') {
-    choices.push({
-      id: 'bottle_ripen', label: '绿瓶催熟灵药', hint: '两月 · 掌天小绿瓶专属，催熟灵草成丹',
-      action: 'bottleRipen',
-    });
-  }
-
-  if (c.realm >= 1 || c.stones >= 300) {
-    choices.push({
-      id: 'auction', label: '万宝拍卖会', hint: '一月 · 竞拍洗髓丹/古经/雷击木，切记财不露白',
-      action: 'auction',
-    });
-  }
-
-  if (c.realm >= 1) {
-    choices.push({
-      id: 'secret_realm', label: '探索秘境', hint: '半年 · 血色禁地/昆仑残墟/归墟海眼/太古剑冢',
-      action: 'secretRealm',
-    });
-  }
-
-  if (c.inventory.some((i) => (i.id === 'xuantie' || i.id === 'leimu') && i.qty > 0) || c.stones >= 350) {
-    choices.push({
-      id: 'refine', label: `祭炼本命法宝（${c.artifactName || '无名青锋'}）`, hint: '三月 · 耗玄铁/雷击木或灵石升阶本命神兵',
-      action: 'refine',
-    });
-  }
-
-  if (sect) {
-    choices.push({
-      id: 'sect_task', label: `宗门事务·${rank.name}`, hint: '三月 · 赚取贡献与灵石',
-      action: 'sectTask',
-    });
-  } else if (!state.flags.拜师季过) {
-    choices.push({
-      id: 'find_sect', label: '寻访仙门', hint: '一月 · 看看哪座山门愿意为你开',
-      action: 'sectRecruit',
-    });
-  }
-
-  if (c.sectId === 'danxia' || state.char.inventory.some((i) => i.id === 'lingcao' && i.qty > 0)) {
-    choices.push({
-      id: 'alchemy', label: '开炉炼丹', hint: '一月 · 耗百年灵草或宗门药材炼制丹药',
-      action: 'alchemy',
-    });
-  }
-
-  choices.push(
-    { id: 'market', label: '坊市走走', hint: '一月 · 买卖丹药法器', action: 'market' },
-    { id: 'comprehend', label: '参悟所学', hint: '半年 · 悟性见长，心境澄明', action: 'comprehend' },
-    {
-      id: 'settle', label: '沉淀心境', hint: '三月 · 压下心魔，抚平伤势',
-      action: 'settle', require: 'demon > 0 || char.injuries > 0', requireHint: '心境无碍',
-    },
-  );
   if (canBreakthrough(c)) {
     choices.push({
-      id: 'breakthrough', label: '冲击境界', hint: '修为已满，可叩关一试',
+      id: 'breakthrough', label: '冲击境界', hint: '修为圆满，即刻叩关破境！',
       action: 'breakthrough', effect: 'primary',
     });
   }
@@ -3149,10 +3142,94 @@ function buildHub(game) {
       action: 'revisitGate', effect: 'primary',
     });
   }
-  if (c.realm >= 3 && !state.flags.开宗立派) {
-    choices.push({ id: 'found_sect', label: '开宗立派', hint: '自立山门，收徒讲道', action: 'foundSect', once: false });
+
+  choices.push(
+    {
+      id: 'cultivate', label: '吐纳打坐', hint: '半年 · 稳步炼气',
+      action: 'cultivate', params: { months: 6 }, effect: 'quiet',
+    },
+    {
+      id: 'deep', label: '闭关苦修', hint: '两年 · 进境极快，防心魔',
+      action: 'cultivate', params: { months: 24, demonRisk: true },
+    },
+    {
+      id: 'explore', label: '山野历练', hint: '三月 · 寻机缘，防杀劫',
+      action: 'explore',
+    },
+    {
+      id: 'travel', label: '游历四方', hint: `${travelMonths}月 · 换地界，长见识`,
+      action: 'travel',
+    },
+  );
+
+  if (c.rootId === 'xue') {
+    choices.push({
+      id: 'blood_cultivate', label: '燃血秘修', hint: '三月 · 焚血换取暴涨修为',
+      action: 'bloodCultivate', require: 'char.hp > char.maxHp * 0.35', requireHint: '气血不足，强行燃血恐伤本源',
+    });
   }
-  choices.push({ id: 'fate', label: '查看命途', hint: '成就 · 结局 · 此生行止', action: 'fate' });
+
+  if (c.goldenFingerId === 'gf_bottle') {
+    choices.push({
+      id: 'bottle_ripen', label: '绿瓶催灵', hint: '两月 · 催熟灵草凝丹',
+      action: 'bottleRipen',
+    });
+  }
+
+  if (c.realm >= 1 || c.stones >= 300) {
+    choices.push({
+      id: 'auction', label: '万宝拍卖', hint: '一月 · 竞拍稀世珍宝',
+      action: 'auction',
+    });
+  }
+
+  if (c.realm >= 1) {
+    choices.push({
+      id: 'secret_realm', label: '秘境探幽', hint: '半年 · 深入古境夺造化',
+      action: 'secretRealm',
+    });
+  }
+
+  if (c.inventory.some((i) => (i.id === 'xuantie' || i.id === 'leimu') && i.qty > 0) || c.stones >= 350) {
+    choices.push({
+      id: 'refine', label: `祭炼法宝`, hint: `三月 · 温养${c.artifactName || '本命青锋'}`,
+      action: 'refine',
+    });
+  }
+
+  if (sect) {
+    choices.push({
+      id: 'sect_task', label: `宗门差事`, hint: `三月 · ${rank.name}领俸挣贡献`,
+      action: 'sectTask',
+    });
+  } else if (!state.flags.拜师季过) {
+    choices.push({
+      id: 'find_sect', label: '拜入仙门', hint: '一月 · 叩问诸宗山门',
+      action: 'sectRecruit',
+    });
+  }
+
+  if (c.sectId === 'danxia' || state.char.inventory.some((i) => i.id === 'lingcao' && i.qty > 0)) {
+    choices.push({
+      id: 'alchemy', label: '开炉炼丹', hint: '一月 · 炼制灵丹妙药',
+      action: 'alchemy',
+    });
+  }
+
+  choices.push(
+    { id: 'market', label: '云桥坊市', hint: '一月 · 买卖丹药灵材', action: 'market' },
+    { id: 'comprehend', label: '参悟大道', hint: '半年 · 增悟性，明道心', action: 'comprehend' },
+  );
+  if (c.demon > 0 || c.injuries > 0) {
+    choices.push({
+      id: 'settle', label: '静心涤魔', hint: '三月 · 镇压心魔，疗内伤',
+      action: 'settle',
+    });
+  }
+  if (c.realm >= 3 && !state.flags.开宗立派) {
+    choices.push({ id: 'found_sect', label: '开宗立派', hint: '自立山门，广收门徒', action: 'foundSect', once: false });
+  }
+  choices.push({ id: 'fate', label: '此生履历', hint: '功业 · 因果 · 行止总览', action: 'fate' });
 
   return {
     id: 'hub',
@@ -10138,11 +10215,11 @@ const WEBNOVEL_EXPANSION = [
         },
       },
       {
-        label: '不动声色收下五十灵石，拱手赔笑（苟道忍辱）', hint: '龟息稳健流 · 先拿资源再暗中算账',
+        label: '不动声色收下灵石，拱手辞谢', hint: '隐忍藏拙 · 先取资粮，来日再算旧账',
         outcome: {
-          text: '你笑眯眯弯腰把灵石袋捡起来掂了掂：「林少主大气，这门亲事退得好。」\n\n众人只当你是软骨头。只有你自己知道，那张玉书背面沾了林昊一缕本命灵气——足够日后精准寻仇。',
+          text: '你神色平静地弯腰拾起灵石袋掂了掂：「林少主爽快，此约就此作罢。」\n\n旁人只当你畏势低头。唯有你清楚，那张退盟玉书背面留有林昊一缕本命灵气——来日万里追索，绝不会认错人。',
           effects: { stones: 80, attrs: { 道心: 4, 悟性: 3 }, flag: { 忍辱藏锋: true, 宿敌林昊: true } },
-          log: '收下退婚灵石，暗记林昊气息',
+          log: '收下退盟灵石，暗记林昊灵气',
         },
       },
       {
@@ -10159,7 +10236,7 @@ const WEBNOVEL_EXPANSION = [
   {
     id: 'wn_oath_2', title: '决战 · 问道台赴约', pool: 'story', tier: 4, weight: 0, minRealm: 1,
     once: true,
-    text: (s) => `三年期满，落霞城演武广场人山人海。\n\n高台之上，林昊一袭金纹法袍，已然筑基，脚下浮着一柄上品灵剑。见你缓步登台，他冷笑道：「${s.flags['忍辱藏锋'] ? '当日捡灵石的软脚虾，竟真敢来送死？' : '你若现在跪下磕三个头，我便只废你修为，留你一命。'}」`,
+    text: (s) => `三年期满，落霞城演武广场人山人海。\n\n高台之上，林昊一袭金纹法袍，已然筑基，脚下悬着一柄上品灵剑。见你缓步登台，他冷笑道：「${s.flags['忍辱藏锋'] ? '当日低头拾灵石的散修，今日倒真敢登台送死？' : '你若现在跪下磕三个头，我便只废你修为，留你一命。'}」`,
     choices: [
       {
         label: '拔剑登台，正面碾压！', hint: '宿命对决 · 击败筑基天骄林昊',
@@ -10402,7 +10479,7 @@ const WEBNOVEL_EXPANSION = [
     text: '苍穹裂开百里金缝，三名身披白玉甲胄的「上界巡查使」踏云降临，威压笼罩九州。\n\n为首银甲使者俯视下界众宗，声音冷漠如宣旨：「下界灵脉衰减，即日起每百年收缴九成灵石与天骄骨血入仙库。{name}，你既已入化神，便替本使掌管征缴吧。」',
     choices: [
       {
-        label: '冷笑抽剑：「下界的灵气，轮不到上界来割韭菜！」', hint: '逆天伐仙 · 硬撼上界金甲使者，名震万古',
+        label: '冷笑抽剑：「下界苍生灵脉，岂容尔等肆意盘剥！」', hint: '逆天伐仙 · 硬撼上界金甲使者，名震九州',
         combat: {
           enemy: 'demon_king',
           win: {
@@ -10477,10 +10554,10 @@ const WEBNOVEL_EXPANSION = [
         },
       },
       {
-        label: '【龟息诀/天机镜】早已看穿埋伏，引官道护卫巡逻队撞个正着', hint: '借刀杀人 · 无伤白嫖声望',
+        label: '【龟息诀/天机镜】早已识破埋伏，引城防巡逻队撞个正着', hint: '借势除害 · 无伤得赏赐与声望',
         require: 'flag("金手指_苟道") || flag("金手指_天机镜")', requireHint: '需龟息诀或天机镜',
         outcome: {
-          text: '你早绕道引来落霞城执法队，三名劫修当场被擒。执法队长拱手谢你举报有功，赏下百枚灵石！',
+          text: '你早已绕道引来落霞城执法巡卫，三名劫修当场束手就擒。巡卫统领拱手谢你示警有功，赏下百余灵石。',
           effects: { stones: 150, reputation: 45, attrs: { 悟性: 2 } },
         },
       },
@@ -11065,7 +11142,7 @@ class Game {
     if (!node) return [];
     const s = this.state;
     if (s.scene.result && !s.scene.result.combatPrompt) {
-      return [{ index: 0, label: s.scene.result.ending ? '看完此生' : '继续', hint: '', action: 'continue', effect: 'primary' }];
+      return [{ index: 0, label: s.scene.result.ending ? '观此生终章' : '继续前行', hint: '', action: 'continue', effect: 'primary' }];
     }
     const list = node.choices || [];
     const out = [];
@@ -11261,12 +11338,11 @@ class Game {
     const c = this.state.char;
     const realm = REALMS[c.realm];
     const pool = [
-      '灵气顺着经脉走了一圈，像一条温热的蛇。',
-      '你听见自己的血流声，慢慢和呼吸对上了。',
-      '丹田里的那团气又大了一点，边缘变得清晰。',
-      '窗外从黑到白，你没有睁眼。',
-      '有一瞬间，你觉得自己不是坐在蒲团上，而是浮在半空。',
-      `${realm.name}的关口像一堵墙，你每天用额头撞它一下，墙没动，你也没退。`,
+      '灵气循周天经脉游走，如春水润物，缓缓沉入丹田气海。',
+      '一呼一吸与山风相应，识海澄净，尘念俱消。',
+      '丹田气旋又凝实了一圈，灵压隐隐外溢，衣袂无风自动。',
+      '月升日落，静室灯火明灭，你双目微阖，神游太虚。',
+      `灵力一遍遍冲刷着${realm.name}壁垒，虽未即刻破关，根基已更见浑厚。`,
     ];
     return pool[this.rng.int(0, pool.length - 1)];
   }
@@ -11284,11 +11360,11 @@ class Game {
       return;
     }
     const flavor = [
-      '你在山道上走了半日，只遇见一个挑柴的老翁。他看了你一眼，说：年轻人，山里有雾。',
-      '溪水很凉。你洗了把脸，看见水里自己的影子比昨天瘦。',
-      '林子里有野兽的脚印，比你的手掌还大。你跟了一段，脚印消失了。',
-      '你在破庙里躲雨，神像的脸被人凿掉了。供桌上还有半块冷掉的饼。',
-      '远处的城镇亮着灯。你忽然不想过去。',
+      '山道雾重，你偶遇一名负薪老者。他遥指云深处，叮嘱你前山妖气未散。',
+      '寒潭水清如镜，你掬水洗尘，只觉周身疲惫一扫而空。',
+      '密林深处留着数道深逾三寸的兽爪印，你循迹追出三里，终究被山雾遮断。',
+      '你在荒废山神庙避雨，断碑残香间似乎残留着百年前某位剑修的剑痕。',
+      '远山灯火如星，尘世烟火近在咫尺，你伫立片刻，终究转身重入云雾。',
     ];
     s.scene.result = { text: this.rng.pick(flavor), lines };
     this.afterAction();
@@ -11619,8 +11695,8 @@ class Game {
     s.char.demon = Math.max(0, s.char.demon - d);
     s.char.injuries = Math.max(0, s.char.injuries - 1);
     s.counters.settle = (s.counters.settle || 0) + 1;
-    lines.push(`你静坐一月，心魔 -${d}。`);
-    s.scene.result = { text: '你什么也没做。这很难。', lines };
+    lines.push(`焚香调息三月，心魔 -${d}，内伤渐愈。`);
+    s.scene.result = { text: '你熄去灵火，于静室中独坐听松。识海翻涌的杂念如潮退去，道心重归清朗。', lines, fx: 'heal' };
     this.afterAction();
     this.emit();
   }
@@ -13215,31 +13291,18 @@ const fxCanvas = new SpiritCanvas($('fx-canvas'));
 const sfx = new SoundFX();
 const pixelStage = new PixelStage($('title-pixel-canvas'), $('scene-pixel-canvas'));
 
-const SPEED_MODES = [
-  { id: 'normal', label: '墨', title: '文字速度：从容（点此切换）', ms: 16, div: 220 },
-  { id: 'fast', label: '快', title: '文字速度：疾书（点此切换）', ms: 10, div: 75 },
-  { id: 'instant', label: '瞬', title: '文字速度：瞬显（点此切换）', ms: 0, div: 1 },
-];
-
 const ui = {
   originId: null,
   goldenFingerId: 'gf_bottle',
   gender: '女',
   rolledRoot: null,
   rerollUsed: false,
-  typing: null,
   codexTab: 'achievements',
   saveMode: 'save',
   mobileTab: 'story',
   lastAchCount: null,
   lastSnapshot: null,
-  speedIdx: 0,
 };
-
-try {
-  const savedSpeed = Number(localStorage.getItem('wendao.v3.speed') || 0);
-  if (savedSpeed >= 0 && savedSpeed < SPEED_MODES.length) ui.speedIdx = savedSpeed;
-} catch { /* ignore */ }
 
 /* ---------------------------------- 启动 ---------------------------------- */
 
@@ -13258,13 +13321,6 @@ function boot() {
 }
 
 function syncPreferenceButtons() {
-  const sp = SPEED_MODES[ui.speedIdx];
-  const btnSpeed = $('btn-speed');
-  if (btnSpeed) {
-    btnSpeed.textContent = sp.label;
-    btnSpeed.title = sp.title;
-    btnSpeed.classList.toggle('is-on', ui.speedIdx > 0);
-  }
   const btnSound = $('btn-sound');
   if (btnSound) {
     btnSound.textContent = sfx.enabled ? '声' : '静';
@@ -13655,10 +13711,12 @@ function renderSceneBanner() {
   $('scene-banner-loc').textContent = `${c.location} · ${theme.caption}`;
 
   const hud = $('scene-combat-hud');
+  const banner = $('scene-banner');
   if (game.state.scene.id === 'combat' && game.state.combat) {
     const cb = game.state.combat;
     const pct = Math.max(0, Math.min(100, Math.round((cb.hp / cb.maxHp) * 100)));
     hud.hidden = false;
+    banner.classList.add('has-hud');
     hud.innerHTML = `
       <div class="combat-hud-row">
         <b>敌手 · ${escapeHtml(cb.enemy.name)}</b>
@@ -13669,6 +13727,7 @@ function renderSceneBanner() {
   } else if (game.state.scene.id === 'tribulation' && game.state.tribulation) {
     const t = game.state.tribulation;
     hud.hidden = false;
+    banner.classList.add('has-hud');
     hud.innerHTML = `
       <div class="combat-hud-row">
         <b>九霄雷阵 · ${REALMS[c.realm]?.name || ''}之劫</b>
@@ -13684,6 +13743,7 @@ function renderSceneBanner() {
     `;
   } else {
     hud.hidden = true;
+    banner.classList.remove('has-hud');
     hud.innerHTML = '';
   }
 }
@@ -13851,54 +13911,25 @@ function renderStory(deltas = []) {
     .join('');
 
   const el = $('scene-text');
-  el.dataset.full = text;
-  const sp = SPEED_MODES[ui.speedIdx];
-  if (sp.ms === 0 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    clearInterval(ui.typing);
-    ui.typing = null;
-    el.textContent = text;
-    renderChoices();
-    return;
-  }
-  typewrite(el, text, sp, () => renderChoices());
-}
-
-function typewrite(el, text, sp, done) {
-  clearInterval(ui.typing);
-  el.textContent = '';
-  let i = 0;
-  const step = Math.max(1, Math.round(text.length / sp.div));
-  ui.typing = setInterval(() => {
-    i += step;
-    el.textContent = text.slice(0, i);
-    if (i >= text.length) {
-      clearInterval(ui.typing);
-      ui.typing = null;
-      el.textContent = text;
-      done?.();
-    }
-  }, sp.ms);
-  el.onclick = () => {
-    if (ui.typing) {
-      clearInterval(ui.typing);
-      ui.typing = null;
-      el.textContent = text;
-      done?.();
-    }
-  };
+  el.textContent = text;
+  el.classList.remove('is-reveal');
+  void el.offsetWidth;
+  el.classList.add('is-reveal');
+  renderChoices();
 }
 
 function renderChoices() {
   const wrap = $('choices');
   wrap.innerHTML = '';
   const list = game.choices();
+  const isHubGrid = game.state.scene.id === 'hub' && !game.state.scene.result && list.length > 3;
+  wrap.classList.toggle('is-hub-grid', isHubGrid);
   list.forEach((ch, i) => {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'choice' + (ch.effect === 'primary' || ch.effect === 'highlight' ? ' is-primary' : '');
     btn.disabled = Boolean(ch.disabled);
     btn.dataset.index = String(i);
-    btn.style.animationDelay = `${Math.min(i * 30, 180)}ms`;
     const reason = ch.disabled && ch.reason ? ` <span class="reason">（${escapeHtml(ch.reason)}）</span>` : '';
     btn.innerHTML = `
       <span class="num">${i + 1}</span>
@@ -13917,12 +13948,6 @@ function ageLabel(months) {
 }
 
 function pick(index) {
-  if (ui.typing) {
-    const el = $('scene-text');
-    clearInterval(ui.typing);
-    ui.typing = null;
-    el.textContent = el.dataset.full || el.textContent;
-  }
   const prev = snapshotChar();
   const res = game.choose(index);
   handleResult(res, prev);
@@ -13961,7 +13986,6 @@ function handleResult(res, prev = null) {
 function scrollStory() {
   const sc = $('story-scroll');
   if (sc) sc.scrollTop = 0;
-  if (window.innerWidth < 1100) window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function announceNewAchievements() {
@@ -13971,7 +13995,7 @@ function announceNewAchievements() {
   if (now > ui.lastAchCount) {
     const newest = ACHIEVEMENTS.filter((a) => meta[a.id]).slice(-1)[0];
     if (newest) {
-      toast(`成就解锁 · ${newest.name}`, 'gold');
+      toast(`道途留名 · ${newest.name}`, 'gold');
       sfx.play('chime');
     }
     ui.lastAchCount = now;
@@ -13987,12 +14011,12 @@ function startReincarnation(meta) {
   ui.lastSnapshot = null;
   $('btn-roll').disabled = true;
   document.querySelectorAll('.origin-card').forEach((c) => c.classList.remove('is-active'));
-  $('create-hint').textContent = `第 ${meta.cycle || 1} 世 · 轮回点 ${meta.karmaPoints || 0}。择一出身与金手指，再问仙途。`;
+  $('create-hint').textContent = `第 ${meta.cycle || 1} 世 · 轮回点 ${meta.karmaPoints || 0}。重择出身与伴生机缘，再问仙途。`;
   renderTalents();
   seedTitleMeta();
   showScreen('create');
   sfx.play('breakthrough');
-  toast('喝下孟婆汤。前尘尽忘，唯有道心还在。', 'gold');
+  toast('一碗忘川水落肚，前尘如烟散尽，唯有一缕道心长存。', 'gold');
 }
 
 /* ---------------------------------- 移动端导航 / 储物使用 ---------------------------------- */
@@ -14039,12 +14063,6 @@ function wireMobileNav() {
 /* ---------------------------------- 顶栏 / 弹层 ---------------------------------- */
 
 function wireTopbar() {
-  $('btn-speed').addEventListener('click', () => {
-    ui.speedIdx = (ui.speedIdx + 1) % SPEED_MODES.length;
-    try { localStorage.setItem('wendao.v3.speed', String(ui.speedIdx)); } catch { /* ignore */ }
-    syncPreferenceButtons();
-    toast(SPEED_MODES[ui.speedIdx].title.split('（')[0]);
-  });
   $('btn-sound').addEventListener('click', () => {
     const on = sfx.toggle();
     syncPreferenceButtons();
@@ -14259,14 +14277,6 @@ function wireKeyboard() {
     }
     if ($('game-screen').hidden) return;
     if (document.querySelector('.overlay:not([hidden])')) return;
-    if (ui.typing) {
-      const el = $('scene-text');
-      clearInterval(ui.typing);
-      ui.typing = null;
-      el.textContent = el.dataset.full || el.textContent;
-      renderChoices();
-      return;
-    }
     if (e.key === 's' || e.key === 'S') { e.preventDefault(); openSave('save'); return; }
     if (e.key === 'l' || e.key === 'L') { e.preventDefault(); openSave('load'); return; }
     if (e.key === 'c' || e.key === 'C') { e.preventDefault(); openCodex(); return; }
@@ -14296,15 +14306,7 @@ function escapeHtml(s) {
 
 function exposeDebug() {
   window.__game = game;
-  window.advanceTime = () => {
-    if (ui.typing) {
-      clearInterval(ui.typing);
-      ui.typing = null;
-      const el = $('scene-text');
-      el.textContent = el.dataset.full || el.textContent;
-      renderChoices();
-    }
-  };
+  window.advanceTime = () => {};
   window.render_game_to_text = () => JSON.stringify({
     screen: $('game-screen').hidden ? ($('create-screen').hidden ? 'title' : 'create') : 'game',
     scene: game.state?.scene?.id || null,

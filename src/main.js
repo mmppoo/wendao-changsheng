@@ -19,31 +19,18 @@ const fxCanvas = new SpiritCanvas($('fx-canvas'));
 const sfx = new SoundFX();
 const pixelStage = new PixelStage($('title-pixel-canvas'), $('scene-pixel-canvas'));
 
-const SPEED_MODES = [
-  { id: 'normal', label: '墨', title: '文字速度：从容（点此切换）', ms: 16, div: 220 },
-  { id: 'fast', label: '快', title: '文字速度：疾书（点此切换）', ms: 10, div: 75 },
-  { id: 'instant', label: '瞬', title: '文字速度：瞬显（点此切换）', ms: 0, div: 1 },
-];
-
 const ui = {
   originId: null,
   goldenFingerId: 'gf_bottle',
   gender: '女',
   rolledRoot: null,
   rerollUsed: false,
-  typing: null,
   codexTab: 'achievements',
   saveMode: 'save',
   mobileTab: 'story',
   lastAchCount: null,
   lastSnapshot: null,
-  speedIdx: 0,
 };
-
-try {
-  const savedSpeed = Number(localStorage.getItem('wendao.v3.speed') || 0);
-  if (savedSpeed >= 0 && savedSpeed < SPEED_MODES.length) ui.speedIdx = savedSpeed;
-} catch { /* ignore */ }
 
 /* ---------------------------------- 启动 ---------------------------------- */
 
@@ -62,13 +49,6 @@ function boot() {
 }
 
 function syncPreferenceButtons() {
-  const sp = SPEED_MODES[ui.speedIdx];
-  const btnSpeed = $('btn-speed');
-  if (btnSpeed) {
-    btnSpeed.textContent = sp.label;
-    btnSpeed.title = sp.title;
-    btnSpeed.classList.toggle('is-on', ui.speedIdx > 0);
-  }
   const btnSound = $('btn-sound');
   if (btnSound) {
     btnSound.textContent = sfx.enabled ? '声' : '静';
@@ -459,10 +439,12 @@ function renderSceneBanner() {
   $('scene-banner-loc').textContent = `${c.location} · ${theme.caption}`;
 
   const hud = $('scene-combat-hud');
+  const banner = $('scene-banner');
   if (game.state.scene.id === 'combat' && game.state.combat) {
     const cb = game.state.combat;
     const pct = Math.max(0, Math.min(100, Math.round((cb.hp / cb.maxHp) * 100)));
     hud.hidden = false;
+    banner.classList.add('has-hud');
     hud.innerHTML = `
       <div class="combat-hud-row">
         <b>敌手 · ${escapeHtml(cb.enemy.name)}</b>
@@ -473,6 +455,7 @@ function renderSceneBanner() {
   } else if (game.state.scene.id === 'tribulation' && game.state.tribulation) {
     const t = game.state.tribulation;
     hud.hidden = false;
+    banner.classList.add('has-hud');
     hud.innerHTML = `
       <div class="combat-hud-row">
         <b>九霄雷阵 · ${REALMS[c.realm]?.name || ''}之劫</b>
@@ -488,6 +471,7 @@ function renderSceneBanner() {
     `;
   } else {
     hud.hidden = true;
+    banner.classList.remove('has-hud');
     hud.innerHTML = '';
   }
 }
@@ -655,54 +639,25 @@ function renderStory(deltas = []) {
     .join('');
 
   const el = $('scene-text');
-  el.dataset.full = text;
-  const sp = SPEED_MODES[ui.speedIdx];
-  if (sp.ms === 0 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    clearInterval(ui.typing);
-    ui.typing = null;
-    el.textContent = text;
-    renderChoices();
-    return;
-  }
-  typewrite(el, text, sp, () => renderChoices());
-}
-
-function typewrite(el, text, sp, done) {
-  clearInterval(ui.typing);
-  el.textContent = '';
-  let i = 0;
-  const step = Math.max(1, Math.round(text.length / sp.div));
-  ui.typing = setInterval(() => {
-    i += step;
-    el.textContent = text.slice(0, i);
-    if (i >= text.length) {
-      clearInterval(ui.typing);
-      ui.typing = null;
-      el.textContent = text;
-      done?.();
-    }
-  }, sp.ms);
-  el.onclick = () => {
-    if (ui.typing) {
-      clearInterval(ui.typing);
-      ui.typing = null;
-      el.textContent = text;
-      done?.();
-    }
-  };
+  el.textContent = text;
+  el.classList.remove('is-reveal');
+  void el.offsetWidth;
+  el.classList.add('is-reveal');
+  renderChoices();
 }
 
 function renderChoices() {
   const wrap = $('choices');
   wrap.innerHTML = '';
   const list = game.choices();
+  const isHubGrid = game.state.scene.id === 'hub' && !game.state.scene.result && list.length > 3;
+  wrap.classList.toggle('is-hub-grid', isHubGrid);
   list.forEach((ch, i) => {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'choice' + (ch.effect === 'primary' || ch.effect === 'highlight' ? ' is-primary' : '');
     btn.disabled = Boolean(ch.disabled);
     btn.dataset.index = String(i);
-    btn.style.animationDelay = `${Math.min(i * 30, 180)}ms`;
     const reason = ch.disabled && ch.reason ? ` <span class="reason">（${escapeHtml(ch.reason)}）</span>` : '';
     btn.innerHTML = `
       <span class="num">${i + 1}</span>
@@ -721,12 +676,6 @@ function ageLabel(months) {
 }
 
 function pick(index) {
-  if (ui.typing) {
-    const el = $('scene-text');
-    clearInterval(ui.typing);
-    ui.typing = null;
-    el.textContent = el.dataset.full || el.textContent;
-  }
   const prev = snapshotChar();
   const res = game.choose(index);
   handleResult(res, prev);
@@ -765,7 +714,6 @@ function handleResult(res, prev = null) {
 function scrollStory() {
   const sc = $('story-scroll');
   if (sc) sc.scrollTop = 0;
-  if (window.innerWidth < 1100) window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function announceNewAchievements() {
@@ -775,7 +723,7 @@ function announceNewAchievements() {
   if (now > ui.lastAchCount) {
     const newest = ACHIEVEMENTS.filter((a) => meta[a.id]).slice(-1)[0];
     if (newest) {
-      toast(`成就解锁 · ${newest.name}`, 'gold');
+      toast(`道途留名 · ${newest.name}`, 'gold');
       sfx.play('chime');
     }
     ui.lastAchCount = now;
@@ -791,12 +739,12 @@ function startReincarnation(meta) {
   ui.lastSnapshot = null;
   $('btn-roll').disabled = true;
   document.querySelectorAll('.origin-card').forEach((c) => c.classList.remove('is-active'));
-  $('create-hint').textContent = `第 ${meta.cycle || 1} 世 · 轮回点 ${meta.karmaPoints || 0}。择一出身与金手指，再问仙途。`;
+  $('create-hint').textContent = `第 ${meta.cycle || 1} 世 · 轮回点 ${meta.karmaPoints || 0}。重择出身与伴生机缘，再问仙途。`;
   renderTalents();
   seedTitleMeta();
   showScreen('create');
   sfx.play('breakthrough');
-  toast('喝下孟婆汤。前尘尽忘，唯有道心还在。', 'gold');
+  toast('一碗忘川水落肚，前尘如烟散尽，唯有一缕道心长存。', 'gold');
 }
 
 /* ---------------------------------- 移动端导航 / 储物使用 ---------------------------------- */
@@ -843,12 +791,6 @@ function wireMobileNav() {
 /* ---------------------------------- 顶栏 / 弹层 ---------------------------------- */
 
 function wireTopbar() {
-  $('btn-speed').addEventListener('click', () => {
-    ui.speedIdx = (ui.speedIdx + 1) % SPEED_MODES.length;
-    try { localStorage.setItem('wendao.v3.speed', String(ui.speedIdx)); } catch { /* ignore */ }
-    syncPreferenceButtons();
-    toast(SPEED_MODES[ui.speedIdx].title.split('（')[0]);
-  });
   $('btn-sound').addEventListener('click', () => {
     const on = sfx.toggle();
     syncPreferenceButtons();
@@ -1063,14 +1005,6 @@ function wireKeyboard() {
     }
     if ($('game-screen').hidden) return;
     if (document.querySelector('.overlay:not([hidden])')) return;
-    if (ui.typing) {
-      const el = $('scene-text');
-      clearInterval(ui.typing);
-      ui.typing = null;
-      el.textContent = el.dataset.full || el.textContent;
-      renderChoices();
-      return;
-    }
     if (e.key === 's' || e.key === 'S') { e.preventDefault(); openSave('save'); return; }
     if (e.key === 'l' || e.key === 'L') { e.preventDefault(); openSave('load'); return; }
     if (e.key === 'c' || e.key === 'C') { e.preventDefault(); openCodex(); return; }
@@ -1100,15 +1034,7 @@ function escapeHtml(s) {
 
 function exposeDebug() {
   window.__game = game;
-  window.advanceTime = () => {
-    if (ui.typing) {
-      clearInterval(ui.typing);
-      ui.typing = null;
-      const el = $('scene-text');
-      el.textContent = el.dataset.full || el.textContent;
-      renderChoices();
-    }
-  };
+  window.advanceTime = () => {};
   window.render_game_to_text = () => JSON.stringify({
     screen: $('game-screen').hidden ? ($('create-screen').hidden ? 'title' : 'create') : 'game',
     scene: game.state?.scene?.id || null,

@@ -368,32 +368,39 @@ async function main() {
     // ---------------- 移动端 390×844 适配验证 ----------------
     await setViewport(390, 844, true);
     await goto(url);
-    await sleep(300);
+    await sleep(250);
     await client.screenshot(path.join(ART, '07-title-mobile.jpg'));
     await click('#btn-continue');
-    await finishTyping();
-    await sleep(300);
+    await sleep(220);
+    // 回到洞府主界面截一张无滚动双列固定屏截图
+    await client.eval('window.__game.state.combat = null; window.__game.state.scene = { id: "hub", result: null }; window.__render();');
+    await sleep(220);
     await client.screenshot(path.join(ART, '08-game-mobile.jpg'));
 
-    await check('移动端 390×844 精简顶条、五栏切换与零横向溢出', async () => {
+    await check('移动端 390×844 固定单屏、无打字延迟、双列行动栏与零溢出', async () => {
       const m1 = await client.eval(`(() => ({
         hud: getComputedStyle(document.getElementById('mobile-hud')).display !== 'none',
         nav: getComputedStyle(document.getElementById('mobile-nav')).display !== 'none',
-        overflow: document.documentElement.scrollWidth > window.innerWidth
+        hubGrid: document.getElementById('choices').classList.contains('is-hub-grid'),
+        overflowX: document.documentElement.scrollWidth > window.innerWidth,
+        overflowY: document.documentElement.scrollHeight > window.innerHeight + 2,
+        textReady: (document.getElementById('scene-text').textContent || '').length > 10
       }))()`);
-      if (!m1.hud || !m1.nav || m1.overflow) throw new Error(JSON.stringify(m1));
+      if (!m1.hud || !m1.nav || !m1.hubGrid || m1.overflowX || m1.overflowY || !m1.textReady) {
+        throw new Error(JSON.stringify(m1));
+      }
       await click('#mobile-nav .mnav-btn[data-mtab="char"]');
-      await sleep(180);
+      await sleep(150);
       await client.screenshot(path.join(ART, '09-char-mobile.jpg'));
       const charVis = await client.eval('getComputedStyle(document.getElementById("char-panel")).display !== "none"');
       await click('#mobile-nav .mnav-btn[data-mtab="bag"]');
-      await sleep(150);
+      await sleep(120);
       await click('#mobile-nav .mnav-btn[data-mtab="log"]');
-      await sleep(150);
+      await sleep(120);
       const logVis = await client.eval('getComputedStyle(document.getElementById("log-list")).display !== "none"');
       await click('#mobile-nav .mnav-btn[data-mtab="story"]');
       if (!charVis || !logVis) throw new Error(`charVis=${charVis}, logVis=${logVis}`);
-      return 'HUD+道躯+储物+行止 零溢出';
+      return '固定单屏 + 2列行动栏 + 零横纵溢出';
     });
 
     // ---------------- 单文件离线版验证 ----------------

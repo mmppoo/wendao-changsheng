@@ -104,7 +104,6 @@
         </div>
       </div>
       <div class="topbar-actions">
-        <button id="btn-speed" class="icon-btn" title="切换文字速度">墨</button>
         <button id="btn-sound" class="icon-btn" title="音效开关">静</button>
         <button id="btn-save" class="icon-btn" title="存档 (S)">存</button>
         <button id="btn-load" class="icon-btn" title="读档 (L)">读</button>
@@ -120,22 +119,22 @@
       <!-- 左侧：像素道躯与属性 -->
       <aside class="rail rail-left" id="char-panel" aria-label="角色属性"></aside>
 
-      <!-- 中央：实时像素实景 + 风闻条 + 叙事交互舞台 -->
+      <!-- 中央：实时像素实景 + 风闻条 + 固定视口叙事区 + 底部固定行动栏 -->
       <section class="story" aria-live="polite">
+        <figure class="scene-banner" id="scene-banner">
+          <canvas id="scene-pixel-canvas" class="scene-pixel-canvas" width="280" height="118" aria-label="当前场景像素实景"></canvas>
+          <div class="scene-banner-grad"></div>
+          <div class="scene-banner-meta">
+            <span class="scene-kicker" id="scene-kicker">人间</span>
+            <span class="scene-banner-loc" id="scene-banner-loc">青牛村</span>
+          </div>
+          <div class="scene-combat-hud" id="scene-combat-hud" hidden></div>
+        </figure>
+
+        <!-- 天机阁修真界风闻栏 -->
+        <div class="rumor-bar" id="rumor-bar" aria-label="修真界风闻"></div>
+
         <div class="story-scroll" id="story-scroll">
-          <figure class="scene-banner" id="scene-banner">
-            <canvas id="scene-pixel-canvas" class="scene-pixel-canvas" width="280" height="118" aria-label="当前场景像素实景"></canvas>
-            <div class="scene-banner-grad"></div>
-            <div class="scene-banner-meta">
-              <span class="scene-kicker" id="scene-kicker">人间</span>
-              <span class="scene-banner-loc" id="scene-banner-loc">青牛村</span>
-            </div>
-            <div class="scene-combat-hud" id="scene-combat-hud" hidden></div>
-          </figure>
-
-          <!-- 天机阁修真界风闻滚动栏 -->
-          <div class="rumor-bar" id="rumor-bar" aria-label="修真界风闻"></div>
-
           <div class="scene-body">
             <div class="scene-head">
               <h2 class="scene-title" id="scene-title">青牛村</h2>
@@ -143,11 +142,15 @@
             </div>
             <div class="scene-text" id="scene-text"></div>
             <div class="scene-lines" id="scene-lines"></div>
-            <div class="choices" id="choices" role="group" aria-label="选择"></div>
           </div>
         </div>
+
+        <div class="story-dock" id="story-dock">
+          <div class="choices" id="choices" role="group" aria-label="选择"></div>
+        </div>
+
         <footer class="story-foot">
-          <span id="hint-line">按 1–9 选择 · 空格/点击正文跳过打字 · S 存档 · L 读档</span>
+          <span id="hint-line">按 1–9 选择 · 空格继续 · S 存档 · L 读档 · C 图鉴</span>
           <span id="turn-line"></span>
         </footer>
       </section>
@@ -247,13 +250,13 @@
   <div class="overlay" id="menu-overlay" hidden>
     <div class="modal modal-narrow px-frame">
       <header class="modal-head">
-        <h3>暂歇</h3>
+        <h3>道途菜单</h3>
         <button class="icon-btn" data-close="menu-overlay" aria-label="关闭">×</button>
       </header>
       <div class="menu-list">
-        <button class="menu-item" id="menu-restart">重开一世</button>
+        <button class="menu-item" id="menu-restart">重入轮回</button>
         <button class="menu-item" id="menu-title">返回卷首</button>
-        <button class="menu-item" id="menu-help">玩法说明</button>
+        <button class="menu-item" id="menu-help">修行指引</button>
         <button class="menu-item" id="menu-about">关于本作</button>
       </div>
       <div class="menu-body" id="menu-body"></div>
