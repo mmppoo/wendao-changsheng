@@ -27,6 +27,7 @@ import { REGIONS, REGION_BY_ID } from '../data/regions.js';
 import {
   SECT_LIBRARIES, SECT_TREASURY, SECT_MISSIONS, SECT_PROMOTION_TRIALS,
 } from '../data/sectContent.js';
+import { WORLD_TECHNIQUES, WORLD_TECH_BY_ID } from '../data/techniques.js';
 import { NPCS, NPC_BY_ID } from '../data/npcs.js';
 
 const MONTHS = 1;
@@ -103,6 +104,7 @@ export class Game {
       case 'sectTreasury': return this.buildSectTreasuryNode();
       case 'sectPromote': return this.buildSectPromoteNode();
       case 'cityHub': return this.buildCityNode();
+      case 'techShop': return this.buildTechShopNode();
       case 'tianji': return this.buildTianjiNode();
       case 'npcHub': return this.buildNpcHubNode();
       case 'npcDetail': return this.buildNpcDetailNode();
@@ -922,12 +924,74 @@ export class Game {
       text: `长街灯火如昼，丹阁、器坊、拍卖行与天机茶楼鳞次栉比。\n\n当前身家：${c.stones.toLocaleString()} 灵石 | 州域货源随所在灵域品阶变化。`,
       choices: [
         { id: 'city_market', label: `${region.name}商行`, hint: '一月 · 买卖本州特产丹药、破境灵丹与炼器灵材', action: 'market' },
+        { id: 'city_techs', label: '古籍秘阁', hint: '以灵石购藏九州散落功法典籍（凡→仙六品）', action: 'openTechShop' },
         { id: 'city_auction', label: '万宝阁 · 暗拍盛会', hint: '一月 · 竞拍洗髓丹、高阶破境宝丹与仙材', action: 'auction' },
         { id: 'city_tianji', label: '天机阁 · 潜龙榜', hint: '查阅九州排名、本界风闻与历世战力评估', action: 'openTianji' },
         { id: 'back_hub', label: '离开坊市', hint: '返回主界面', action: 'backHub' },
       ],
       subhub: true,
     };
+  }
+
+  act_openTechShop() {
+    this.state.scene = { id: 'techShop', result: null };
+    this.emit();
+  }
+
+  buildTechShopNode() {
+    const s = this.state;
+    const c = s.char;
+    const gradeOrder = { 凡: 0, 黄: 1, 玄: 2, 地: 3, 天: 4, 仙: 6 };
+    const gradePrice = { 凡: 180, 黄: 680, 玄: 2200, 地: 7500, 天: 26000, 仙: 95000 };
+    const discount = (c.sectId === 'wanbao' ? 0.85 : 1) * (c.goldenFingerId === 'gf_karma_mirror' ? 0.88 : 1);
+    const available = WORLD_TECHNIQUES.filter((t) => (gradeOrder[t.grade] ?? 0) <= c.realm + 1 && !c.techniques.some((x) => x.id === t.id));
+    const shown = available.slice(0, 8);
+    const choices = shown.map((t) => {
+      const price = Math.round((gradePrice[t.grade] || 800) * discount);
+      return {
+        id: `wt_${t.id}`,
+        label: `【${t.grade}】${t.name}（${price.toLocaleString()} 灵石）`,
+        hint: `修炼+${Math.round(t.speed * 100)}% 攻+${Math.round(t.atk * 100)}% · 绝招「${t.artName}」`,
+        action: 'buyWorldTech',
+        params: { techId: t.id, price },
+        disabled: c.stones < price,
+        reason: `需 ${price.toLocaleString()} 灵石`,
+      };
+    });
+    choices.push({ id: 'back_city', label: '离开秘阁', hint: '', action: 'openCity' });
+    return {
+      id: 'techShop',
+      title: '仙城 · 古籍秘阁',
+      text: `阁内玉简浩如烟海，收录九州散落之凡、黄、玄、地、天、仙六品功法。境界越高，阁主方肯取出更深层的镇阁孤本。\n\n已参悟功法：${c.techniques.length} 部 | 持有灵石：${c.stones.toLocaleString()}`,
+      choices,
+    };
+  }
+
+  act_buyWorldTech(ch) {
+    const s = this.state;
+    const c = s.char;
+    const { techId, price } = ch.params || {};
+    const t = WORLD_TECH_BY_ID[techId];
+    if (!t) return;
+    if (c.techniques.some((x) => x.id === t.id)) return { error: '已参悟此典' };
+    if (c.stones < price) return { error: `灵石不足（需 ${price.toLocaleString()}）` };
+    c.stones -= price;
+    s.stats.goldSpent += price;
+    c.techniques.push({
+      id: t.id, name: t.name, speed: t.speed, atk: t.atk, def: t.def,
+      lifespan: t.lifespan, lawId: t.lawId, artName: t.artName, grade: t.grade,
+    });
+    const lawLines = t.lawId ? gainLawExp(s, 30, t.lawId) : [];
+    recomputeDerived(c);
+    this.pushLog(`购藏参悟${t.name}`);
+    s.scene.result = {
+      text: `你拂去玉简微尘，神识沉入其中，瞬息领悟【${t.grade}品】${t.name}与绝招「${t.artName}」！\n\n${t.desc}`,
+      lines: [`消耗 ${price.toLocaleString()} 灵石，习得 ${t.name}`, ...lawLines],
+      fx: 'breakthrough',
+      returnTo: 'techShop',
+    };
+    this.afterAction();
+    this.emit();
   }
 
   act_openTianji() {
@@ -1012,6 +1076,17 @@ export class Game {
       },
       { id: 'npc_spar', label: '切磋试剑', hint: '一月 · 无论胜负皆获实战修为与好感', action: 'npcSpar', params: { npcId: npc.id } },
     ];
+    const teachTech = npc.teachTechId ? WORLD_TECH_BY_ID[npc.teachTechId] : null;
+    if (teachTech && rel >= 35 && !c.techniques.some((t) => t.id === teachTech.id)) {
+      choices.push({
+        id: 'npc_teach',
+        label: `请教绝学 · ${teachTech.name}`,
+        hint: `好感已深，获赠【${teachTech.grade}品】绝学「${teachTech.artName}」`,
+        action: 'npcTeach',
+        params: { npcId: npc.id, techId: teachTech.id },
+        effect: 'primary',
+      });
+    }
     if (npc.id === 'npc_su' && rel >= 40 && !s.flags['道侣']) {
       choices.push({
         id: 'npc_bond',
@@ -1116,6 +1191,31 @@ export class Game {
     }, { lines: [...lines, `你向${npc.name}拱手请教，双方点到为止！`] });
   }
 
+  act_npcTeach(ch) {
+    const s = this.state;
+    const c = s.char;
+    const npc = NPC_BY_ID[ch.params?.npcId];
+    const tech = WORLD_TECH_BY_ID[ch.params?.techId];
+    if (!npc || !tech) return;
+    if (c.techniques.some((t) => t.id === tech.id)) return { error: '已习得此绝学' };
+    c.techniques.push({
+      id: tech.id, name: tech.name, speed: tech.speed, atk: tech.atk, def: tech.def,
+      lifespan: tech.lifespan, lawId: tech.lawId, artName: tech.artName, grade: tech.grade,
+    });
+    const lawLines = tech.lawId ? gainLawExp(s, 50, tech.lawId) : [];
+    recomputeDerived(c);
+    this.pushLog(`${npc.name}传授${tech.name}`);
+    s.scene.result = {
+      text: `${npc.name}沉吟片刻，以指代笔在虚空中划出七道微光道纹：「你我相交莫逆，这套【${tech.grade}品】${tech.name}便赠予你参悟罢！」\n\n${tech.desc}`,
+      lines: [`习得 ${tech.name}（绝招：${tech.artName}）`, ...lawLines],
+      fx: 'breakthrough',
+      returnTo: 'npcDetail',
+      returnMeta: { npcId: npc.id },
+    };
+    this.afterAction();
+    this.emit();
+  }
+
   act_npcBond(ch) {
     const s = this.state;
     const c = s.char;
@@ -1166,6 +1266,15 @@ export class Game {
       s.counters.deep_streak = 0;
     }
     lines.push(...advanceMonths(s, months, this.rng));
+    if (months >= 24 && this.rng.chance(0.22)) {
+      const innerEv = pickEvent(s, this.rng, this, 'inner');
+      if (innerEv) {
+        this.openEvent(innerEv);
+        this.afterAction();
+        this.emit();
+        return;
+      }
+    }
     s.scene.result = {
       text: this.cultivationFlavor(months),
       lines,
@@ -1535,6 +1644,15 @@ export class Game {
     if (this.rng.chance(0.25)) {
       lines.push('灵光一闪，你豁然贯通一道滞涩多年的道纹（道心额外 +2）。');
       c.attrs.道心 += 2;
+    }
+    if (this.rng.chance(0.24)) {
+      const innerEv = pickEvent(s, this.rng, this, 'inner');
+      if (innerEv) {
+        this.openEvent(innerEv);
+        this.afterAction();
+        this.emit();
+        return;
+      }
     }
     s.scene.result = {
       text: '你于静室中闭目内观，将平生所学与天地法则逐一印证，识海渐生清光。',

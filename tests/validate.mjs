@@ -9,6 +9,7 @@ import { SECTS } from '../src/data/sects.js';
 import { REGIONS, REGION_BY_ID } from '../src/data/regions.js';
 import { LAW_BY_ID } from '../src/data/realms.js';
 import { SECT_LIBRARIES, SECT_TREASURY, SECT_MISSIONS, SECT_PROMOTION_TRIALS } from '../src/data/sectContent.js';
+import { WORLD_TECHNIQUES, ALL_TECHNIQUES, WORLD_TECH_BY_ID } from '../src/data/techniques.js';
 import { NPCS } from '../src/data/npcs.js';
 import { parseExpression } from '../src/engine/expr.js';
 
@@ -126,7 +127,11 @@ for (const r of REGIONS) {
 for (const npc of NPCS) {
   if (!REGION_BY_ID[npc.region]) errors.push(`道友 ${npc.id} region 不存在: ${npc.region}`);
   if (npc.sparEnemy && !ENEMY_BY_ID[npc.sparEnemy]) errors.push(`道友 ${npc.id} sparEnemy 不存在: ${npc.sparEnemy}`);
+  if (npc.teachTechId && !WORLD_TECH_BY_ID[npc.teachTechId]) errors.push(`道友 ${npc.id} teachTechId 不存在: ${npc.teachTechId}`);
   for (const it of npc.likeItems || []) if (!ITEM_BY_ID[it]) errors.push(`道友 ${npc.id} likeItem 不存在: ${it}`);
+}
+for (const wt of WORLD_TECHNIQUES) {
+  if (wt.lawId && !LAW_BY_ID[wt.lawId]) errors.push(`九州功法 ${wt.id} lawId 不存在: ${wt.lawId}`);
 }
 
 const totalWeight = ROOTS.reduce((a, r) => a + r.weight, 0);
@@ -139,6 +144,10 @@ const report = {
   achievements: ACHIEVEMENTS.length,
   hiddenAchievements: ACHIEVEMENTS.filter((a) => a.hidden).length,
   endings: ENDINGS.length,
+  techniques: ALL_TECHNIQUES.length,
+  items: Object.keys(ITEM_BY_ID).length,
+  enemies: Object.keys(ENEMY_BY_ID).length,
+  npcs: NPCS.length,
   roots: ROOTS.length,
   sects: SECTS.length,
   rootWeight: Math.round(totalWeight * 100) / 100,

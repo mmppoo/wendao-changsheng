@@ -7,14 +7,16 @@ import {
   REALMS, realmLabel, LAW_BY_ID, LAW_STAGES, DAO_BASE_QUALITIES, GOLDEN_CORE_QUALITIES,
 } from './data/realms.js';
 import { SECTS, SECT_BY_ID, SECT_RANKS } from './data/sects.js';
-import { REGION_BY_ID } from './data/regions.js';
+import { REGIONS, REGION_BY_ID } from './data/regions.js';
+import { ALL_TECHNIQUES } from './data/techniques.js';
+import { NPCS } from './data/npcs.js';
 import { ACHIEVEMENTS } from './data/achievements.js';
 import { ENDINGS } from './data/endings.js';
 import { ITEM_BY_ID } from './data/items.js';
 import { TALENTS } from './data/talents.js';
 import { GOLDEN_FINGERS, GOLDEN_FINGER_BY_ID, PET_BY_ID } from './data/golden_fingers.js';
 import { SpiritCanvas, SoundFX, triggerScreenFx } from './ui/fx.js';
-import { PixelStage, sceneThemeFor, renderPixelPortrait } from './ui/pixelScene.js';
+import { PixelStage, sceneThemeFor, renderPixelPortrait, PIXEL_ICONS } from './ui/pixelScene.js';
 
 function formatNum(n) {
   if (!Number.isFinite(n)) return '∞';
@@ -394,12 +396,48 @@ function renderAll(deltas = []) {
   renderCharPanel();
   renderSceneBanner();
   renderRumorBar();
+  renderSubhubBar();
   renderStory(deltas);
   renderRightPanel();
   const c = game.state.char;
   $('top-realm').textContent = `${c.name} · ${realmLabel(c)}`;
   $('brand-mark').textContent = REALMS[c.realm]?.name?.[0] || '道';
   $('turn-line').textContent = `第 ${game.state.turn} 回合 · ${Math.floor(c.age / 12)}岁`;
+}
+
+function renderSubhubBar() {
+  const bar = $('subhub-bar');
+  if (!bar) return;
+  const s = game.state;
+  const id = s?.scene?.id;
+  const c = s?.char;
+  const meta = {
+    cave: { icon: 'cave', title: '洞府静室', badge: `月修 ${formatNum(Math.round((REALMS[c.realm]?.monthly || 1) * 5))}+`, cls: '' },
+    regionHub: { icon: 'region', title: c.location, badge: `探索 ${Math.min(100, Math.round(c.regionProgress?.[c.regionId] || 0))}%`, cls: 'jade' },
+    regionMap: { icon: 'region', title: '九州舆图', badge: `已游 ${(c.visitedLocations || []).length}/8 州`, cls: 'jade' },
+    sectHall: { icon: 'sect', title: SECT_BY_ID[c.sectId]?.name || '仙门大殿', badge: `贡献 ${formatNum(c.contribution)}`, cls: '' },
+    sectMissions: { icon: 'mission', title: '宗门任务堂', badge: `贡献 ${formatNum(c.contribution)}`, cls: '' },
+    sectLibrary: { icon: 'book', title: '宗门藏经阁', badge: `贡献 ${formatNum(c.contribution)}`, cls: '' },
+    sectTreasury: { icon: 'treasury', title: '宗门宝库', badge: `贡献 ${formatNum(c.contribution)}`, cls: '' },
+    sectPromote: { icon: 'promote', title: '晋升考核台', badge: `${SECT_RANKS[c.sectRank || 0]?.name || '外门'}`, cls: '' },
+    cityHub: { icon: 'city', title: '仙城坊市', badge: `灵石 ${formatNum(c.stones)}`, cls: '' },
+    market: { icon: 'city', title: `${c.location}商行`, badge: `灵石 ${formatNum(c.stones)}`, cls: '' },
+    sell: { icon: 'city', title: '出售灵材', badge: `灵石 ${formatNum(c.stones)}`, cls: '' },
+    techShop: { icon: 'book', title: '古籍秘阁', badge: `灵石 ${formatNum(c.stones)}`, cls: '' },
+    auction: { icon: 'treasury', title: '万宝暗拍', badge: `灵石 ${formatNum(c.stones)}`, cls: '' },
+    tianji: { icon: 'fate', title: '天机潜龙榜', badge: `声望 ${c.reputation}`, cls: 'jade' },
+    npcHub: { icon: 'npc', title: '红尘道友', badge: `${NPCS.length} 位名宿`, cls: 'jade' },
+    npcDetail: { icon: 'npc', title: '道友论道', badge: `灵石 ${formatNum(c.stones)}`, cls: 'jade' },
+  }[id];
+  if (!meta || s.scene.result) {
+    bar.innerHTML = '';
+    return;
+  }
+  bar.innerHTML = `
+    <button type="button" class="subhub-back" data-subhub-back="1">← 主界</button>
+    <span class="subhub-title">${PIXEL_ICONS[meta.icon] || ''}${escapeHtml(meta.title)}</span>
+    <span class="subhub-badges"><span class="subhub-badge ${meta.cls}">${escapeHtml(meta.badge)}</span></span>
+  `;
 }
 
 function renderRumorBar() {
@@ -414,18 +452,30 @@ function renderMobileHud() {
   const realm = REALMS[c.realm];
   const expNeed = Number.isFinite(realm.exp) ? Math.round(realm.exp * Math.pow(realm.growth, c.layer)) : Infinity;
   const expPct = expNeed === Infinity ? 100 : Math.min(100, Math.floor((c.exp / expNeed) * 100));
+  const hpPct = Math.max(0, Math.min(100, Math.round((c.hp / c.maxHp) * 100)));
+  const mpPct = Math.max(0, Math.min(100, Math.round((c.mp / c.maxMp) * 100)));
   const remain = Math.max(0, Math.floor((c.lifespan - c.age) / 12));
   $('mobile-hud').innerHTML = `
-    <div class="mhud-pills">
-      <span class="c-hp">血 <b>${formatNum(c.hp)}/${formatNum(c.maxHp)}</b></span>
-      <span class="c-mp">灵 <b>${formatNum(c.mp)}/${formatNum(c.maxMp)}</b></span>
-      <span class="c-gold">石 <b>${formatNum(c.stones)}</b></span>
-      <span>攻 <b>${formatNum(game.playerAtk())}</b></span>
-      <span>寿 <b>${remain}年</b></span>
-      ${c.demon > 0 ? `<span class="c-demon">魔 <b>${Math.round(c.demon)}</b></span>` : ''}
+    <div class="mhud-bars">
+      <div class="mhud-bar-item c-hp">
+        <div class="mhud-bar-head"><span>血</span><b>${formatNum(c.hp)}/${formatNum(c.maxHp)}</b></div>
+        <div class="bar hp"><i style="width:${hpPct}%"></i></div>
+      </div>
+      <div class="mhud-bar-item c-mp">
+        <div class="mhud-bar-head"><span>灵</span><b>${formatNum(c.mp)}/${formatNum(c.maxMp)}</b></div>
+        <div class="bar mp"><i style="width:${mpPct}%"></i></div>
+      </div>
+      <div class="mhud-bar-item c-exp">
+        <div class="mhud-bar-head"><span>修</span><b>${expPct}%</b></div>
+        <div class="bar exp"><i style="width:${expPct}%"></i></div>
+      </div>
     </div>
-    <div class="mhud-exp">
-      <div class="bar exp"><i style="width:${expPct}%"></i></div>
+    <div class="mhud-meta">
+      <span class="c-gold">石 <b>${formatNum(c.stones)}</b></span>
+      <span class="c-jade">攻 <b>${formatNum(game.playerAtk())}</b></span>
+      <span>寿 <b>${remain}年</b></span>
+      <span>${escapeHtml(c.location)}</span>
+      ${c.demon > 0 ? `<span class="c-demon">魔 <b>${Math.round(c.demon)}</b></span>` : ''}
     </div>
   `;
 }
@@ -496,7 +546,7 @@ function kickerFor(node) {
   if (id === 'cave') return '洞府修行';
   if (id === 'regionHub' || id === 'regionMap') return '九州历练';
   if (id === 'sectHall' || id === 'sectMissions' || id === 'sectLibrary' || id === 'sectTreasury' || id === 'sectPromote') return '仙门大殿';
-  if (id === 'cityHub' || id === 'tianji') return '仙城坊市';
+  if (id === 'cityHub' || id === 'tianji' || id === 'techShop') return '仙城坊市';
   if (id === 'npcHub' || id === 'npcDetail') return '红尘道友';
   if (id === 'combat') return '斗法';
   if (id === 'tribulation') return '九霄天劫';
@@ -684,6 +734,25 @@ function renderStory(deltas = []) {
   renderChoices();
 }
 
+function choiceIconFor(ch) {
+  const map = {
+    breakthrough: 'breakthrough', revisitGate: 'breakthrough',
+    openCave: 'cave', cultivate: 'cave', comprehend: 'book', settle: 'pill', alchemy: 'pill', refine: 'sword', bottleRipen: 'pill', bloodCultivate: 'art',
+    openRegion: 'region', regionExplore: 'region', regionHunt: 'sword', secretRealm: 'region', openRegionMap: 'region', gotoRegion: 'region',
+    openSectHall: 'sect', sectRecruit: 'sect', joinSect: 'sect',
+    openSectMissions: 'mission', runSectMission: 'mission', sectTask: 'mission',
+    openSectLibrary: 'book', buySectManual: 'book',
+    openSectTreasury: 'treasury', buySectTreasury: 'treasury',
+    sectVein: 'vein', openSectPromote: 'promote', sectPromote: 'promote',
+    openCity: 'city', market: 'city', buyItem: 'city', sellMenu: 'city', sellItem: 'city', openTechShop: 'book', buyWorldTech: 'book', auction: 'treasury', bidItem: 'treasury', openTianji: 'fate',
+    openNpcHub: 'npc', openNpc: 'npc', npcChat: 'npc', npcGift: 'treasury', npcSpar: 'sword', npcTeach: 'book', npcBond: 'npc',
+    fate: 'fate',
+    combatAttack: 'sword', combatSpell: 'spell', combatArt: 'art', combatGuard: 'guard', combatPill: 'pill', combatFlee: 'flee',
+  };
+  const key = map[ch.action];
+  return key ? PIXEL_ICONS[key] : null;
+}
+
 function renderChoices() {
   const wrap = $('choices');
   wrap.innerHTML = '';
@@ -698,8 +767,9 @@ function renderChoices() {
     btn.disabled = Boolean(ch.disabled);
     btn.dataset.index = String(i);
     const reason = ch.disabled && ch.reason ? ` <span class="reason">（${escapeHtml(ch.reason)}）</span>` : '';
+    const iconSvg = choiceIconFor(ch);
     btn.innerHTML = `
-      <span class="num">${i + 1}</span>
+      ${iconSvg ? `<span class="choice-icon" aria-hidden="true">${iconSvg}</span>` : `<span class="num">${i + 1}</span>`}
       <span class="choice-main">
         <span class="label">${escapeHtml(ch.label)}</span>
         ${ch.hint ? `<span class="hint">${escapeHtml(ch.hint)}${reason}</span>` : reason ? `<span class="hint">${reason}</span>` : ''}
@@ -799,11 +869,25 @@ function setMobileTab(tab) {
 }
 
 function wireMobileNav() {
+  const navIconMap = { story: 'cave', char: 'char', bag: 'bag', log: 'log', codex: 'codex' };
+  document.querySelectorAll('#mobile-nav .mnav-btn').forEach((btn) => {
+    const glyph = btn.querySelector('.mnav-glyph');
+    const icon = PIXEL_ICONS[navIconMap[btn.dataset.mtab]];
+    if (glyph && icon) glyph.innerHTML = icon;
+  });
+
   $('mobile-nav').addEventListener('click', (e) => {
     const btn = e.target.closest('.mnav-btn');
     if (!btn) return;
     sfx.play('click');
     setMobileTab(btn.dataset.mtab);
+  });
+
+  $('subhub-bar')?.addEventListener('click', (e) => {
+    if (!e.target.closest('[data-subhub-back]') || !game.state) return;
+    sfx.play('click');
+    game.act_backHub();
+    renderAll();
   });
 
   $('right-bag-wrap').addEventListener('click', (e) => {
@@ -939,9 +1023,9 @@ function wireOverlays() {
   });
   $('menu-about').addEventListener('click', () => {
     $('menu-body').innerHTML = `
-      <h4>关于《问道长生》v4.0</h4>
-      <p>HD-2D 国风像素仙侠 × inkle/ink 互动叙事引擎，实时像素实景画布随州域、境界、灵根、宗门与伴生灵兽动态演化。</p>
-      <p>内置 376 个叙事节点、八大州域、十三宗完整大殿（52 部藏经阁功法 / 76 件宝库奇珍 / 39 项宗门悬赏）、十道天地法则、25 类特性敌手、24 重结局与 177 项成就。</p>
+      <h4>关于《问道长生》v5.0 · 大千世界</h4>
+      <p>16-bit HD-2D 国风像素仙侠 RPG × inkle/ink 互动叙事引擎，实时像素画布随八大州域、十重境界、宗门与灵兽动态演化。</p>
+      <p>内置 1,090+ 叙事节点、123 重独立结局、142 部功法典籍、105 种奇珍丹器、66 类特性敌手、12 位红尘道友、八大九州灵域、十三宗六阶大殿与 270 项成就。</p>
     `;
   });
 }
@@ -1022,7 +1106,7 @@ function renderCodex() {
         <small>修炼 ×${r.speed} · 突破 ${r.breakBonus >= 0 ? '+' : ''}${r.breakBonus}% · 概率 ${pct}%</small>
       </div>`;
     }).join('')}</div>`;
-  } else {
+  } else if (ui.codexTab === 'sects') {
     const joined = new Set(meta.sectsJoined || []);
     sum.textContent = `历世已拜入 ${joined.size} / ${SECTS.length} 座仙门`;
     body.innerHTML = `<div class="ach-grid">${SECTS.map((s) => {
@@ -1030,7 +1114,31 @@ function renderCodex() {
       return `<div class="ach ${got ? 'done' : 'locked'}">
         <b>${escapeHtml(s.name)}（${s.align}）</b>
         <p>${escapeHtml(s.desc)}</p>
-        <small>条件：${escapeHtml(s.requirement)} · 功法：${escapeHtml(s.technique)}</small>
+        <small>条件：${escapeHtml(s.requirement)} · 传承：${escapeHtml(s.technique)}</small>
+      </div>`;
+    }).join('')}</div>`;
+  } else if (ui.codexTab === 'techniques') {
+    const owned = new Set((game.state?.char?.techniques || []).map((t) => t.id));
+    sum.textContent = `本世已参悟 ${owned.size} / ${ALL_TECHNIQUES.length} 部九州功法（宗门 78 + 九州散落 64）`;
+    body.innerHTML = `<div class="ach-grid">${ALL_TECHNIQUES.map((t) => {
+      const got = owned.has(t.id);
+      return `<div class="ach ${got ? 'done' : 'locked'}">
+        <b style="color:${gradeColor(t.grade)}">${escapeHtml(t.name)} · ${t.grade}品</b>
+        <p>${escapeHtml(t.desc)}</p>
+        <small>来源：${escapeHtml(t.source || '九州秘传')} · 绝招「${escapeHtml(t.artName || '无')}」</small>
+      </div>`;
+    }).join('')}</div>`;
+  } else {
+    const progMap = game.state?.char?.regionProgress || {};
+    const visited = new Set(game.state?.char?.visitedLocations || []);
+    sum.textContent = `已踏足 ${visited.size} / ${REGIONS.length} 大九州灵域`;
+    body.innerHTML = `<div class="ach-grid">${REGIONS.map((r) => {
+      const pct = Math.min(100, Math.round(progMap[r.id] || 0));
+      const got = visited.has(r.name) || pct > 0;
+      return `<div class="ach ${got ? 'done' : 'locked'}">
+        <b>${escapeHtml(r.name)}（探索 ${pct}%）</b>
+        <p>${escapeHtml(r.desc)}</p>
+        <small>门槛：${REALMS[r.minRealm]?.name || '炼气'}境 · 危险：${'★'.repeat(r.danger)} · ${escapeHtml(r.specialty)}</small>
       </div>`;
     }).join('')}</div>`;
   }

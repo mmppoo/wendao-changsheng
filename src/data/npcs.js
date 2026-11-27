@@ -1,6 +1,7 @@
 /**
- * 九州知名修士名录（红尘羁绊系统）：
- * 支持拜访论道、切磋试剑、赠礼结缘与高好感专属同行/助战/双修事件。
+ * 九州知名修士名录（v5.0 红尘羁绊系统）：
+ * 共 12 位名宿（完整保留原有 6 位 ID，新增 6 位涵盖东海、中州、北荒、妖森、昆仑、九霄）。
+ * 支持拜访论道、切磋试剑、赠礼结缘、好感 ≥ 35 授艺（teachTechId）与高好感专属同行/道侣终章。
  */
 export const NPCS = [
   {
@@ -11,7 +12,8 @@ export const NPCS = [
     region: 'luoxia',
     minRealm: 0,
     relationKey: '苏晚晴',
-    likeItems: ['lingcao', 'huiling_dan', 'dao_fruit'],
+    likeItems: ['lingcao', 'huiling_dan', 'dao_fruit', 'hanbing_jian'],
+    teachTechId: 'wt_hanmei_jian',
     desc: '青衣玉笛，剑法如雪落寒梅。平日独行落霞城与山野茶摊之间，性情清冷却极重情义。',
     chatLines: [
       '「修仙百年，最难得的不是长生，而是走到半山腰时，回头还有人认得你的名字。」',
@@ -19,7 +21,7 @@ export const NPCS = [
       '「落霞城的雪快停了。若你无事，陪我在梅树下喝完这壶残茶罢。」',
     ],
     sparEnemy: 'cultivator',
-    perkDesc: '好感 ≥ 20 可共论剑道（悟性/道心大涨）；好感 ≥ 40 可结为道侣，解锁「双宿」「红尘仙」终章。',
+    perkDesc: '好感 ≥ 20 可共论剑道（悟性/道心大涨）；好感 ≥ 35 亲授《寒梅落雪剑诀》；好感 ≥ 40 可结为道侣。',
   },
   {
     id: 'npc_lu',
@@ -29,7 +31,8 @@ export const NPCS = [
     region: 'zhongzhou',
     minRealm: 0,
     relationKey: '陆沉舟',
-    likeItems: ['xuantie', 'leimu', 'xingchen_sha'],
+    likeItems: ['xuantie', 'leimu', 'xingchen_sha', 'jianyi_dan'],
+    teachTechId: 'wt_guhong_jian',
     desc: '一生只问剑不问俗事的痴人，背负一柄无鞘铁剑，逢人便想试三招。',
     chatLines: [
       '「好剑！方才那一式若再慢半息，我便要出鞘了。」',
@@ -37,7 +40,7 @@ export const NPCS = [
       '「来日若你我皆入化神，中州剑台之上，必有一战。」',
     ],
     sparEnemy: 'sword_phantom',
-    perkDesc: '切磋无论胜负皆可领悟剑意与根骨；好感 ≥ 30 可获赠剑道心得并提升剑道法则。',
+    perkDesc: '切磋无论胜负皆可领悟剑意与根骨；好感 ≥ 35 可获传天阶《孤鸿断空剑经》。',
   },
   {
     id: 'npc_yao',
@@ -47,7 +50,8 @@ export const NPCS = [
     region: 'yaosen',
     minRealm: 1,
     relationKey: '药尘子',
-    likeItems: ['lingcao', 'qiannian_lingcao', 'tiandao_lotus'],
+    likeItems: ['lingcao', 'qiannian_lingcao', 'tiandao_lotus', 'biling_yu'],
+    teachTechId: 'wt_shennong_dan',
     desc: '常年隐居苍茫妖森边缘的焦须老道，炼丹十炉炸三炉，却偶能炼出惊世圣药。',
     chatLines: [
       '「火候差一分，仙丹变焦炭；心性差一分，道基成虚土。」',
@@ -55,7 +59,7 @@ export const NPCS = [
       '「等你结丹那日，若凑不齐结金丹，提两株千年灵草来寻老夫。」',
     ],
     sparEnemy: 'jindan_elder',
-    perkDesc: '赠药草可大幅提升好感并换取丹道指点，好感 ≥ 25 拜访概率获赠珍稀丹药！',
+    perkDesc: '赠药草可大幅提升好感并获赠珍稀丹药；好感 ≥ 35 授以地阶《神农百草丹经》。',
   },
   {
     id: 'npc_gu',
@@ -65,7 +69,8 @@ export const NPCS = [
     region: 'luoxia',
     minRealm: 1,
     relationKey: '顾青衣',
-    likeItems: ['faze_canpian', 'xingchen_sha', 'xukong_jing'],
+    likeItems: ['faze_canpian', 'xingchen_sha', 'xukong_jing', 'yangshen_dan'],
+    teachTechId: 'wt_tianji_ce',
     desc: '天机阁编纂《潜龙榜》的神秘女史，手中朱笔一落，便牵动九州英杰名动四方。',
     chatLines: [
       '「天机阁从不替人改命，只记下那些敢跟天道讨价还价的名字。」',
@@ -73,7 +78,7 @@ export const NPCS = [
       '「你的名字已在潜龙榜上挪了十几位——风头太盛时，记得留一张保命底牌。」',
     ],
     sparEnemy: 'ancient_puppet',
-    perkDesc: '拜访可窥探九州秘闻、提升神识与气运，并指点高阶法则与秘境方位。',
+    perkDesc: '拜访可窥探九州秘闻、提升神识与气运；好感 ≥ 35 传授天阶《天机因果策》。',
   },
   {
     id: 'npc_xuesha',
@@ -83,7 +88,8 @@ export const NPCS = [
     region: 'beihuang',
     minRealm: 2,
     relationKey: '血煞老祖',
-    likeItems: ['longxue_jing', 'xueyu', 'pozhang_dan'],
+    likeItems: ['longxue_jing', 'xueyu', 'pozhang_dan', 'xuesha_jing'],
+    teachTechId: 'wt_xuehe_sha',
     desc: '盘踞北荒血池千年的魔道巨擘，谈笑间血河倒卷，唯独赏识狠辣果决之辈。',
     chatLines: [
       '「正道满口仁义，暗地里抢灵脉比谁都狠。在本座这儿，弱肉强食写明在门匾上！」',
@@ -91,7 +97,7 @@ export const NPCS = [
       '「天劫？天道要杀你，你便把雷劈回去！」',
     ],
     sparEnemy: 'blood_elder',
-    perkDesc: '与其论道可修习血海杀意、暴涨攻击与修为（须防心魔与业力反噬）。',
+    perkDesc: '论道可暴涨攻击与血海杀意；好感 ≥ 35 亲授天阶《血河焚天魔功》（须防心魔）。',
   },
   {
     id: 'npc_lin',
@@ -101,7 +107,8 @@ export const NPCS = [
     region: 'luoxia',
     minRealm: 0,
     relationKey: '林昊',
-    likeItems: ['zhuji_dan', 'xuantie'],
+    likeItems: ['zhuji_dan', 'xuantie', 'peiyuan_dan', 'jianqi_fu'],
+    teachTechId: 'wt_qingshuang_jue',
     desc: '落霞城林氏当代少主，天资出众却傲气凌人，是你初入仙途时最锋利的一块磨刀石。',
     chatLines: [
       '「散修终究是散修，没有世家底蕴，你拿什么去争金丹大道？」',
@@ -109,7 +116,123 @@ export const NPCS = [
       '「若连你我都挡不住上界威压，九州还有何颜面？」',
     ],
     sparEnemy: 'cultivator',
-    perkDesc: '宿敌线核心人物：可正面约战雪耻，亦可在高境界化敌为友、共抗上界强敌。',
+    perkDesc: '宿敌线核心人物：化敌为友且好感 ≥ 35 时，可互换家传玄阶《青霜破岳诀》。',
+  },
+
+  // ==================== 新增 6 位九州名宿 ====================
+  {
+    id: 'npc_yunni',
+    name: '云霓仙子',
+    title: '归墟听潮阁主',
+    align: '正',
+    region: 'guixu',
+    minRealm: 2,
+    relationKey: '云霓仙子',
+    likeItems: ['guixu_shanhu', 'bihai_xuanbing', 'xingchen_sha', 'canghai_zhu'],
+    teachTechId: 'wt_canghai_jue',
+    desc: '立于东海海眼礁阁之上的白衣女修，掌潮汐剑阵、护海商百年，眸光澄澈如海面映星。',
+    chatLines: [
+      '「归墟万水皆归于下，可人若不逆潮而行，便只能随波逐流、化作海底枯骨。」',
+      '「海眼之下沉着三座上古龙宫。你若胆气足够，改日随我乘灵舟共探潮汐。」',
+      '「星辰倒映海面时，剑意最清。你且收心静气，听一听这万里涛声。」',
+    ],
+    sparEnemy: 'coral_demon',
+    perkDesc: '论道可大幅提升星辰感悟与神识；好感 ≥ 35 亲授地阶《沧海潮汐星剑录》。',
+  },
+  {
+    id: 'npc_xuanji',
+    name: '玄机老人',
+    title: '天工奇门宗师',
+    align: '中',
+    region: 'zhongzhou',
+    minRealm: 2,
+    relationKey: '玄机老人',
+    likeItems: ['xuantie', 'leimu', 'xukong_jing', 'xingchen_sha'],
+    teachTechId: 'wt_qianji_zhen',
+    desc: '游走中州与机关城的独臂巧匠，腰挂玄铁算盘，袖藏百具微型战傀，性情古怪却极爱奇材。',
+    chatLines: [
+      '「剑修喊打喊杀，丹修成日烧炭，哪及我阵器双绝——站着不动便叫强敌粉身碎骨！」',
+      '「这块玄铁成色勉强入眼。若寻得星辰砂与虚空晶，老夫替你把本命法宝重铸一番。」',
+      '「机关城为什么走了三百年？嘿嘿，它在躲一个天上掉下来的老家伙。」',
+    ],
+    sparEnemy: 'iron_titan',
+    perkDesc: '拜访可精进阵道感悟与炼器心得；好感 ≥ 35 亲传地阶《千机八阵图录》。',
+  },
+  {
+    id: 'npc_moheng',
+    name: '墨衡',
+    title: '黄泉摆渡人',
+    align: '邪',
+    region: 'beihuang',
+    minRealm: 3,
+    relationKey: '墨衡',
+    likeItems: ['jiuyou_mingjing', 'xuesha_jing', 'huaying_dan', 'bingxin_dan'],
+    teachTechId: 'wt_huangquan_yin',
+    desc: '撑一叶乌木孤舟游弋北荒黄泉渡的青面鬼帝，不属正魔，唯独替世间未了执念摆渡旧债。',
+    chatLines: [
+      '「生人过河要给渡资，死人过河要留执念。道友今夜来此，带了哪一样？」',
+      '「别怕阴气。比九幽黄泉更冷的东西，往往藏在活人的心口里。」',
+      '「等你哪天寿元将尽、阴差上门时，报我墨衡的名字，兴许能多赊你三十年。」',
+    ],
+    sparEnemy: 'soul_reaper',
+    perkDesc: '论道可淬炼神识与空间幽冥之意；好感 ≥ 35 传授地阶《黄泉摆渡幽冥印》。',
+  },
+  {
+    id: 'npc_baiyou',
+    name: '白幽',
+    title: '青丘月华妖尊',
+    align: '中',
+    region: 'yaosen',
+    minRealm: 2,
+    relationKey: '白幽',
+    likeItems: ['yaoshou_neidan', 'qiannian_lingcao', 'longxue_jing', 'zhuyan_dan'],
+    teachTechId: 'wt_qingqiu_huan',
+    desc: '栖于苍茫妖森深处月泉古洞的白尾狐尊，笑语温婉却曾一念迷杀三位金丹剑修。',
+    chatLines: [
+      '「人族总爱把妖兽写成吃人的恶煞，可你们拔剑抢灵脉时，眼里可比山中饿狼亮多了。」',
+      '「能走进月泉洞却没迷失在幻雾里，你这双眼睛倒还算干净。」',
+      '「若肯拿几枚百年灵药换我一壶月华酒，我便告诉你妖森深处那座古修洞府的暗门。」',
+    ],
+    sparEnemy: 'demon_general',
+    perkDesc: '赠奇珍可大增魅力与气运；好感 ≥ 35 亲授玄阶妖族秘典《青丘月华幻典》。',
+  },
+  {
+    id: 'npc_qinglian',
+    name: '青莲剑仙',
+    title: '昆仑遗世剑尊',
+    align: '正',
+    region: 'kunlun',
+    minRealm: 5,
+    relationKey: '青莲剑仙',
+    likeItems: ['kunlun_shenmu', 'dao_fruit', 'faze_canpian', 'guangyin_lu'],
+    teachTechId: 'wt_qinglian_jian',
+    desc: '昆仑墟界残殿中独酌的青衫中年，腰悬翠玉酒葫芦，传闻三万年前曾一剑斩退上界仙将。',
+    chatLines: [
+      '「天门之后并非净土，不过是另一座更大的名利场罢了——可即便如此，人总要自己推开看一眼。」',
+      '「剑到极处无招无式，你心里还装着胜负二字，这柄剑便还沉了三分。」',
+      '「好酒配好剑。来，陪老夫浮一大白，再接我三成剑意试试！」',
+    ],
+    sparEnemy: 'blade_saint_shade',
+    perkDesc: '切磋论道可令剑道与大道感悟暴涨；好感 ≥ 35 传授天阶绝学《太古青莲剑歌》。',
+  },
+  {
+    id: 'npc_siming',
+    name: '司命星君',
+    title: '九霄观星谪仙',
+    align: '中',
+    region: 'jiuxiao',
+    minRealm: 7,
+    relationKey: '司命星君',
+    likeItems: ['jiuxiao_leijie', 'hundun_muqi', 'tiandao_lotus', 'xinghui_dan'],
+    teachTechId: 'wt_zhoutian_xing',
+    desc: '因私改下界命簿而被贬守九霄星台的古仙，玄袍绣满周天星斗，静候足以震碎天门之人。',
+    chatLines: [
+      '「九霄雷劫本是筛沙之网，筛掉贪生怕死之辈，也筛掉不肯低头的狂人。」',
+      '「你的命星在紫微东南亮了百年，上界那几位大人物，怕是已经低头看过你一眼了。」',
+      '「待你真能斩破裁决者雷甲之日，这卷星斗仙经，便算老夫送你的登仙贺礼。」',
+    ],
+    sparEnemy: 'thunder_tribulation_avatar',
+    perkDesc: '论道可窥破天劫玄机与星辰大道；好感 ≥ 35 亲授仙阶《周天星斗太古仙经》。',
   },
 ];
 

@@ -385,11 +385,15 @@ async function main() {
       const body = await client.eval('document.getElementById("codex-body").textContent');
       await click('#codex-tabs .tab[data-tab="sects"]');
       const sectText = await client.eval('document.getElementById("codex-body").textContent');
-      if (tabs !== 4 || !body.includes('？？？') || !sectText.includes('太玄剑宗')) {
-        throw new Error('图鉴内容异常');
+      await click('#codex-tabs .tab[data-tab="techniques"]');
+      const techSum = await client.eval('document.getElementById("codex-summary").textContent');
+      await click('#codex-tabs .tab[data-tab="regions"]');
+      const regText = await client.eval('document.getElementById("codex-body").textContent');
+      if (tabs !== 6 || !body.includes('？？？') || !sectText.includes('太玄剑宗') || !techSum.includes('142') || !regText.includes('昆仑墟界')) {
+        throw new Error(`图鉴内容异常 tabs=${tabs} techSum=${techSum}`);
       }
       await click('[data-close="codex-overlay"]');
-      return '4栏图鉴 + 隐藏遮蔽正常';
+      return '6栏图鉴(含142功法与九州) + 隐藏遮蔽正常';
     });
 
     // ---------------- 移动端 390×844 适配验证 ----------------
@@ -404,18 +408,29 @@ async function main() {
     await sleep(220);
     await client.screenshot(path.join(ART, '08-game-mobile.jpg'));
 
-    await check('移动端 390×844 固定单屏、无打字延迟、双列行动栏与零溢出', async () => {
+    await check('移动端 390×844 与 375×667 双屏固定单屏、像素图标、面包屑与零溢出', async () => {
       const m1 = await client.eval(`(() => ({
         hud: getComputedStyle(document.getElementById('mobile-hud')).display !== 'none',
+        mhudBars: document.querySelectorAll('#mobile-hud .mhud-bar-item').length,
         nav: getComputedStyle(document.getElementById('mobile-nav')).display !== 'none',
+        pxIcons: document.querySelectorAll('#choices .px-icon').length,
         hubGrid: document.getElementById('choices').classList.contains('is-hub-grid'),
         overflowX: document.documentElement.scrollWidth > window.innerWidth,
         overflowY: document.documentElement.scrollHeight > window.innerHeight + 2,
         textReady: (document.getElementById('scene-text').textContent || '').length > 10
       }))()`);
-      if (!m1.hud || !m1.nav || !m1.hubGrid || m1.overflowX || m1.overflowY || !m1.textReady) {
+      if (!m1.hud || m1.mhudBars !== 3 || !m1.nav || m1.pxIcons < 4 || !m1.hubGrid || m1.overflowX || m1.overflowY || !m1.textReady) {
         throw new Error(JSON.stringify(m1));
       }
+      // 进入仙门大殿验证移动端面包屑与 8 州域像素画布
+      await client.eval('window.__game.act_openSectHall(); window.__render();');
+      await sleep(160);
+      await client.screenshot(path.join(ART, '08b-sect-mobile.jpg'));
+      const subVis = await client.eval('Boolean(document.querySelector("#subhub-bar .subhub-back"))');
+      if (!subVis) throw new Error('移动端面包屑未显示');
+      await click('#subhub-bar .subhub-back');
+      await sleep(120);
+
       await click('#mobile-nav .mnav-btn[data-mtab="char"]');
       await sleep(150);
       await client.screenshot(path.join(ART, '09-char-mobile.jpg'));
@@ -426,8 +441,19 @@ async function main() {
       await sleep(120);
       const logVis = await client.eval('getComputedStyle(document.getElementById("log-list")).display !== "none"');
       await click('#mobile-nav .mnav-btn[data-mtab="story"]');
-      if (!charVis || !logVis) throw new Error(`charVis=${charVis}, logVis=${logVis}`);
-      return '固定单屏 + 2列行动栏 + 零横纵溢出';
+
+      // 额外验证小屏 375×667 (iPhone SE) 零溢出
+      await setViewport(375, 667, true);
+      await sleep(180);
+      await client.screenshot(path.join(ART, '10-se-mobile.jpg'));
+      const se = await client.eval(`(() => ({
+        overflowX: document.documentElement.scrollWidth > window.innerWidth,
+        overflowY: document.documentElement.scrollHeight > window.innerHeight + 2
+      }))()`);
+      if (!charVis || !logVis || se.overflowX || se.overflowY) {
+        throw new Error(`charVis=${charVis}, logVis=${logVis}, se=${JSON.stringify(se)}`);
+      }
+      return '390×844 & 375×667 固定单屏 + 3段像素条 + 像素图标 + 面包屑 + 零溢出';
     });
 
     // ---------------- 单文件离线版验证 ----------------

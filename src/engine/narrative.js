@@ -149,14 +149,14 @@ export function buildHub(game) {
     {
       id: 'open_cave',
       label: '洞府修行',
-      hint: '吐纳 · 闭关 · 参悟法则 · 炼丹祭宝',
+      hint: '闭关 · 法则 · 丹器',
       action: 'openCave',
       effect: 'quiet',
     },
     {
       id: 'open_region',
       label: '九州历练',
-      hint: `${region.name}（${progress}%）· 探险 · 秘境 · 迁徙`,
+      hint: `${region.name} ${progress}% · 探险迁徙`,
       action: 'openRegion',
     },
   );
@@ -165,14 +165,14 @@ export function buildHub(game) {
     choices.push({
       id: 'open_sect',
       label: '仙门大殿',
-      hint: `${sect.name} · ${rankName} · 藏经/宝库/任务/晋升`,
+      hint: `${sect.name} · ${rankName}`,
       action: 'openSectHall',
     });
   } else {
     choices.push({
       id: 'find_sect',
       label: '拜入仙门',
-      hint: '叩问九州十三宗山门，寻师问道',
+      hint: '叩问十三宗山门',
       action: 'sectRecruit',
     });
   }
@@ -181,19 +181,19 @@ export function buildHub(game) {
     {
       id: 'open_city',
       label: '仙城坊市',
-      hint: '州域商行 · 万宝暗拍 · 天机阁榜单',
+      hint: '商行 · 秘阁 · 暗拍',
       action: 'openCity',
     },
     {
       id: 'open_npc',
       label: '红尘道友',
-      hint: '拜访名修 · 赠礼切磋 · 问道结缘',
+      hint: '十二名修 · 论道结缘',
       action: 'openNpcHub',
     },
     {
       id: 'fate',
       label: '此生履历',
-      hint: '战力 · 法则 · 功业 · 终章总览',
+      hint: '战力 · 法则 · 终章',
       action: 'fate',
     },
   );

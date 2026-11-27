@@ -537,3 +537,35 @@ test('v4.0 九州八大灵域迁徙探索与红尘道友羁绊', () => {
   g.act_npcBond({ params: { npcId: 'npc_su' } });
   assert.equal(g.state.flags['道侣'], true);
 });
+
+test('v5.0 大千世界规模与古籍秘阁/道友传艺校验', async () => {
+  const { ALL_TECHNIQUES } = await import('../src/data/techniques.js');
+  const { ITEMS } = await import('../src/data/items.js');
+  const { ENEMIES } = await import('../src/data/enemies.js');
+  const { NPCS } = await import('../src/data/npcs.js');
+  assert.ok(EVENTS.length >= 1050, `事件节点应≥1050，当前 ${EVENTS.length}`);
+  assert.ok(ENDINGS.length >= 108, `结局数应≥108，当前 ${ENDINGS.length}`);
+  assert.ok(ALL_TECHNIQUES.length >= 138, `功法数应≥138，当前 ${ALL_TECHNIQUES.length}`);
+  assert.ok(ITEMS.length >= 95, `物品数应≥95，当前 ${ITEMS.length}`);
+  assert.ok(ENEMIES.length >= 64, `敌手数应≥64，当前 ${ENEMIES.length}`);
+  assert.ok(NPCS.length >= 12, `道友数应≥12，当前 ${NPCS.length}`);
+  assert.ok(ACHIEVEMENTS.length >= 250, `成就数应≥250，当前 ${ACHIEVEMENTS.length}`);
+
+  // 古籍秘阁购藏九州功法
+  const g = fresh();
+  g.state.char.stones = 5000;
+  g.act_openTechShop();
+  assert.equal(g.state.scene.id, 'techShop');
+  const firstBook = g.choices().find((c) => !c.disabled && !c.label.includes('离开'));
+  assert.ok(firstBook);
+  g.choose(firstBook.index);
+  assert.ok(g.state.char.techniques.length >= 1);
+
+  // 红尘道友高好感传授绝学
+  g.state.char.relations['苏晚晴'] = 40;
+  g.act_openNpc({ params: { npcId: 'npc_su' } });
+  const teach = g.choices().find((c) => c.label.includes('请教绝学'));
+  assert.ok(teach && !teach.disabled);
+  g.choose(teach.index);
+  assert.ok(g.state.char.techniques.some((t) => t.id === 'wt_hanmei_jian'));
+});
