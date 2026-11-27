@@ -158,8 +158,8 @@ export const STORY_EVENTS = [
         outcome: { text: '你迈出一步，山河在脚下远去。', effects: { realmSet: 9 }, ending: 'e_ascend', dynamicAscend: true },
       },
       {
-        label: '再等等', hint: '留在人间（三次拒绝可触发隐藏结局）',
-        outcome: { text: '你退回山巅。神将没有表情，门慢慢淡了。\n\n你听见山下有人喊你的名字。', effects: { counter: { refuse_ascend: 1 }, attrs: { 道心: 5 } } },
+        label: '再等等', hint: '抗拒天门牵引（承受天威反噬，三次拒飞升可证红尘仙）',
+        outcome: { text: '你硬顶天门威压退回山巅，气血翻涌，神魂受天道排斥剧震。神将漠然合门，天际云海渐散。', effects: { counter: { refuse_ascend: 1 }, hpPct: -0.25, demon: 12, reputation: 50 } },
       },
     ],
   },

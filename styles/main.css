@@ -1586,3 +1586,11 @@ button { cursor: pointer; }
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
   .fx-canvas { display: none; }
 }
+
+/* v6.0 寿元预警与行止录工具条 */
+.bar.life.is-warn > i { background: repeating-linear-gradient(90deg, #e6b95c 0 8px, #b88a2e 8px 10px); }
+.bar.life.is-critical > i { background: repeating-linear-gradient(90deg, #e85543 0 8px, #9e2318 8px 10px); animation: px-pulse-border 0.9s steps(2) infinite; }
+.c-warn b, .c-warn { color: #f0c260 !important; }
+.c-critical b, .c-critical { color: #ff7163 !important; }
+.log-tools { display: flex; gap: 0.35rem; margin-bottom: 0.55rem; }
+.log-tools .mini { flex: 1; font-size: 0.68rem; padding: 0.28rem 0.45rem; }

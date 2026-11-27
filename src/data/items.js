@@ -74,15 +74,15 @@ export const ITEMS = [
   },
   {
     id: 'jiuzhuan_gong', name: '《九转元功》', type: '功法', tier: '天', price: 0,
-    desc: '不知来历的残卷，每读一遍，经脉就宽一分。', technique: { speed: 0.25, attrs: { 根骨: 3 } },
+    desc: '不知来历的残卷，每读一遍，经脉就宽一分。', technique: { speed: 0.25, attrs: { 根骨: 3 }, align: '中' },
   },
   {
     id: 'wujian_jue', name: '《无剑诀》', type: '功法', tier: '天', price: 0,
-    desc: '剑不在手，剑在念。修至深处，草木皆剑。', technique: { atk: 0.3, speed: 0.1 },
+    desc: '剑不在手，剑在念。修至深处，草木皆剑。', technique: { atk: 0.3, speed: 0.1, align: '正' },
   },
   {
     id: 'changchun_gong', name: '《长春功》', type: '功法', tier: '地', price: 0,
-    desc: '木系养命之法，寿元绵长。', technique: { lifespan: 40, speed: 0.08 },
+    desc: '木系养命之法，寿元绵长。', technique: { lifespan: 40, speed: 0.08, align: '正' },
   },
   {
     id: 'jiejin_dan', name: '结金丹', type: '丹药', tier: '玄', price: 2200,
@@ -472,56 +472,142 @@ export const ITEMS = [
   {
     id: 'yujian_qingfeng', name: '《青风剑谱玉简》', type: '秘典', tier: '黄', price: 380,
     desc: '落霞城坊市偶见的古朴玉简，录有散修剑客三十六式清风轻灵剑法。',
-    technique: { grade: '黄', speed: 0.06, atk: 0.09, def: 0.02, lifespan: 0, lawId: 'sword', artName: '清风拂柳剑' },
+    technique: { grade: '黄', align: '正', speed: 0.06, atk: 0.09, def: 0.02, lifespan: 0, lawId: 'sword', artName: '清风拂柳剑' },
   },
   {
     id: 'yujian_yangshen', name: '《黄庭养气简》', type: '秘典', tier: '黄', price: 420,
     desc: '道门流传甚广的吐纳养命残简，虽少杀伐之威，却最利延年益寿、调和丹火。',
-    technique: { grade: '黄', speed: 0.08, atk: 0.03, def: 0.05, lifespan: 15, lawId: 'pill', artName: '黄庭蕴灵气' },
+    technique: { grade: '黄', align: '正', speed: 0.08, atk: 0.03, def: 0.05, lifespan: 15, lawId: 'pill', artName: '黄庭蕴灵气' },
   },
   {
     id: 'yujian_benlei', name: '《奔雷掌秘典》', type: '秘典', tier: '玄', price: 1600,
     desc: '焦黑雷纹封面的古籍，载有以掌引雷、震碎妖骨的刚猛雷法。',
-    technique: { grade: '玄', speed: 0.11, atk: 0.15, def: 0.06, lifespan: 5, lawId: 'thunder', artName: '掌中惊雷爆' },
+    technique: { grade: '玄', align: '正', speed: 0.11, atk: 0.15, def: 0.06, lifespan: 5, lawId: 'thunder', artName: '掌中惊雷爆' },
   },
   {
     id: 'yujian_xuanbing', name: '《玄冰心经残卷》', type: '秘典', tier: '玄', price: 1800,
     desc: '寒意森森的冰蚕丝帛书，修之灵力如玄冰沉静，既固防御亦缓岁华流逝。',
-    technique: { grade: '玄', speed: 0.12, atk: 0.08, def: 0.14, lifespan: 25, lawId: 'time', artName: '冰河凝霜诀' },
+    technique: { grade: '玄', align: '中', speed: 0.12, atk: 0.08, def: 0.14, lifespan: 25, lawId: 'time', artName: '冰河凝霜诀' },
   },
   {
     id: 'yujian_bagua', name: '《伏羲八卦阵简》', type: '秘典', tier: '地', price: 6800,
     desc: '以龟甲刻录的古阵玉简，参透后举手投足暗合八卦方位，进退皆如身处大阵。',
-    technique: { grade: '地', speed: 0.16, atk: 0.15, def: 0.2, lifespan: 20, lawId: 'array', artName: '八卦定乾坤' },
+    technique: { grade: '地', align: '中', speed: 0.16, atk: 0.15, def: 0.2, lifespan: 20, lawId: 'array', artName: '八卦定乾坤' },
   },
   {
     id: 'yujian_xingchen', name: '《周天星辰诀玉简》', type: '秘典', tier: '地', price: 9200,
     desc: '银辉点点的星玉简，教人夜引周天星力淬炼肉身神魂，攻守与寿元俱进。',
-    technique: { grade: '地', speed: 0.18, atk: 0.2, def: 0.18, lifespan: 35, lawId: 'star', artName: '星陨九重天' },
+    technique: { grade: '地', align: '中', speed: 0.18, atk: 0.2, def: 0.18, lifespan: 35, lawId: 'star', artName: '星陨九重天' },
   },
   {
     id: 'yujian_xukong', name: '《太虚挪移经》', type: '秘典', tier: '天', price: 42000,
     desc: '封于虚空晶匣中的上古秘卷，参悟后可借空间褶皱断界斩敌、瞬息千里。',
-    technique: { grade: '天', speed: 0.24, atk: 0.26, def: 0.22, lifespan: 50, lawId: 'space', artName: '裂空断界斩' },
+    technique: { grade: '天', align: '中', speed: 0.24, atk: 0.26, def: 0.22, lifespan: 50, lawId: 'space', artName: '裂空断界斩' },
   },
   {
     id: 'yujian_yinguo', name: '《天机因果秘录》', type: '秘典', tier: '天', price: 56000,
     desc: '天机阁外流的一卷无字天书，唯有神识透纸方见满篇因果业火妙理。',
-    technique: { grade: '天', speed: 0.25, atk: 0.24, def: 0.26, lifespan: 60, lawId: 'karma', artName: '因果业火劫' },
+    technique: { grade: '天', align: '中', speed: 0.25, atk: 0.24, def: 0.26, lifespan: 60, lawId: 'karma', artName: '因果业火劫' },
   },
   {
     id: 'yujian_xuesha', name: '《修罗战天录》', type: '秘典', tier: '天', price: 48000,
     desc: '北荒古战场出土的血纹骨简，录有修罗一脉以战养战、杀意焚天的绝学。',
-    technique: { grade: '天', speed: 0.28, atk: 0.36, def: 0.12, lifespan: 15, lawId: 'blood', artName: '血狱修罗破' },
+    technique: { grade: '天', align: '邪', speed: 0.28, atk: 0.36, def: 0.12, lifespan: 15, lawId: 'blood', artName: '血狱修罗破' },
   },
   {
     id: 'yujian_hundun', name: '《混沌太初仙典》', type: '秘典', tier: '仙', price: 280000,
     desc: '昆仑深渊重见天日的先天玉璧拓本，字字皆蕴开天辟地之象，万法归宗。',
-    technique: { grade: '仙', speed: 0.36, atk: 0.44, def: 0.36, lifespan: 120, lawId: 'chaos', artName: '太初混沌开天斩' },
+    technique: { grade: '仙', align: '中', speed: 0.36, atk: 0.44, def: 0.36, lifespan: 120, lawId: 'chaos', artName: '太初混沌开天斩' },
   },
 ];
 
 export const ITEM_BY_ID = Object.fromEntries(ITEMS.map((i) => [i.id, i]));
+
+/** 丹方体系（v6.0）：八大显式丹方，原料与成丹 ID 均严格对应 ITEM_BY_ID。 */
+export const ALCHEMY_RECIPES = [
+  {
+    id: 'yinqi_dan',
+    outputId: 'yinqi_dan',
+    name: '引气丹',
+    tier: '凡',
+    minRealm: 0,
+    baseRate: 0.78,
+    ingredients: [{ id: 'lingcao', qty: 1 }],
+    desc: '百年灵草一株入炉，文火凝气，成丹可省一月吐纳苦功。',
+  },
+  {
+    id: 'liaoshang_dan',
+    outputId: 'liaoshang_dan',
+    name: '疗伤丹',
+    tier: '黄',
+    minRealm: 0,
+    baseRate: 0.80,
+    ingredients: [{ id: 'lingcao', qty: 1 }],
+    desc: '取灵草生机炼成常备疗伤丹丸，止血生肌、回复气血。',
+  },
+  {
+    id: 'juling_dan',
+    outputId: 'juling_dan',
+    name: '聚灵丹',
+    tier: '玄',
+    minRealm: 1,
+    baseRate: 0.70,
+    ingredients: [{ id: 'lingcao', qty: 2 }],
+    desc: '双株灵草合炼聚灵丹纹，筑基与金丹修士精进修为之良药。',
+  },
+  {
+    id: 'zhuji_dan',
+    outputId: 'zhuji_dan',
+    name: '筑基丹',
+    tier: '玄',
+    minRealm: 0,
+    baseRate: 0.62,
+    ingredients: [{ id: 'lingcao', qty: 2 }, { id: 'yaoshou_neidan', qty: 1 }],
+    desc: '以百年灵草调和妖兽内丹暴烈精元，炼气冲刺筑基的核心破境丹。',
+  },
+  {
+    id: 'dahuan_dan',
+    outputId: 'dahuan_dan',
+    name: '大还丹',
+    tier: '地',
+    minRealm: 2,
+    baseRate: 0.68,
+    ingredients: [{ id: 'qiannian_lingcao', qty: 1 }],
+    desc: '千年灵草入炉凝液，重创之际亦可顷刻复原大半气血法力。',
+  },
+  {
+    id: 'jiejin_dan',
+    outputId: 'jiejin_dan',
+    name: '结金丹',
+    tier: '玄',
+    minRealm: 1,
+    baseRate: 0.58,
+    ingredients: [{ id: 'qiannian_lingcao', qty: 1 }, { id: 'yaoshou_neidan', qty: 1 }],
+    desc: '千年灵草与妖丹相融，助筑基圆满凝液结丹、稳固金丹品阶。',
+  },
+  {
+    id: 'huaying_dan',
+    outputId: 'huaying_dan',
+    name: '化婴丹',
+    tier: '地',
+    minRealm: 2,
+    baseRate: 0.54,
+    ingredients: [{ id: 'qiannian_lingcao', qty: 2 }, { id: 'biling_yu', qty: 1 }],
+    desc: '双株千年灵草配碧磷蛇胆淬炼元神，碎丹成婴时护持道基并延寿。',
+  },
+  {
+    id: 'huashen_dan',
+    outputId: 'huashen_dan',
+    name: '化神丹',
+    tier: '地',
+    minRealm: 3,
+    baseRate: 0.50,
+    ingredients: [{ id: 'qiannian_lingcao', qty: 2 }, { id: 'longxue_jing', qty: 1 }],
+    desc: '以龙血真精为君、千年灵草为臣，引神魂与天地法则共鸣，大增化神契机。',
+  },
+];
+
+export const ALCHEMY_RECIPE_BY_ID = Object.fromEntries(ALCHEMY_RECIPES.map((r) => [r.id, r]));
 
 export function itemName(id) {
   return ITEM_BY_ID[id]?.name || id;

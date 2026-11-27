@@ -31,13 +31,13 @@ export const ACHIEVEMENTS = [
   { id: 'a_root_all', name: '万灵归一', desc: '在轮回中体验过八种以上灵根。', check: 'meta.rootsSeen.length >= 8', hidden: true },
 
   // —— 宗门 ——
-  { id: 'a_join_sect', name: '入门', desc: '拜入宗门。', check: 'char.sectId != null' },
+  { id: 'a_join_sect', name: '入门', desc: '拜入宗门。', check: 'sect() != ""' },
   { id: 'a_inner', name: '内门弟子', desc: '晋升内门。', check: 'char.sectRank >= 1' },
   { id: 'a_true', name: '真传', desc: '成为真传弟子。', check: 'char.sectRank >= 2' },
   { id: 'a_elder', name: '长老', desc: '坐上长老之位。', check: 'char.sectRank >= 4' },
   { id: 'a_supreme', name: '太上长老', desc: '宗门最高位。', check: 'char.sectRank >= 5' },
   { id: 'a_all_sects', name: '十二山门', desc: '在十二个宗门中都待过。', check: 'meta.sectsJoined.length >= 12', hidden: true },
-  { id: 'a_sanxiu_100', name: '散修百年', desc: '无门无派修行百年。', check: 'char.sectId === null && age >= 116', hidden: true },
+  { id: 'a_sanxiu_100', name: '散修百年', desc: '无门无派修行百年。', check: '(sect() == "" || sect() == "sanxiu") && age >= 116', hidden: true },
   { id: 'a_betray', name: '叛门', desc: '离开曾经跪拜过的山门。', check: 'flag("临阵脱逃") || flag("放走周野")', hidden: true },
 
   // —— 战斗 ——
@@ -103,12 +103,12 @@ export const ACHIEVEMENTS = [
   { id: 'a_title_5', name: '名号', desc: '获得五个称号。', check: 'counters.titles >= 5' },
   { id: 'a_ending_1', name: '一种结局', desc: '抵达任意一个结局。', check: 'counters.endings_seen >= 1' },
   { id: 'a_ending_5', name: '五世轮回', desc: '抵达五个不同结局。', check: 'counters.endings_seen >= 5' },
-  { id: 'a_ending_all', name: '万相归一', desc: '抵达全部结局。', check: 'meta.unlockedEndings.length >= 20', tier: '仙', hidden: true },
+  { id: 'a_ending_all', name: '二十相归一', desc: '在轮回中抵达二十重不同结局。', check: 'meta.unlockedEndings.length >= 20', tier: '仙', hidden: true },
 
   // —— 整活 / 隐藏 ——
-  { id: 'a_die_first', name: '出师未捷', desc: '第一次死亡。', check: 'stats.deaths >= 1' },
-  { id: 'a_die_10', name: '十世轮回', desc: '死亡十次。', check: 'stats.deaths >= 10', hidden: true },
-  { id: 'a_die_100', name: '不死不休', desc: '死亡一百次。', check: 'stats.deaths >= 100', hidden: true, tier: '天' },
+  { id: 'a_die_first', name: '出师未捷', desc: '第一次死亡。', check: 'stats.deaths >= 1 || meta.totalDeaths >= 1' },
+  { id: 'a_die_10', name: '十世轮回', desc: '累计死亡十次。', check: 'meta.totalDeaths >= 10', hidden: true },
+  { id: 'a_die_100', name: '不死不休', desc: '累计死亡一百次。', check: 'meta.totalDeaths >= 100', hidden: true, tier: '天' },
   { id: 'a_click_100', name: '手不释卷', desc: '做出三百次选择。', check: 'stats.actions >= 300' },
   { id: 'a_idle', name: '山中无甲子', desc: '连续闭关十二次。', check: 'counters.deep_streak >= 12', hidden: true },
   { id: 'a_poor', name: '一文不名', desc: '身无分文地活过五十年。', check: 'stones === 0 && age >= 66', hidden: true },
@@ -255,8 +255,8 @@ export const ACHIEVEMENTS = [
   { id: 'a3_tech_30', name: '万卷仙经', desc: '累计参悟三十部功法秘典。', check: 'counters.techniques >= 30', tier: '天', hidden: true },
   { id: 'a3_artifact_1', name: '初祭本命', desc: '首次祭炼本命法宝。', check: 'char.artifactLevel >= 1' },
   { id: 'a3_artifact_3', name: '灵宝成器', desc: '本命法宝祭炼至三重。', check: 'char.artifactLevel >= 3' },
-  { id: 'a3_artifact_5', name: '通天灵宝', desc: '本命法宝祭炼至五重。', check: 'char.artifactLevel >= 5', tier: '地' },
-  { id: 'a3_artifact_8', name: '混沌仙兵', desc: '本命法宝祭炼至八重极境。', check: 'char.artifactLevel >= 8', tier: '仙', hidden: true },
+  { id: 'a3_artifact_5', name: '通天灵宝', desc: '本命法宝祭炼至地阶灵宝（四重）。', check: 'char.artifactLevel >= 4', tier: '地' },
+  { id: 'a3_artifact_8', name: '混沌仙兵', desc: '本命法宝祭炼至五重太古仙剑极境。', check: 'char.artifactLevel >= 5', tier: '仙', hidden: true },
   { id: 'a3_craft_10', name: '天工巧匠', desc: '炼器成功十次。', check: 'counters.craft >= 10' },
   { id: 'a3_alchemy_100', name: '丹火长明', desc: '炼丹成功一百次。', check: 'counters.alchemy >= 100', tier: '地' },
   { id: 'a3_attr_wuxing_100', name: '慧眼通天', desc: '悟性达到一百。', check: 'char.attrs.悟性 >= 100' },
@@ -294,8 +294,8 @@ export const ACHIEVEMENTS = [
   { id: 'a3_npc_lin_30', name: '不打不相识', desc: '与落霞少主林昊化敌为友，好感达到三十。', check: 'rel("林昊") >= 30' },
   { id: 'a3_npc_lin_win', name: '三年之约', desc: '在问道台上堂堂正正击败林昊。', check: 'flag("败林昊")' },
   { id: 'a3_npc_bond_su', name: '落霞并蒂', desc: '与苏晚晴情投意合并结为道侣。', check: 'flag("道侣") && rel("苏晚晴") >= 40', hidden: true },
-  { id: 'a3_npc_all_3', name: '八方结交', desc: '与三位以上九州名修结下深厚交情。', check: '(rel("苏晚晴") >= 15 && rel("陆沉舟") >= 15 && rel("药尘子") >= 15) || (rel("顾青衣") >= 15 && rel("林昊") >= 15 && rel("苏晚晴") >= 15)' },
-  { id: 'a3_npc_all_6', name: '正邪皆友', desc: '同时与六位九州名修好感均达到二十以上。', check: 'rel("苏晚晴") >= 20 && rel("陆沉舟") >= 20 && rel("药尘子") >= 20 && rel("顾青衣") >= 20 && rel("血煞老祖") >= 20 && rel("林昊") >= 20', tier: '天', hidden: true },
+  { id: 'a3_npc_all_3', name: '八方结交', desc: '与三位以上九州名修结下深厚交情。', check: '((rel("苏晚晴") >= 15) + (rel("陆沉舟") >= 15) + (rel("药尘子") >= 15) + (rel("顾青衣") >= 15) + (rel("血煞老祖") >= 15) + (rel("林昊") >= 15) + (rel("云霓仙子") >= 15) + (rel("玄机老人") >= 15) + (rel("墨衡") >= 15) + (rel("白幽") >= 15) + (rel("青莲剑仙") >= 15) + (rel("司命星君") >= 15)) >= 3' },
+  { id: 'a3_npc_all_6', name: '正邪皆友', desc: '同时与六位以上九州名修好感均达到二十以上。', check: '((rel("苏晚晴") >= 20) + (rel("陆沉舟") >= 20) + (rel("药尘子") >= 20) + (rel("顾青衣") >= 20) + (rel("血煞老祖") >= 20) + (rel("林昊") >= 20) + (rel("云霓仙子") >= 20) + (rel("玄机老人") >= 20) + (rel("墨衡") >= 20) + (rel("白幽") >= 20) + (rel("青莲剑仙") >= 20) + (rel("司命星君") >= 20)) >= 6', tier: '天', hidden: true },
   { id: 'a3_npc_su_high', name: '情比金坚', desc: '与苏晚晴好感达到八十。', check: 'rel("苏晚晴") >= 80', tier: '天', hidden: true },
 
   // —— v4.0 扩容：高境突破、长寿与百小时修仙里程碑 ——
@@ -312,6 +312,15 @@ export const ACHIEVEMENTS = [
   { id: 'a3_rep_5000', name: '九州共仰', desc: '声望达到五千。', check: 'reputation >= 5000', tier: '天', hidden: true },
   { id: 'a3_karma_1000', name: '功德无量', desc: '业力达到 +1000。', check: 'karma >= 1000', tier: '天', hidden: true },
   { id: 'a3_fast_huashen', name: '二百载化神', desc: '两百岁前踏入化神境。', check: 'realm >= 4 && age < 200', tier: '天', hidden: true },
-];
+].map((a) => ({
+  ...a,
+  ...(a.karmaReward != null
+    ? {}
+    : a.tier === '仙'
+      ? { karmaReward: 2 }
+      : (a.tier === '天' || a.hidden)
+        ? { karmaReward: 1 }
+        : {}),
+}));
 
 export const ACHIEVEMENT_BY_ID = Object.fromEntries(ACHIEVEMENTS.map((a) => [a.id, a]));

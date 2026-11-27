@@ -339,8 +339,9 @@ export function sceneThemeFor(node, state) {
   const id = node.id || state.scene?.id;
   if (id === 'combat') return SCENE_THEMES.combat;
   if (id === 'tribulation') return SCENE_THEMES.tribulation;
-  if (id === 'breakthrough' || id === 'cave') return SCENE_THEMES.breakthrough;
+  if (id === 'breakthrough' || id === 'cave' || id === 'techEquip' || id === 'alchemy') return SCENE_THEMES.breakthrough;
   if (id === 'auction') return SCENE_THEMES.auction;
+  if (id === 'arena') return SCENE_THEMES.combat;
   if (id === 'market' || id === 'sell' || id === 'cityHub' || id === 'tianji' || id === 'techShop') {
     return state.char?.regionId === 'luoxia' ? SCENE_THEMES.luoxia : SCENE_THEMES.market;
   }

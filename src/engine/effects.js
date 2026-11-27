@@ -1,4 +1,7 @@
-import { addItem, removeItem, gainExp, needExp, recomputeDerived, advanceMonths, gainLawExp } from './state.js';
+import {
+  addItem, removeItem, gainExp, needExp, recomputeDerived, advanceMonths, gainLawExp,
+  maxTechSlots, titleBonuses,
+} from './state.js';
 import { ITEM_BY_ID } from '../data/items.js';
 import { SECT_BY_ID } from '../data/sects.js';
 import { REALMS } from '../data/realms.js';
@@ -13,6 +16,7 @@ export function applyEffects(state, effects = {}, ctx = {}) {
   const out = [];
   const c = state.char;
   if (!effects) return out;
+  state.stats = state.stats || {};
 
   if (effects.exp) {
     const gained = gainExp(state, effects.exp);
@@ -23,6 +27,9 @@ export function applyEffects(state, effects = {}, ctx = {}) {
     if (gained) out.push(`修为 +${gained}`);
   }
   if (effects.stones) {
+    if (effects.stones < 0) {
+      state.stats.goldSpent = (state.stats.goldSpent || 0) + Math.abs(effects.stones);
+    }
     c.stones = Math.max(0, c.stones + effects.stones);
     out.push(`灵石 ${effects.stones > 0 ? '+' : ''}${effects.stones}`);
   }
@@ -48,18 +55,30 @@ export function applyEffects(state, effects = {}, ctx = {}) {
     recomputeDerived(c);
   }
   if (effects.lifespan) {
-    c.lifespan += effects.lifespan * 12;
-    out.push(`寿元 ${effects.lifespan > 0 ? '+' : ''}${effects.lifespan} 年`);
+    const before = c.lifespan;
+    c.bonusLifespan = (c.bonusLifespan || 0) + effects.lifespan * 12;
+    recomputeDerived(c);
+    const actualYears = Math.round((c.lifespan - before) / 12);
+    if (effects.lifespan > 0 && actualYears < effects.lifespan) {
+      out.push(`寿元 +${Math.max(0, actualYears)} 年（已触及当前境界外延寿元上限）`);
+    } else {
+      out.push(`寿元 ${effects.lifespan > 0 ? '+' : ''}${effects.lifespan} 年`);
+    }
   }
   if (effects.reputation) {
     let rep = effects.reputation;
     if (rep > 0 && c.rootId === 'taiyang') rep = Math.round(rep * 1.5);
     if (rep > 0 && c.rootId === 'an') rep = Math.max(1, Math.round(rep * 0.5));
     if (rep > 0 && c.goldenFingerId === 'gf_none') rep = Math.round(rep * 1.25);
+    const tRep = titleBonuses(c).repBonus || 0;
+    if (rep > 0 && tRep > 0) rep = Math.round(rep * (1 + tRep));
     c.reputation += rep;
     out.push(`声望 ${rep > 0 ? '+' : ''}${rep}`);
   }
   if (effects.contribution) {
+    if (effects.contribution < 0) {
+      state.stats.contribSpent = (state.stats.contribSpent || 0) + Math.abs(effects.contribution);
+    }
     c.contribution = Math.max(0, c.contribution + effects.contribution);
     out.push(`宗门贡献 ${effects.contribution > 0 ? '+' : ''}${effects.contribution}`);
   }
@@ -75,6 +94,7 @@ export function applyEffects(state, effects = {}, ctx = {}) {
   }
   if (effects.pet && PET_BY_ID[effects.pet]) {
     c.petId = effects.pet;
+    if (!c.petLevel) c.petLevel = 1;
     out.push(`伴生灵兽「${PET_BY_ID[effects.pet].name}」认主`);
   }
   if (effects.injury) {
@@ -104,16 +124,33 @@ export function applyEffects(state, effects = {}, ctx = {}) {
     }
   }
   if (effects.techniques) {
+    if (!Array.isArray(c.equippedTechs)) c.equippedTechs = [];
+    const cap = maxTechSlots(c.realm);
     for (const t of effects.techniques) {
       if (!c.techniques.some((x) => x.id === t.id)) {
         c.techniques.push({ ...t });
-        out.push(`习得${t.name || '功法'}`);
+        if (c.equippedTechs.length < cap && !c.equippedTechs.includes(t.id)) {
+          c.equippedTechs.push(t.id);
+          c._manualUnequip = false;
+          out.push(`习得并运使${t.name || '功法'}`);
+        } else {
+          out.push(`习得${t.name || '功法'}（已收录藏经簿，可至洞府切换运使）`);
+        }
+        recomputeDerived(c);
       }
     }
   }
   if (effects.title) {
     const list = Array.isArray(effects.title) ? effects.title : [effects.title];
-    for (const t of list) if (!c.titles.includes(t)) { c.titles.push(t); out.push(`获得称号「${t}」`); }
+    let added = false;
+    for (const t of list) {
+      if (!c.titles.includes(t)) {
+        c.titles.push(t);
+        out.push(`获得称号「${t}」`);
+        added = true;
+      }
+    }
+    if (added) recomputeDerived(c);
   }
   if (effects.flag) {
     for (const [k, v] of Object.entries(effects.flag)) state.flags[k] = v;
@@ -156,8 +193,6 @@ export function applyEffects(state, effects = {}, ctx = {}) {
       c.realm = effects.realmSet;
       c.layer = Math.min(effects.layerSet ?? 0, realm.layers - 1);
       c.exp = 0;
-      c.lifespanBase = Math.round((80 + (realm.lifespan || 0)) * 12);
-      c.lifespan = Math.max(c.lifespan, c.lifespanBase);
       out.push(`境界：${realm.name}`);
       recomputeDerived(c);
     }

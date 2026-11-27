@@ -5,7 +5,10 @@ import { SECT_BY_ID, SECT_RANKS } from '../data/sects.js';
 import { ITEM_BY_ID } from '../data/items.js';
 import { REGION_BY_ID } from '../data/regions.js';
 import { GOLDEN_FINGER_BY_ID, PET_BY_ID } from '../data/golden_fingers.js';
-import { canBreakthrough, needExp, bottleneckStatus, maxLawLevel, defaultLawFor } from './state.js';
+import {
+  START_AGE_MONTHS, canBreakthrough, needExp, bottleneckStatus, maxLawLevel, defaultLawFor,
+  lifespanAlert, activeTechniques, maxTechSlots, techAlignmentConflict,
+} from './state.js';
 
 export const EVENTS = [];
 const SEEN_CHOICE_PREFIX = 'pick:';
@@ -29,15 +32,19 @@ export function formatText(text, state) {
   const c = state.char;
   const root = ROOT_BY_ID[c.rootId];
   const sect = c.sectId ? SECT_BY_ID[c.sectId] : null;
-  const rankName = sect ? (SECT_RANKS[c.sectRank || 0]?.name || '外门弟子') : '无门无派';
+  const sectDisplay = sect?.name || c.playerSectName || '散修';
+  const rankName = sect
+    ? (SECT_RANKS[c.sectRank || 0]?.name || '外门弟子')
+    : (c.playerSectName ? '开山祖师' : '无门无派');
+  const cultYear = Math.max(1, Math.floor((c.age - START_AGE_MONTHS) / 12) + 1);
   return String(text)
     .replaceAll('{name}', c.name)
     .replaceAll('{realm}', realmLabel(c))
     .replaceAll('{root}', root?.name || '凡体')
-    .replaceAll('{sect}', sect?.name || '散修')
+    .replaceAll('{sect}', sectDisplay)
     .replaceAll('{rank}', rankName)
     .replaceAll('{age}', String(Math.floor(c.age / 12)))
-    .replaceAll('{year}', String(1980 + Math.floor(c.age / 12)))
+    .replaceAll('{year}', String(cultYear))
     .replaceAll('{stones}', String(c.stones))
     .replaceAll('{exp}', String(Math.floor(c.exp)))
     .replaceAll('{need}', String(Number.isFinite(needExp(c)) ? needExp(c) : '∞'))
@@ -168,6 +175,13 @@ export function buildHub(game) {
       hint: `${sect.name} · ${rankName}`,
       action: 'openSectHall',
     });
+  } else if (c.playerSectName) {
+    choices.push({
+      id: 'open_sect',
+      label: '仙门大殿',
+      hint: `${c.playerSectName} · 祖师（${c.playerSectLevel || 1}品）`,
+      action: 'openSectHall',
+    });
   } else {
     choices.push({
       id: 'find_sect',
@@ -210,17 +224,30 @@ export function buildHub(game) {
         '你吐出一口浊气，双目澄明——仙路漫漫，根基厚一寸，劫难轻三分。',
       ];
       const idx = (state.turn + c.realm) % hours.length;
-      const remain = Math.max(0, Math.floor((c.lifespan - c.age) / 12));
+      const alert = lifespanAlert(c);
+      const remain = alert.remainYears;
+      const active = activeTechniques(c);
+      const techCap = maxTechSlots(c.realm);
+      const alignInfo = techAlignmentConflict(c);
       const notes = [];
+      if (alert.level === 'critical') notes.push(`【大限危警】${alert.text}`);
+      else if (alert.level === 'warn') notes.push(`【寿元警示】${alert.text}`);
+      if (alignInfo.conflict) notes.push('【功法相冲】正邪功法同修，心魔暗滋且破境成算受损！');
       const gf = c.goldenFingerId ? GOLDEN_FINGER_BY_ID[c.goldenFingerId] : null;
       if (gf && state.turn % 3 === 0) notes.push(`【${gf.name}】隐隐共鸣。`);
-      if (c.petId && PET_BY_ID[c.petId]) notes.push(`伴生灵兽「${PET_BY_ID[c.petId].name}」伏于身侧吐纳。`);
+      if (c.petId && PET_BY_ID[c.petId]) {
+        const pLvl = c.petLevel || 1;
+        notes.push(`伴生灵兽「${PET_BY_ID[c.petId].name}」（${pLvl}阶）伏于身侧吐纳。`);
+      }
+      if (c.playerSectName) {
+        notes.push(`自创仙宗「${c.playerSectName}」（${c.playerSectLevel || 1}品 · 门徒 ${c.playerSectDisciples || 0} 人）香火绵延。`);
+      }
       if (state.flags['宿敌林昊'] && !state.flags['败林昊']) notes.push('【三年之约】林昊之辱犹在眼前，入筑基后将迎问道台对决。');
       const mainLaw = LAW_BY_ID[defaultLawFor(c)];
       const lawStage = LAW_STAGES[maxLawLevel(c)] || '未入门';
       const lawLine = c.realm >= 2 || maxLawLevel(c) > 0 ? ` · 法则：${mainLaw?.name || '剑道'}（${lawStage}）` : '';
       const needText = Number.isFinite(needExp(c)) ? needExp(c).toLocaleString() : '∞';
-      return `${hours[idx]}${notes.length ? `\n${notes.join('')}` : ''}\n\n${Math.floor(c.age / 12)} 岁 · ${realmLabel(c)}（余寿 ${remain} 年）· 身处「${region.name}」${lawLine}\n修为 ${Math.floor(c.exp).toLocaleString()} / ${needText} · 攻 ${game.playerAtk().toLocaleString()} / 防 ${game.playerDef().toLocaleString()}`;
+      return `${hours[idx]}${notes.length ? `\n${notes.join('\n')}` : ''}\n\n${Math.floor(c.age / 12)} 岁 · ${realmLabel(c)}（余寿 ${remain} 年）· 身处「${region.name}」${lawLine}\n修为 ${Math.floor(c.exp).toLocaleString()} / ${needText} · 运使功法 ${active.length}/${techCap} · 攻 ${game.playerAtk().toLocaleString()} / 防 ${game.playerDef().toLocaleString()}`;
     },
     choices,
     hub: true,

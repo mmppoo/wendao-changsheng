@@ -94,7 +94,7 @@ export const ENDINGS = [
   },
   {
     id: 'e_artifact_ascend', name: '器道通仙', priority: 109, tier: '仙',
-    condition: 'realm >= 9 && char.artifactLevel >= 6',
+    condition: 'realm >= 9 && char.artifactLevel >= 5',
     summary: '你以一生温养本命灵宝，终与器共证仙位。',
     text: (s) => `那件陪了你数百年的本命法宝「${s.char.artifactName || '无名青锋'}」，在最后一重天劫里发出了清越的龙吟。
 
@@ -159,7 +159,7 @@ export const ENDINGS = [
   },
   {
     id: 'e_lover_ascend', name: '双宿', priority: 104, tier: '天',
-    condition: 'realm >= 9 && flag("道侣") && char.relations.道侣 >= 35',
+    condition: 'realm >= 9 && flag("道侣") && rel("道侣") >= 35',
     summary: '天门只开一线，你们挤了进去。',
     text: () => `天门窄得只能过一个人。
 
@@ -185,7 +185,7 @@ export const ENDINGS = [
   },
   {
     id: 'e_ascend_refuse', name: '看山还是山', priority: 102, tier: '天', hidden: true,
-    condition: 'realm >= 9 && count("refuse_ascend") >= 3',
+    condition: 'realm >= 8 && counter("refuse_ascend") >= 3',
     summary: '天门开了三次，你三次转身。',
     text: () => `第三次天门开的时候，你已经很老了。
 
@@ -516,19 +516,19 @@ export const ENDINGS = [
 你把帖子折成一只纸船放进溪水里。有些门，走出来之后，就不必再回去了。`,
   },
   {
-    id: 'e_sect_founder', name: '一代宗师', priority: 55, tier: '地',
+    id: 'e_sect_founder', name: '一代宗师', priority: 66, tier: '地',
     condition: 'flag("开宗立派") && reputation >= 500',
     summary: '你的山门，比你活得更久。',
     text: (s) => `你在一座无名的山上立了山门。第一年只有三个弟子，第三年三十个，第三十年三千个。\n\n你教他们吐纳，教他们剑法，教他们不要随便杀人。最后一课你只说了一句：\n\n「我这一生，也没想明白。你们自己去找。」\n\n你死后的第三百年，宗门还在。山门上刻着你的名字：${s.char.name}。字是歪的，是你自己刻的。`,
   },
   {
-    id: 'e_pill_master', name: '丹道圣手', priority: 45, tier: '地',
+    id: 'e_pill_master', name: '丹道圣手', priority: 69, tier: '地',
     condition: 'char.sectId === "danxia" && count("alchemy") >= 100',
     summary: '你炼的丹，救了半个修真界。',
     text: () => `你一生炼了三万炉丹，炸了七千炉。\n\n你死的时候，丹霞谷的炉火第一次灭了。谷中弟子跪了一地，没有人说话，只有风穿过药田。\n\n你的墓碑上没写境界，只写了四个字：此人会炼丹。\n\n——修真界后来把这句话，当成最高的评价。`,
   },
   {
-    id: 'e_sword_grave', name: '剑冢无名', priority: 44, tier: '地',
+    id: 'e_sword_grave', name: '剑冢无名', priority: 67, tier: '地',
     condition: 'char.sectId === "taixuan" && stats.kills >= 100',
     summary: '你的剑留在了剑冢，名字没有。',
     text: () => `你死前把剑插进剑冢最深处。\n\n按剑宗的规矩，剑在人在，剑亡人亡。可你的剑还在，人没了。\n\n后来有弟子去剑冢选剑，走到最深处，看见一柄没有铭文的剑。他伸手去拔，剑鸣了一声，像在哭。\n\n他拔不动。`,
@@ -703,7 +703,7 @@ export const ENDINGS = [
   // =========================================================================
   {
     id: 'e_all_friends', name: '九州皆故人', priority: 64, tier: '天', hidden: true,
-    condition: 'rel("苏晚晴") >= 20 && rel("陆沉舟") >= 20 && rel("药尘子") >= 20 && rel("顾青衣") >= 20',
+    condition: '((rel("苏晚晴") >= 20) + (rel("陆沉舟") >= 20) + (rel("药尘子") >= 20) + (rel("顾青衣") >= 20) + (rel("血煞老祖") >= 20) + (rel("林昊") >= 20) + (rel("云霓仙子") >= 20) + (rel("玄机老人") >= 20) + (rel("墨衡") >= 20) + (rel("白幽") >= 20) + (rel("青莲剑仙") >= 20) + (rel("司命星君") >= 20)) >= 4',
     summary: '仙途孤寒，可你走到哪里，都有人替你温着一壶酒。',
     text: () => `修仙界常说大道独行，可你偏把这条冷清的路走出了烟火气。
 
@@ -785,7 +785,7 @@ export const ENDINGS = [
   },
   {
     id: 'e_master_of_disciples', name: '桃李满九州', priority: 64, tier: '地',
-    condition: 'counters.disciples >= 10 && realm >= 3',
+    condition: 'counter("disciples") >= 10 && realm >= 3',
     summary: '你的弟子散落九州八域，成了下一个时代的风云。',
     text: () => `你一生收徒不问灵根高低，只问心性诚不诚。
 
@@ -854,25 +854,25 @@ export const ENDINGS = [
 傍晚炊烟升起时，你眯眼望向后山云层，忽然觉得，少年时看见的那道剑光，原来一直在自己心里。`,
   },
   {
-    id: 'e_hermit', name: '山中无甲子', priority: 50, tier: '玄',
+    id: 'e_hermit', name: '山中无甲子', priority: 62, tier: '玄',
     condition: 'char.attrs.道心 >= 80 && realm >= 3',
     summary: '你不再问长生，长生自己来了。',
     text: () => `你在山里住了很久，久到忘了自己多大。\n\n春种秋收，冬天下棋。偶尔有修士误入，问你是什么境界。你想了半天，说：种地的。\n\n后来有人把你写进书里，称你为「隐仙」。你看见了，笑了一下，把书垫了桌脚。`,
   },
   {
-    id: 'e_red_dust', name: '红尘仙', priority: 48, tier: '天', hidden: true,
-    condition: 'flag("道侣") && char.relations.道侣 >= 35',
+    id: 'e_red_dust', name: '红尘仙', priority: 62, tier: '天', hidden: true,
+    condition: 'flag("道侣") && rel("道侣") >= 35',
     summary: '你没有飞升，因为你舍不得。',
     text: () => `天门开的那天，她/他在院子里晒被子。\n\n你站在门口看了很久，然后转身回去，帮她把被子抖开。\n\n「不去了？」\n「不去了。」\n\n你们在人间活了两百年，吵过很多次架，也一起看过很多次日落。最后你们葬在同一棵树下。\n\n——后来有人说，那棵树每年开的花，比别处的都白。`,
   },
   {
-    id: 'e_karma_saint', name: '功德圆满', priority: 47, tier: '地',
+    id: 'e_karma_saint', name: '功德圆满', priority: 64, tier: '地',
     condition: 'karma >= 500 && realm >= 4',
     summary: '你没有成仙，但很多人记得你。',
     text: () => `你死的那天，山下排了很长的队。\n\n有瘸腿的樵夫，有还俗的和尚，有被你从水里捞出来的孩子——他已经老了。\n\n他们不说话，只是站着。\n\n你没有留下道统，没有留下法宝，只留下一句话，被人刻在石碑上：\n\n「能帮就帮一把。」`,
   },
   {
-    id: 'e_hermit_low', name: '归隐', priority: 46, tier: '玄',
+    id: 'e_hermit_low', name: '归隐', priority: 61, tier: '玄',
     condition: 'realm >= 2 && char.attrs.道心 >= 60 && age >= 80',
     summary: '你在半山腰盖了间屋子，再没下来。',
     text: () => `你在半山腰盖了间屋子，种了两亩地，养了一只不会说话的鹤。\n\n有修士上山来找你，说外面打起来了，正道魔道，死了很多人。\n\n你给他们倒了茶，说：喝完再走。\n\n他们喝完，走了。你还是没下山。`,
@@ -1062,19 +1062,19 @@ export const ENDINGS = [
 后来你在雪山建起白狐祠，晚年常抱着变回小狐狸模样的它围炉烤栗子，静看窗外雪落无声。`,
   },
   {
-    id: 'e_emperor', name: '万古一帝', priority: 43, tier: '天', hidden: true,
+    id: 'e_emperor', name: '万古一帝', priority: 65, tier: '天', hidden: true,
     condition: 'char.originId === "royal" && realm >= 7',
     summary: '你既坐过龙椅，也坐过仙位。',
     text: () => `大梁的史官写你：\n\n「帝幼有仙缘，十八入山，三百岁归。归时乘云，百官伏地。帝曰：起来吧，朕只是回来看看。」\n\n你在皇城住了三天，换了三个皇帝，然后走了。\n\n此后大梁每一代皇帝登基，都要对着西方拜三拜。他们拜的不是你，是那个「长生」的可能。`,
   },
   {
-    id: 'e_outsider', name: '天外归客', priority: 42, tier: '仙', hidden: true,
+    id: 'e_outsider', name: '天外归客', priority: 108, tier: '仙', hidden: true,
     condition: 'char.originId === "outsider" && realm >= 9',
     summary: '你终于明白，这不是穿越，是回家。',
     text: () => `飞升的那一刻，你看见的不是仙界。\n\n是一间亮着白灯的屋子，桌上有一台还开着的电脑，屏幕上是一个写到一半的故事。\n\n你伸手去碰屏幕。\n\n然后你醒了。窗外天亮了，楼下的早餐摊在冒热气。你坐了很久，忽然发现自己记得每一句咒语。\n\n你没有再打开那个文档。`,
   },
   {
-    id: 'e_sword_spirit', name: '器灵归位', priority: 41, tier: '地', hidden: true,
+    id: 'e_sword_spirit', name: '器灵归位', priority: 65, tier: '地', hidden: true,
     condition: 'char.originId === "artifact_spirit" && char.realm >= 6',
     summary: '你终于想起来，自己原本是什么。',
     text: () => `你把残剑插进自己的胸口。\n\n没有血。剑身一寸寸化开，重新长成你的骨头。你听见三千年前那个握剑的人说：老伙计，回来了。\n\n你睁开眼，手里握着的，是自己。`,
@@ -1254,7 +1254,7 @@ export const ENDINGS = [
     text: (s) => `你到死都是炼气一层，或者连一层都没有。\n\n你在山脚下开了个茶馆，给过路的修士倒水。他们出手很大方，也从不看你第二眼。\n\n你娶了/嫁了一个不修仙的人，生了两个孩子。孩子长大了，去了城里。\n\n你死在一个春天。\n\n——${s.char.name}，凡人，享年${Math.floor(s.char.age / 12)}岁。你的一生很短，但确实是你自己的。`,
   },
   {
-    id: 'e_slaughter', name: '杀孽', priority: 28, tier: '玄', hidden: true,
+    id: 'e_slaughter', name: '杀孽', priority: 65, tier: '玄', hidden: true,
     condition: 'stats.kills >= 1000',
     summary: '你数不清了，也就不数了。',
     text: () => `一开始你还记得每一张脸。后来你只记得剑拔出来的手感。\n\n最后你在一个雨夜醒过来，发现自己在洗手——手上没有血。\n\n你洗了一整夜。`,

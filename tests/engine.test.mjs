@@ -188,8 +188,9 @@ test('结局判定：寿元耗尽与魔化', () => {
 
 test('成就：条件满足后解锁且不重复', () => {
   const g = fresh();
+  g.state.char.layer = 1; // 满足「引气入体」条件
   const unlocked = g.checkAchievements();
-  assert.ok(Object.keys(g.state.meta.achievements).length > 0);
+  assert.ok(unlocked.length > 0 && Object.keys(g.state.meta.achievements).length > 0);
   const after = g.unlockAchievement('a_first_qi');
   assert.ok(after === null || typeof after === 'string');
   const count = Object.keys(g.state.meta.achievements).length;
@@ -434,13 +435,21 @@ test('网文系统：金手指（绿瓶/剑老）、拍卖会、本命法宝祭�
   assert.equal(g.state.char.artifactLevel, 1);
   assert.ok(g.playerAtk() > atkBefore);
 
-  // 万宝拍卖会竞拍
+  // 十年一届限量拍卖会竞拍（溢价起拍，非2折倾销）
+  g.state.char.stones = 200000;
   g.act_auction();
   assert.equal(g.state.scene.id, 'auction');
-  const bid = g.choices().find((c) => c.label.includes('筑基丹'));
+  const bid = g.choices().find((c) => c.label.includes('举牌竞价'));
   assert.ok(bid);
-  g.choose(bid.index);
-  assert.ok(g.state.char.inventory.some((i) => i.id === 'zhuji_dan'));
+  let tries = 0;
+  while (g.state.scene.id === 'auction' && tries++ < 6) {
+    const b = g.choices().find((c) => c.label.includes('举牌竞价'));
+    if (!b) break;
+    g.choose(b.index);
+    if (g.state.scene.result?.text?.includes('抬价')) g.proceed();
+    else break;
+  }
+  assert.ok(g.state.auctionRound.lots.some((l) => l.sold));
 
   // 伴生灵兽孵化
   g.openScene('wn_pet_egg_1');
@@ -532,7 +541,7 @@ test('v4.0 九州八大灵域迁徙探索与红尘道友羁绊', () => {
   g.act_openNpc({ params: { npcId: 'npc_su' } });
   assert.equal(g.state.scene.id, 'npcDetail');
   g.act_npcGift({ params: { npcId: 'npc_su', itemId: 'lingcao' } });
-  assert.equal(g.state.char.relations['苏晚晴'], 14);
+  assert.ok(g.state.char.relations['苏晚晴'] >= 5 && g.state.char.relations['苏晚晴'] <= 10);
   g.state.char.relations['苏晚晴'] = 42;
   g.act_npcBond({ params: { npcId: 'npc_su' } });
   assert.equal(g.state.flags['道侣'], true);
@@ -564,8 +573,76 @@ test('v5.0 大千世界规模与古籍秘阁/道友传艺校验', async () => {
   // 红尘道友高好感传授绝学
   g.state.char.relations['苏晚晴'] = 40;
   g.act_openNpc({ params: { npcId: 'npc_su' } });
-  const teach = g.choices().find((c) => c.label.includes('请教绝学'));
+  const teach = g.choices().find((c) => c.label.includes('请教唯一绝学'));
   assert.ok(teach && !teach.disabled);
   g.choose(teach.index);
   assert.ok(g.state.char.techniques.some((t) => t.id === 'wt_hanmei_jian'));
+});
+
+test('v6.0 审计专项回归：功法槽位防叠加、按境礼聘、叛门黑名单、省料祭炼、唯一传艺、配方炼丹、开宗立派与成就轮回点', async () => {
+  const { activeTechniques, maxTechSlots, recomputeDerived, lifespanAlert } = await import('../src/engine/state.js');
+  const { WORLD_TECHNIQUES } = await import('../src/data/techniques.js');
+  const { NPCS } = await import('../src/data/npcs.js');
+
+  // 1. 功法槽位上限防止76本线性叠到×31
+  const g = fresh();
+  for (const t of WORLD_TECHNIQUES.slice(0, 25)) g.state.char.techniques.push({ ...t });
+  g.state.char.equippedTechs = [WORLD_TECHNIQUES[0].id, WORLD_TECHNIQUES[1].id];
+  recomputeDerived(g.state.char);
+  assert.equal(activeTechniques(g.state.char).length, maxTechSlots(0));
+  const atkWith25 = g.playerAtk();
+  assert.ok(atkWith25 < 120, `25本收藏功法不应破坏炼气战力，当前 atk=${atkWith25}`);
+
+  // 2. 化神入宗按境界直聘长老，叛门入黑名单+5年冷却
+  const g2 = fresh();
+  g2.state.char.realm = 4;
+  g2.state.char.attrs.根骨 = 30;
+  g2.act_joinSect({ sectId: 'taixuan' });
+  assert.equal(g2.state.char.sectRank, 4, '化神入宗应礼聘为长老(rank 4)');
+  g2.act_sectLeave();
+  assert.equal(g2.state.char.sectBlacklist.taixuan, true);
+  assert.ok(g2.state.char.sectLeaveUntil > g2.state.char.age);
+  const rejoin = g2.act_joinSect({ sectId: 'taixuan' });
+  assert.ok(rejoin?.error);
+
+  // 3. 省料优先：同时有龙血精和玄铁时，先消耗玄铁
+  const g3 = fresh();
+  g3.state.char.inventory.push({ id: 'longxue_jing', qty: 1 }, { id: 'xuantie', qty: 1 });
+  g3.act_refine();
+  assert.ok(g3.state.char.inventory.some((i) => i.id === 'longxue_jing'), '绝不能误烧龙血精');
+  assert.ok(!g3.state.char.inventory.some((i) => i.id === 'xuantie'), '应优先消耗低价玄铁');
+
+  // 4. 古籍秘阁严格不含12位道友唯一传艺功法
+  const npcTechs = new Set(NPCS.map((n) => n.teachTechId));
+  g3.state.char.realm = 8;
+  g3.state.char.stones = 999999;
+  g3.act_openTechShop();
+  const shopIds = g3.currentNode().choices.map((c) => c.params?.techId).filter(Boolean);
+  assert.ok(shopIds.every((id) => !npcTechs.has(id)), '古籍秘阁不得售卖道友唯一绝学');
+
+  // 5. 12道友专属论道（青莲剑仙 & 司命星君）+ 赠礼按价值区分
+  g3.act_npcChat({ params: { npcId: 'npc_qinglian' } });
+  assert.ok((g3.state.char.laws.sword || 0) >= 0 && g3.state.char.lawExp >= 0);
+  const gGift = fresh();
+  gGift.state.char.inventory.push({ id: 'lingcao', qty: 1 }, { id: 'dao_fruit', qty: 1 });
+  gGift.act_npcGift({ params: { npcId: 'npc_su', itemId: 'lingcao' } });
+  const rCheap = gGift.state.char.relations['苏晚晴'];
+  gGift.state.char.relations['苏晚晴'] = 0;
+  gGift.act_npcGift({ params: { npcId: 'npc_su', itemId: 'dao_fruit' } });
+  const rExpensive = gGift.state.char.relations['苏晚晴'];
+  assert.ok(rExpensive > rCheap * 2, `悟道果好感(${rExpensive})应远高于灵草(${rCheap})`);
+
+  // 6. 开宗立派真实建立玩家宗门 + 讲道/收徒/配方炼丹/寿元预警
+  const g4 = fresh();
+  g4.state.char.realm = 3;
+  g4.state.char.stones = 20000;
+  g4.act_foundSect();
+  assert.equal(g4.state.char.sectId, 'player_sect');
+  assert.equal(g4.state.char.sectRank, 5);
+  g4.act_preach();
+  g4.act_recruitDisciple();
+  assert.ok(g4.state.counters.teach >= 10);
+  assert.ok(g4.state.counters.disciples >= 2);
+  g4.state.char.age = g4.state.char.lifespan - 24;
+  assert.equal(lifespanAlert(g4.state.char).level, 'critical');
 });

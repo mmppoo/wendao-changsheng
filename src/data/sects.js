@@ -185,8 +185,39 @@ export const SECTS = [
 
 export const SECT_BY_ID = Object.fromEntries(SECTS.map((s) => [s.id, s]));
 
-export function sectRank(contribution) {
+/** 玩家开宗立派模板：创建自创仙宗时以此为基础生成宗门对象。 */
+export const PLAYER_SECT_TEMPLATE = {
+  id: 'player_sect',
+  name: '自创仙宗',
+  align: '中',
+  element: '道',
+  seat: '自辟洞天·宗门主峰',
+  desc: '由你亲手开山立派的道统，规矩由你定，剑锋随你指。',
+  requirement: '开宗立派',
+  requireExpr: 'false',
+  entry: '立碑刻名，聚拢散修与门徒，自成九州一方道统。',
+  perks: { speed: 0.24, atk: 0.2, def: 0.15, stones: 180, attrs: { 道心: 4, 悟性: 4 } },
+  technique: '《开宗大道总纲》',
+  taskFlavor: ['招收新徒', '扩建灵脉', '讲道授业', '震慑群宗'],
+  joinEffects: { reputation: 120 },
+  tags: ['开宗立派', '自创'],
+  defaultRank: 5,
+  buildCustom(name, align = '中') {
+    return {
+      ...this,
+      name: name || this.name,
+      align: ['正', '中', '邪'].includes(align) ? align : '中',
+    };
+  },
+};
+
+/** 兼容薄封装：SECT_RANKS 为唯一真源；支持按职阶索引（0..5）或贡献值查询。 */
+export function sectRank(rankIdxOrContribution) {
+  const val = Number(rankIdxOrContribution) || 0;
+  if (val >= 0 && val < SECT_RANKS.length && Number.isInteger(val)) {
+    return { index: val, ...SECT_RANKS[val] };
+  }
   let idx = 0;
-  SECT_RANKS.forEach((r, i) => { if (contribution >= r.contribution) idx = i; });
+  SECT_RANKS.forEach((r, i) => { if (val >= r.contribution) idx = i; });
   return { index: idx, ...SECT_RANKS[idx] };
 }

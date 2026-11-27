@@ -20,10 +20,10 @@ export const GOLDEN_FINGERS = [
     icon: '剑',
     color: '#e6b95c',
     desc: '古戒中蛰伏着一缕太古剑尊残魂，言语刻薄却眼界通天，常于危局指点剑招破绽。',
-    perk: '开局习得《太虚剑意》并携青锋剑，战力 +20%，参悟额外 +1 悟性，解锁老祖传音分支。',
+    perk: '开局习得《太虚剑意》并携青锋剑，合计战力 +20%，悟性 +4、根骨 +3，解锁老祖传音分支。',
     apply: {
       items: ['qingfeng_jian'],
-      techniques: [{ id: 'taixu_jianyi', name: '《太虚剑意》', atk: 0.2, speed: 0.08 }],
+      techniques: [{ id: 'gf_sword_art', name: '《太虚剑意》', speed: 0.08, atk: 0.06, def: 0.02, lifespan: 0, align: '正', artName: '太虚一剑' }],
       attrs: { 悟性: 4, 根骨: 3 },
       flag: { 金手指_剑老: true },
     },
@@ -35,7 +35,7 @@ export const GOLDEN_FINGERS = [
     icon: '镜',
     color: '#7ab8d9',
     desc: '一面蒙尘古铜镜，可映照三息后的吉凶死劫与灵宝真气，坊市鉴漏、暗拍压价皆先人一步。',
-    perk: '神识 +6、气运 +6；坊市与拍卖折扣 -15%；奇遇检定成算提升；开局携护心符。',
+    perk: '神识 +6、气运 +6；商行、秘阁与拍卖行全享 -15% 折扣；奇遇检定成算提升；开局携护心符。',
     apply: { items: ['huxin_fu'], attrs: { 神识: 6, 气运: 6 }, flag: { 金手指_天机镜: true } },
   },
   {
@@ -74,10 +74,30 @@ export const GOLDEN_FINGER_BY_ID = Object.fromEntries(GOLDEN_FINGERS.map((g) => 
 
 /** 伴生灵兽表 */
 export const PETS = [
-  { id: 'pet_turtle', name: '玄水灵龟', icon: '龟', desc: '壳生八卦纹，寿与天齐，擅护主减伤。', defBonus: 0.14, lifespan: 40 },
-  { id: 'pet_bird', name: '青鸾雏鸟', icon: '鸾', desc: '尾羽带风雷，日行万里，擅破阵寻宝。', atkBonus: 0.14, luck: 5 },
-  { id: 'pet_beetle', name: '噬金灵虫', icon: '虫', desc: '吞金噬铁，群出如云，专破修士护体灵光。', atkBonus: 0.2, stonesBonus: 0.15 },
-  { id: 'pet_fox', name: '九尾白狐', icon: '狐', desc: '通灵知人心，助主稳固道心、抵御心魔。', demonResist: 0.25, charm: 6 },
+  {
+    id: 'pet_turtle', name: '玄水灵龟', icon: '龟',
+    desc: '壳生八卦纹，寿与天齐，擅护主减伤与渡劫护道。',
+    defBonus: 0.14, atkBonus: 0, stonesBonus: 0, luckBonus: 2, exploreBonus: 0.05,
+    demonResist: 0.08, tribResist: 0.10, lifespan: 40,
+  },
+  {
+    id: 'pet_bird', name: '青鸾雏鸟', icon: '鸾',
+    desc: '尾羽带风雷，日行万里，擅破阵寻宝与加快探索。',
+    atkBonus: 0.12, defBonus: 0.04, stonesBonus: 0.05, luckBonus: 6, exploreBonus: 0.25,
+    demonResist: 0, tribResist: 0.05, luck: 6,
+  },
+  {
+    id: 'pet_beetle', name: '噬金灵虫', icon: '虫',
+    desc: '吞金噬铁，群出如云，专破修士护体灵光并搜刮灵石。',
+    atkBonus: 0.18, defBonus: 0.04, stonesBonus: 0.18, luckBonus: 2, exploreBonus: 0.10,
+    demonResist: 0, tribResist: 0,
+  },
+  {
+    id: 'pet_fox', name: '九尾白狐', icon: '狐',
+    desc: '通灵知人心，助主稳固道心、抵御心魔与招揽奇缘。',
+    atkBonus: 0.06, defBonus: 0.06, stonesBonus: 0.06, luckBonus: 5, exploreBonus: 0.12,
+    demonResist: 0.25, tribResist: 0.06, charm: 6,
+  },
 ];
 
 export const PET_BY_ID = Object.fromEntries(PETS.map((p) => [p.id, p]));
