@@ -359,7 +359,7 @@ export const WILD_EVENTS = [
           enemy: 'ghost',
           win: {
             text: '你一剑斩断那只手。妇人瘫坐在地上，一直道谢。水里浮起一具泡胀的尸体，脸已经看不清了。',
-            effects: { exp: 80, reputation: 20, karma: 20, achievement: 'a_ghost' },
+            effects: { exp: 80, reputation: 20, karma: 20, achievements: ['a_ghost'] },
           },
           lose: { text: '你被拖进水里。冰水灌进肺里，你拼死才爬上岸。妇人已经不见了。', effects: { hp: -60, injury: 2 } },
         },

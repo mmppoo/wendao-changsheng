@@ -1371,21 +1371,22 @@ button { cursor: pointer; }
 .roll-desc { min-height: 3.8em; color: var(--paper-dim); font-size: 0.84rem; line-height: 1.82; margin: 0 0 1.2rem; }
 .roll-actions { display: flex; gap: 0.65rem; justify-content: center; flex-wrap: wrap; }
 
-/* Toast */
+/* Toast：固定于顶栏下方，绝不遮挡底部行动指令按钮 */
 .toast-stack {
   position: fixed;
-  bottom: calc(4.8rem + var(--safe-bottom));
+  top: 3.3rem;
+  bottom: auto;
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;
   display: flex;
   flex-direction: column;
-  gap: 0.42rem;
+  gap: 0.36rem;
   align-items: center;
   pointer-events: none;
   width: min(92vw, 440px);
 }
-@media (min-width: 1100px) { .toast-stack { bottom: 1.5rem; } }
+@media (min-width: 1100px) { .toast-stack { top: 3.4rem; bottom: auto; } }
 .toast {
   padding: 0.5rem 1rem;
   border: 2px solid var(--line-strong);
@@ -1469,7 +1470,8 @@ button { cursor: pointer; }
   .game-screen[data-mobile-tab="bag"] .rail-left { display: none; }
   .game-screen[data-mobile-tab="bag"] .rail-right { display: block; }
   .game-screen[data-mobile-tab="bag"] .rail-right .log-list,
-  .game-screen[data-mobile-tab="bag"] .rail-right .rail-head { display: none; }
+  .game-screen[data-mobile-tab="bag"] .rail-right .log-tools,
+  .game-screen[data-mobile-tab="bag"] .rail-right > .rail-head { display: none; }
 
   .game-screen[data-mobile-tab="log"] .story,
   .game-screen[data-mobile-tab="log"] .rail-left { display: none; }
@@ -1587,10 +1589,45 @@ button { cursor: pointer; }
   .fx-canvas { display: none; }
 }
 
-/* v6.0 寿元预警与行止录工具条 */
+/* v6.0-v7.0 寿元预警、战术意图、道途指引与行止录像素工具条 */
 .bar.life.is-warn > i { background: repeating-linear-gradient(90deg, #e6b95c 0 8px, #b88a2e 8px 10px); }
 .bar.life.is-critical > i { background: repeating-linear-gradient(90deg, #e85543 0 8px, #9e2318 8px 10px); animation: px-pulse-border 0.9s steps(2) infinite; }
 .c-warn b, .c-warn { color: #f0c260 !important; }
 .c-critical b, .c-critical { color: #ff7163 !important; }
 .log-tools { display: flex; gap: 0.35rem; margin-bottom: 0.55rem; }
-.log-tools .mini { flex: 1; font-size: 0.68rem; padding: 0.28rem 0.45rem; }
+.log-tools:empty { display: none; }
+.log-tools .mini {
+  flex: 1;
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  padding: 0.3rem 0.48rem;
+  border: 2px solid var(--line-strong);
+  background: var(--ink-2);
+  color: var(--paper-dim);
+  box-shadow: 0 2px 0 #05070c;
+}
+.log-tools .mini:hover { border-color: var(--gold); color: var(--gold-bright); }
+.combat-intent {
+  margin-top: 0.24rem;
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  color: #f5d27a;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.combat-intent.is-heavy { color: #ff8e7b; }
+.goal-card {
+  padding: 0.46rem 0.6rem;
+  border: 2px solid rgba(230, 185, 92, 0.42);
+  background: rgba(230, 185, 92, 0.08);
+  box-shadow: var(--px-shadow-sm);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+.goal-card b { display: block; color: var(--gold); font-weight: 500; margin-bottom: 0.1rem; }
+.goal-card span { color: var(--paper-dim); font-size: 0.68rem; }
+.goal-card.is-warn { border-color: #f0c260; }
+.goal-card.is-critical { border-color: #ff7163; background: rgba(212, 77, 56, 0.16); }
+.goal-card.is-critical b { color: #ff8e7b; }

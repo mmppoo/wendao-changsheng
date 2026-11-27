@@ -122,7 +122,7 @@ export const REALMS = [
   },
   {
     id: 'zhenxian', name: '真仙', layers: 1, exp: Infinity, growth: 1,
-    lifespan: 999999, monthly: 1, tribulation: false, powerMult: 10000,
+    lifespan: 999999, monthly: 1, tribulation: true, powerMult: 10000,
     layerNames: ['仙'],
     desc: '飞升上界。此处之后，已非人间故事——但你可以继续走下去。',
     bottleneck: null,

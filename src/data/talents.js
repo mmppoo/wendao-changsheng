@@ -53,8 +53,8 @@ export const TALENTS = [
   },
   {
     id: 't_niming', name: '逆命', cost: 3,
-    desc: '你死过一次，知道天道在哪里下手。突破成功率 +6%。',
-    apply: { buffs: { breakBonus: 6 } },
+    desc: '你死过一次，知道天道在哪里下手。全境突破成功率永久 +6%。',
+    apply: { buffs: { permBreakBonus: 6 } },
   },
   {
     id: 't_changsheng', name: '长生种', cost: 2,

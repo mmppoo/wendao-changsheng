@@ -84,7 +84,7 @@ export const PETS = [
     id: 'pet_bird', name: '青鸾雏鸟', icon: '鸾',
     desc: '尾羽带风雷，日行万里，擅破阵寻宝与加快探索。',
     atkBonus: 0.12, defBonus: 0.04, stonesBonus: 0.05, luckBonus: 6, exploreBonus: 0.25,
-    demonResist: 0, tribResist: 0.05, luck: 6,
+    demonResist: 0, tribResist: 0.05,
   },
   {
     id: 'pet_beetle', name: '噬金灵虫', icon: '虫',

@@ -3,9 +3,9 @@ import {
   createRun, advanceMonths, recomputeDerived, needExp, canBreakthrough, isRealmMaxLayer,
   breakthroughChance, monthlyExp, gainExp, isDead, addItem, removeItem, hasItem, itemCount,
   qualityMultiplier, lawBonusSum, maxLawLevel, defaultLawFor, gainLawExp, bottleneckStatus,
-  maxTechSlots, activeTechniques, techCollectionBonus, techAlignmentConflict,
-  equipTechnique, unequipTechnique, titleBonuses, petBonuses, lifespanAlert,
-  SAVE_VERSION,
+  maxTechSlots, activeTechniques, techCollectionBonus, techAlignmentConflict, techAlign,
+  equipTechnique, unequipTechnique, autoEquipBestTechniques, titleBonuses, petBonuses,
+  lifespanAlert, sectPerks, currentWorldEra, rollWorldEra, activeDaoGoal, SAVE_VERSION,
 } from './state.js';
 import { applyEffects } from './effects.js';
 import {
@@ -13,7 +13,7 @@ import {
   formatText, contextOf, registerEvents,
 } from './narrative.js';
 import { ALL_EVENTS, STORY_TRIGGERS } from '../data/events/index.js';
-import { compileCondition } from './expr.js';
+import { compileCondition, parseExpression, evaluate } from './expr.js';
 import {
   REALMS, realmLabel, LAW_BY_ID, LAW_STAGES,
   DAO_BASE_QUALITIES, GOLDEN_CORE_QUALITIES,
@@ -35,12 +35,24 @@ import { NPCS, NPC_BY_ID } from '../data/npcs.js';
 const MONTHS = 1;
 const ARTIFACT_TIERS = [
   '凡铁胚', '下品灵剑', '中品法宝', '上品通灵剑', '极品法宝',
-  '地阶灵宝', '天阶灵宝', '后天仙宝', '先天至宝', '太古混沌仙剑',
+  '地阶灵宝', '天阶灵宝', '后天仙宝', '先天至宝', '太古混沌仙剑', '太初问道仙兵',
 ];
 const CAVE_UPGRADE_COSTS = [0, 600, 2400, 9000, 32000, 110000, 360000, 1200000, 3800000];
 const REFINE_MATS_BY_PRICE = ['xuantie', 'chiyang_shi', 'leimu', 'xingchen_sha', 'longxue_jing', 'kunlun_shenmu', 'hundun_muqi'];
 const NPC_EXCLUSIVE_TECH_IDS = new Set(NPCS.map((n) => n.teachTechId).filter(Boolean));
 const ROMANCEABLE_NPCS = new Set(['npc_su', 'npc_yunni', 'npc_baiyou', 'npc_lu']);
+const TECH_GRADE_ORDER = { 凡: 0, 黄: 1, 玄: 2, 地: 3, 天: 4, 仙: 6 };
+const COMBAT_TALISMAN_IDS = ['taiyi_hudaofu', 'jiuxiao_leifu', 'poxie_fu', 'jianqi_fu', 'zhangxin_leifu'];
+const DELVE_THEMES = {
+  qingniu:   { name: '青牛古修残洞', floors: ['青苔前室', '药圃残阵', '石傀回廊', '丹室秘藏', '古修坐化殿'] },
+  luoxia:    { name: '落霞地下秘库', floors: ['暗渠入口', '商贾暗窖', '傀儡机关库', '藏宝暗阁', '黑市幕后主殿'] },
+  yaosen:    { name: '妖森血色禁地', floors: ['瘴林外围', '腐沼药谷', '古树妖巢', '上古灵泉', '血禁妖王祭坛'] },
+  guixu:     { name: '归墟沉渊龙宫', floors: ['潮汐断壁', '珊瑚兵阵', '避水珠阁', '星砂宝库', '沉渊龙王正殿'] },
+  beihuang:  { name: '北荒白骨魔渊', floors: ['煞风谷口', '尸兵长廊', '血池炼炉', '九幽阴脉', '魔尊骨座大殿'] },
+  zhongzhou: { name: '中州问剑古冢', floors: ['断剑山阶', '剑意石林', '星阵守廊', '法则碑林', '太古剑圣主冢'] },
+  kunlun:    { name: '昆仑玉虚残殿', floors: ['碎星仙桥', '时空错廊', '混沌灵池', '仙遗藏阁', '玉虚仙宫主殿'] },
+  jiuxiao:   { name: '九霄紫雷登仙台', floors: ['罡风雷阶', '天律神廊', '星河问道台', '劫雷本源池', '九霄裁决神殿'] },
+};
 
 if (EVENTS.length === 0) registerEvents(ALL_EVENTS);
 
@@ -89,6 +101,14 @@ export class Game {
     if (!Array.isArray(c.secretsCleared)) c.secretsCleared = [];
     if (state.stats && state.stats.contribSpent == null) state.stats.contribSpent = 0;
     if (state.meta && state.meta.totalDeaths == null) state.meta.totalDeaths = state.meta.runs || 0;
+    if (state.meta && !Array.isArray(state.meta.techniquesSeen)) {
+      state.meta.techniquesSeen = (c.techniques || []).map((t) => t.id);
+    }
+    if (!state.worldEra) state.worldEra = { id: 'aura_tide', until: (c.age || 192) + 420 };
+    if (state.delve === undefined) state.delve = null;
+    if (state.buffs && (state.meta?.talents || []).includes('t_niming') && !state.buffs.permBreakBonus) {
+      state.buffs.permBreakBonus = 6;
+    }
     this.rng = new RNG(state.seed);
     this.rng.setState(state.rngState);
     this.meta = state.meta;
@@ -116,6 +136,7 @@ export class Game {
       case 'alchemy': return this.buildAlchemyNode();
       case 'regionHub': return this.buildRegionNode();
       case 'regionMap': return this.buildRegionMapNode();
+      case 'delve': return this.buildDelveNode();
       case 'sectHall': return this.buildSectHallNode();
       case 'sectMissions': return this.buildSectMissionsNode();
       case 'sectLibrary': return this.buildSectLibraryNode();
@@ -218,7 +239,7 @@ export class Game {
       let p = ch.roll.p ?? 0.5;
       for (const [k, v] of Object.entries(ch.roll.attrs || {})) p += (s.char.attrs[k] || 0) * v;
       if (ch.roll.expr) {
-        try { p = Number(compileCondition(ch.roll.expr)(contextOf(s, this))) || 0; } catch { /* ignore */ }
+        try { p = Number(evaluate(parseExpression(ch.roll.expr), contextOf(s, this))) || 0; } catch { /* ignore */ }
       }
       if (s.char.goldenFingerId === 'gf_karma_mirror') p += 0.08;
       p += (petBonuses(s.char).luck || 0) * 0.005;
@@ -270,6 +291,23 @@ export class Game {
     if (outcome.arenaWin) {
       s.counters.arena_win = (s.counters.arena_win || 0) + 1;
       lines.push(`【问道台连胜】当前擂台胜绩：${s.counters.arena_win} 场！`);
+    }
+    if (outcome.delveAdvance && s.delve) {
+      const da = outcome.delveAdvance;
+      s.delve.haulStones += da.stones || 0;
+      s.delve.haulExp += da.exp || 0;
+      s.delve.haulLaw += da.law || 0;
+      if (da.item) s.delve.haulItems.push(da.item);
+      if (da.kind === 'boss') {
+        lines.push(...this.bankDelveHaul(1, true));
+      } else {
+        s.delve.floor = Math.min(s.delve.maxFloor, s.delve.floor + 1);
+        s.delve.log.push(`斩敌得宝（灵石 +${(da.stones || 0).toLocaleString()}），踏入第 ${s.delve.floor} 层。`);
+        lines.push(`暂存战利：灵石 +${(da.stones || 0).toLocaleString()}，${ITEM_BY_ID[da.item]?.name || da.item} ×1`);
+      }
+    }
+    if (outcome.delveEscape && s.delve) {
+      lines.push(...this.bankDelveHaul(0.5, false));
     }
     if (outcome.ending) {
       if (effects && Object.keys(effects).length) {
@@ -362,14 +400,29 @@ export class Game {
   autoEquipIfSpace(techObj) {
     const c = this.state.char;
     c.equippedTechs = c.equippedTechs || [];
+    if (this.state.meta && techObj?.id) {
+      this.state.meta.techniquesSeen = Array.from(new Set([...(this.state.meta.techniquesSeen || []), techObj.id]));
+    }
     if (c.equippedTechs.length < maxTechSlots(c.realm) && !c.equippedTechs.includes(techObj.id)) {
       c.equippedTechs.push(techObj.id);
+      c._manualUnequip = false;
       return true;
     }
     return false;
   }
 
-  /* ---------------- 支柱一：洞府修行（功法槽位 / 丹方 / 法宝 / 灵脉 / 灵兽 / 讲道收徒） ---------------- */
+  refineStoneCost() {
+    const s = this.state;
+    const c = s.char;
+    const lvl = c.artifactLevel || 0;
+    const raw = (260 + lvl * 420) * Math.pow(2.05, Math.max(0, lvl));
+    const craftDisc = 1 - Math.min(0.4, sectPerks(c).craft || 0);
+    const fireDisc = c.rootId === 'huo' ? 0.85 : 1;
+    const eraDisc = 1 - (currentWorldEra(s).refineDiscount || 0);
+    return Math.max(80, Math.round(raw * craftDisc * fireDisc * eraDisc));
+  }
+
+  /* ---------------- 支柱一：洞府修行（功法槽位 / 丹方 / 法宝 / 灵脉 / 灵兽 / 智能闭关 / 讲道收徒） ---------------- */
 
   act_openCave() {
     this.state.scene = { id: 'cave', result: null };
@@ -387,12 +440,13 @@ export class Game {
     const conflict = techAlignmentConflict(c);
     const choices = [
       { id: 'cultivate', label: '吐纳炼气', hint: '半年 · 稳步积攒修为，无心魔之忧', action: 'cultivate', params: { months: 6, returnTo: 'cave' }, effect: 'quiet' },
-      { id: 'deep', label: '闭关苦修', hint: '两年 · 进境极快，须防心魔滋生', action: 'cultivate', params: { months: 24, demonRisk: true, returnTo: 'cave' } },
+      { id: 'deep', label: '闭关苦修', hint: `两年 · 进境极快${c.rootId === 'taiyin' ? '（太阴月华 +30%）' : ''}，须防心魔`, action: 'cultivate', params: { months: 24, demonRisk: true, returnTo: 'cave' } },
+      { id: 'smart_cult', label: '闭关冲层（智能出关）', hint: '至多五年 · 修为圆满/心魔警报/奇遇/寿元告急时自动停关', action: 'smartCultivate', effect: canBreakthrough(c) ? '' : 'quiet' },
       { id: 'comprehend', label: `参悟${law?.name || '大道'}`, hint: `半年 · 悟性/道心 + 法则（${LAW_STAGES[lawLvl]}）`, action: 'comprehend', params: { returnTo: 'cave' } },
       {
         id: 'tech_equip',
         label: `功法运使（${active.length}/${slots}）`,
-        hint: conflict.conflict ? '【真气冲突！】正邪混修，速调整功法槽位' : `藏经簿共 ${c.techniques.length} 部 · 切换主修与辅修`,
+        hint: conflict.conflict ? '【真气冲突！】正邪混修，速调整功法槽位' : `藏经簿共 ${c.techniques.length} 部 · 切换运使与一键择优`,
         action: 'openTechEquip',
       },
       { id: 'open_alchemy', label: '开炉炼丹', hint: '8 套自选丹方 · 定向炼制破境与疗伤丹', action: 'openAlchemy' },
@@ -401,11 +455,13 @@ export class Game {
       choices.push({ id: 'settle', label: '静心涤魔', hint: `三月 · 镇压心魔(${Math.round(c.demon)})，调理内伤`, action: 'settle', params: { returnTo: 'cave' } });
     }
     const lvl = c.artifactLevel || 0;
-    const refineCost = Math.round((260 + lvl * 420) * Math.pow(2.1, Math.max(0, lvl)));
+    const refineCost = this.refineStoneCost();
     choices.push({
       id: 'refine',
       label: `祭炼法宝（${lvl}/${ARTIFACT_TIERS.length - 1}阶）`,
-      hint: lvl >= ARTIFACT_TIERS.length - 1 ? '已臻太古混沌仙剑极境（全境战力+72%）' : `三月 · 升阶全境战力+8%（省料优先或 ${refineCost.toLocaleString()} 石）`,
+      hint: lvl >= ARTIFACT_TIERS.length - 1
+        ? `已臻${ARTIFACT_TIERS[ARTIFACT_TIERS.length - 1]}极境（全境战力 +${lvl * 8}%）`
+        : `三月 · 升阶全境战力 +8%（省料优先或 ${refineCost.toLocaleString()} 石）`,
       action: 'refine',
       params: { returnTo: 'cave' },
       disabled: lvl >= ARTIFACT_TIERS.length - 1,
@@ -475,8 +531,95 @@ export class Game {
     };
   }
 
-  act_openTechEquip() {
-    this.state.scene = { id: 'techEquip', result: null };
+  act_smartCultivate() {
+    const s = this.state;
+    const c = s.char;
+    if (canBreakthrough(c)) {
+      s.scene.result = {
+        text: '你刚入定便觉气海充盈欲溢，修为已至当前层数圆满，可直接出关叩关破境！',
+        lines: ['修为已满，无须继续枯坐'],
+        returnTo: 'hub',
+      };
+      this.emit();
+      return;
+    }
+    let totalMonths = 0;
+    let totalExp = 0;
+    let stopReason = '五年期满，平稳出关';
+    const notes = [];
+    for (let step = 0; step < 10; step++) {
+      const m = 6;
+      const got = gainExp(s, monthlyExp(s) * m);
+      totalExp += got;
+      totalMonths += m;
+      s.counters.night_cultivate = (s.counters.night_cultivate || 0) + 2;
+      if (c.goldenFingerId === 'gf_bottle' && this.rng.chance(0.32)) {
+        const herb = c.realm >= 2 ? 'qiannian_lingcao' : 'lingcao';
+        addItem(s, herb, 1);
+        notes.push(`【掌天小绿瓶】催熟 ${ITEM_BY_ID[herb]?.name} ×1`);
+      }
+      const tickNotes = advanceMonths(s, m, this.rng);
+      for (const n of tickNotes) {
+        if (n.includes('纪元') || n.includes('冲突')) notes.push(n);
+      }
+      if (isDead(s) || c.demon >= 100) {
+        this.afterAction();
+        this.emit();
+        return;
+      }
+      if (this.pendingStory()) {
+        this.afterAction();
+        this.emit();
+        return;
+      }
+      if (canBreakthrough(c)) {
+        stopReason = '修为圆满，破境契机已至！';
+        break;
+      }
+      if (c.demon >= 45) {
+        stopReason = `心魔升至 ${Math.round(c.demon)}，警觉停关调息`;
+        break;
+      }
+      if (lifespanAlert(c).level !== 'ok' && step >= 1) {
+        stopReason = '寿元告警，提前出关谋求破境或延寿';
+        break;
+      }
+      if (step >= 2 && this.rng.chance(0.14)) {
+        const innerEv = pickEvent(s, this.rng, this, 'inner');
+        if (innerEv) {
+          this.openEvent(innerEv);
+          this.afterAction();
+          this.emit();
+          return;
+        }
+      }
+    }
+    const yearsStr = totalMonths >= 12 ? `${(totalMonths / 12).toFixed(totalMonths % 12 ? 1 : 0)} 年` : `${totalMonths} 个月`;
+    s.scene.result = {
+      text: `你闭关潜修 ${yearsStr}，气海周天绵绵不绝。\n\n【出关缘由】${stopReason}`,
+      lines: [`累计修为 +${totalExp.toLocaleString()}`, ...notes.slice(0, 4)],
+      fx: canBreakthrough(c) ? 'breakthrough' : null,
+      returnTo: canBreakthrough(c) ? 'hub' : 'cave',
+    };
+    this.afterAction();
+    this.emit();
+  }
+
+  act_openTechEquip(ch = {}) {
+    const page = Math.max(0, Number(ch?.params?.page) || 0);
+    this.state.scene = { id: 'techEquip', page, result: null };
+    this.emit();
+  }
+
+  act_autoEquipTech() {
+    const s = this.state;
+    const c = s.char;
+    const picked = autoEquipBestTechniques(c);
+    s.scene.result = {
+      text: `你梳理周身经脉，按品阶与正邪相生之理，自动择优运使了 ${picked.length}/${maxTechSlots(c.realm)} 部最强功法。`,
+      lines: [`当前攻 ${this.playerAtk().toLocaleString()} · 防 ${this.playerDef().toLocaleString()} · 月修 ${monthlyExp(s).toLocaleString()}`],
+      returnTo: 'techEquip',
+    };
     this.emit();
   }
 
@@ -487,25 +630,53 @@ export class Game {
     const active = activeTechniques(c);
     const activeIds = new Set(active.map((t) => t.id));
     const conflict = techAlignmentConflict(c);
-    const choices = (c.techniques || []).map((t) => {
+    const sorted = [...(c.techniques || [])].sort((a, b) => {
+      const ea = activeIds.has(a.id) ? 1 : 0;
+      const eb = activeIds.has(b.id) ? 1 : 0;
+      if (ea !== eb) return eb - ea;
+      const ga = TECH_GRADE_ORDER[a.grade] ?? 1;
+      const gb = TECH_GRADE_ORDER[b.grade] ?? 1;
+      if (ga !== gb) return gb - ga;
+      return ((b.atk || 0) + (b.speed || 0)) - ((a.atk || 0) + (a.speed || 0));
+    });
+    const perPage = 8;
+    const totalPages = Math.max(1, Math.ceil(sorted.length / perPage));
+    const page = clamp(Number(s.scene.page) || 0, 0, totalPages - 1);
+    const slice = sorted.slice(page * perPage, (page + 1) * perPage);
+
+    const choices = [];
+    if (sorted.length > 0) {
+      choices.push({
+        id: 'teq_auto',
+        label: '一键择优运使',
+        hint: '按当前境界与阵营自动装备最强、无冲突功法组合',
+        action: 'autoEquipTech',
+        effect: conflict.conflict ? 'primary' : '',
+      });
+    }
+    for (const t of slice) {
       const on = activeIds.has(t.id);
-      const align = t.align || '中';
-      const stats = `修炼+${Math.round((t.speed || 0) * 100)}% 攻+${Math.round((t.atk || 0) * 100)}% 防+${Math.round((t.def || 0) * 100)}%${t.lifespan ? ` 寿+${t.lifespan}` : ''}`;
-      return {
+      const align = techAlign(t);
+      const stats = `${t.grade || '玄'}品 · 修炼+${Math.round((t.speed || 0) * 100)}% 攻+${Math.round((t.atk || 0) * 100)}% 防+${Math.round((t.def || 0) * 100)}%${t.lifespan ? ` 寿+${t.lifespan}` : ''}`;
+      choices.push({
         id: `teq_${t.id}`,
         label: `${on ? '【运使中】' : '【藏经簿】'}${t.name}（${align}）`,
         hint: `${on ? '点击卸下 · ' : active.length >= slots ? '槽位已满 · ' : '点击运使 · '}${stats}`,
         action: 'toggleTechEquip',
-        params: { techId: t.id },
+        params: { techId: t.id, page },
         disabled: !on && active.length >= slots,
         reason: `运使槽位已满（${active.length}/${slots}），请先卸下其他功法`,
         effect: on ? 'primary' : '',
-      };
-    });
+      });
+    }
+    if (totalPages > 1) {
+      if (page > 0) choices.push({ id: 'teq_prev', label: `上一页（${page}/${totalPages}）`, hint: '翻看前页功法', action: 'openTechEquip', params: { page: page - 1 } });
+      if (page < totalPages - 1) choices.push({ id: 'teq_next', label: `下一页（${page + 2}/${totalPages}）`, hint: '翻看更多收藏功法', action: 'openTechEquip', params: { page: page + 1 } });
+    }
     choices.push({ id: 'back_cave', label: '返回洞府', hint: '', action: 'openCave' });
     return {
       id: 'techEquip',
-      title: `藏经簿 · 功法运使（${active.length}/${slots}）`,
+      title: `藏经簿 · 功法运使（${active.length}/${slots}）${totalPages > 1 ? ` · 第${page + 1}/${totalPages}页` : ''}`,
       text: `修士经脉有数，同一时刻仅可运使 ${slots} 部功法（随大境突破解锁至 6 槽）。其余收藏功法提供武道底蕴（当前 +${Math.round(techCollectionBonus(c) * 1000) / 10}%，上限 15%）。\n\n正邪功法不可混修：${conflict.conflict ? '⚠️ 当前正邪真气冲撞，闭关将滋生心魔且突破 -8%！' : '当前真气融洽无碍。'}`,
       choices,
     };
@@ -528,19 +699,29 @@ export class Game {
     this.emit();
   }
 
-  buildAlchemyNode() {
+  alchemyBonus() {
     const s = this.state;
     const c = s.char;
     const lawAlch = lawBonusSum(c, 'alchemy') + (titleBonuses(c).alchemy || 0) + (s.buffs?.alchemyBonus || 0);
-    const baseBonus = c.attrs.悟性 * 0.006 + lawAlch + (c.rootId === 'huo' ? 0.12 : 0) + (c.sectId === 'danxia' ? 0.18 : 0);
+    const sectAlch = Math.min(0.25, sectPerks(c).alchemy || 0);
+    const rootAlch = c.rootId === 'huo' ? 0.15 : 0;
+    const eraAlch = currentWorldEra(s).alchemy || 0;
+    return c.attrs.悟性 * 0.006 + lawAlch + rootAlch + sectAlch + eraAlch;
+  }
+
+  buildAlchemyNode() {
+    const s = this.state;
+    const c = s.char;
+    const baseBonus = this.alchemyBonus();
     const choices = ALCHEMY_RECIPES.map((rec) => {
-      const outDef = ITEM_BY_ID[rec.output];
+      const outId = rec.outputId || rec.output;
+      const outDef = ITEM_BY_ID[outId];
       const rate = Math.round(clamp(rec.baseRate + baseBonus, 0.25, 0.97) * 100);
       const ingText = rec.ingredients.map((ing) => `${ITEM_BY_ID[ing.id]?.name || ing.id}×${ing.qty}(有${itemCount(s, ing.id)})`).join(' + ');
       const canAfford = c.realm >= rec.minRealm && rec.ingredients.every((ing) => itemCount(s, ing.id) >= ing.qty);
       return {
         id: `alch_${rec.id}`,
-        label: `炼制 · ${outDef?.name || rec.output}（成丹 ${rate}%）`,
+        label: `炼制 · ${outDef?.name || rec.name || outId}（成丹 ${rate}%）`,
         hint: `需 ${ingText}`,
         action: 'brewRecipe',
         params: { recipeId: rec.id },
@@ -552,7 +733,7 @@ export class Game {
     return {
       id: 'alchemy',
       title: '丹房 · 八大丹方开炉',
-      text: `三昧地火在丹炉下静静跳动。择定丹方、配齐主辅药材方可定向成丹；丹道法则、火灵根与丹霞谷传承可显著提高成丹率。\n\n累计成丹：${s.counters.alchemy || 0} 炉 | 炸炉：${s.counters.alchemy_fail || 0} 次`,
+      text: `三昧地火在丹炉下静静跳动。择定丹方、配齐主辅药材方可定向成丹；丹道法则、火灵根、丹霞谷传承与「丹器盛会」天象皆可显著提高成丹率。\n\n累计成丹：${s.counters.alchemy || 0} 炉 | 炸炉：${s.counters.alchemy_fail || 0} 次`,
       choices,
     };
   }
@@ -562,16 +743,17 @@ export class Game {
     const c = s.char;
     const rec = ALCHEMY_RECIPE_BY_ID[ch.params?.recipeId];
     if (!rec) return;
+    const outId = rec.outputId || rec.output;
+    if (!outId || !ITEM_BY_ID[outId]) return { error: '丹方产物无效' };
     if (c.realm < rec.minRealm) return { error: `需${REALMS[rec.minRealm]?.name}境` };
     if (!rec.ingredients.every((ing) => itemCount(s, ing.id) >= ing.qty)) return { error: '所需药材不足' };
     for (const ing of rec.ingredients) removeItem(s, ing.id, ing.qty);
     const lines = advanceMonths(s, 1, this.rng);
-    const lawAlch = lawBonusSum(c, 'alchemy') + (titleBonuses(c).alchemy || 0) + (s.buffs?.alchemyBonus || 0);
-    const rate = clamp(rec.baseRate + c.attrs.悟性 * 0.006 + lawAlch + (c.rootId === 'huo' ? 0.12 : 0) + (c.sectId === 'danxia' ? 0.18 : 0), 0.25, 0.97);
+    const rate = clamp(rec.baseRate + this.alchemyBonus(), 0.25, 0.97);
     if (this.rng.chance(rate)) {
       s.counters.alchemy = (s.counters.alchemy || 0) + 1;
-      addItem(s, rec.output, 1);
-      const pillName = ITEM_BY_ID[rec.output]?.name || rec.output;
+      addItem(s, outId, 1);
+      const pillName = ITEM_BY_ID[outId]?.name || rec.name || outId;
       const lawNote = gainLawExp(s, 14 + rec.minRealm * 8, 'pill');
       lines.push(`开炉丹成：获得 ${pillName} ×1（累计炼丹 ${s.counters.alchemy} 次）。`, ...lawNote);
       s.scene.result = {
@@ -707,6 +889,13 @@ export class Game {
         action: 'regionExplore',
       },
       {
+        id: 'region_delve',
+        label: `秘境探幽 · ${DELVE_THEMES[region.id]?.name || '五层险境'}`,
+        hint: '三月 · 五层步步抉择风险回报！层越深爆率越高，可随时携宝撤离',
+        action: 'startDelve',
+        effect: 'primary',
+      },
+      {
         id: 'region_hunt',
         label: '主动猎妖历战',
         hint: `两月 · 挑战${region.name}盘踞妖邪，磨砺战法`,
@@ -714,8 +903,8 @@ export class Game {
       },
       {
         id: 'region_secret',
-        label: '闯入本州独有秘境',
-        hint: '半年 · 深入本州古境夺造化（严格校验境界与条件）',
+        label: '闯入本州独有古境',
+        hint: '半年 · 深入本州传世奇遇（严格校验境界与条件）',
         action: 'secretRealm',
       },
     ];
@@ -760,7 +949,8 @@ export class Game {
 
     const ev = pickEvent(s, this.rng, this, this.rng.chance(0.7) ? 'wild' : 'world', region.id);
     const petExp = petBonuses(c).explore || 0;
-    const evChance = clamp((c.rootId === 'kongjian' ? 0.85 : 0.68) + petExp, 0.2, 0.96);
+    const freedomBonus = (sectPerks(c).freedom || 0) * 0.35;
+    const evChance = clamp((c.rootId === 'kongjian' ? 0.85 : 0.68) + petExp + freedomBonus, 0.2, 0.96);
     if (ev && this.rng.chance(evChance)) {
       this.openEvent(ev);
       this.afterAction();
@@ -774,7 +964,8 @@ export class Game {
       return this.startCombat(eid, { lines });
     }
     const lootId = this.rng.pick(region.exploreRewards || ['lingcao']);
-    const stones = Math.round((30 + region.danger * 55) * Math.pow(REALMS[c.realm]?.powerMult || 1, 0.52));
+    const eraLoot = 1 + (currentWorldEra(s).combatLoot || 0);
+    const stones = Math.round((30 + region.danger * 55) * Math.pow(REALMS[c.realm]?.powerMult || 1, 0.52) * eraLoot * (1 + freedomBonus));
     c.stones += stones;
     addItem(s, lootId, 1);
     lines.push(`搜山寻幽有所收获：灵石 +${stones.toLocaleString()}，${ITEM_BY_ID[lootId]?.name || lootId} ×1（探索度 ${c.regionProgress[region.id]}%）。`);
@@ -787,6 +978,244 @@ export class Game {
     this.emit();
   }
 
+  /* ---------------- 五层秘境探幽（Roguelike 风险回报爬塔） ---------------- */
+
+  act_startDelve() {
+    const s = this.state;
+    const c = s.char;
+    const region = REGION_BY_ID[c.regionId] || REGION_BY_ID.qingniu;
+    const theme = DELVE_THEMES[region.id] || DELVE_THEMES.qingniu;
+    const lines = advanceMonths(s, 3, this.rng);
+    s.delve = {
+      regionId: region.id,
+      name: theme.name,
+      floor: 1,
+      maxFloor: 5,
+      haulStones: 0,
+      haulExp: 0,
+      haulLaw: 0,
+      haulItems: [],
+      log: [...lines, `踏入「${theme.name}」第一层，禁制森严，越深处重宝越多。`],
+    };
+    s.scene = { id: 'delve', result: null };
+    this.afterAction();
+    this.emit();
+  }
+
+  delveMultiplier(floor) {
+    return [1.0, 1.4, 1.9, 2.6, 3.5][clamp((floor || 1) - 1, 0, 4)];
+  }
+
+  buildDelveNode() {
+    const s = this.state;
+    const c = s.char;
+    const dv = s.delve;
+    if (!dv) return this.buildRegionNode();
+    const region = REGION_BY_ID[dv.regionId] || REGION_BY_ID.qingniu;
+    const theme = DELVE_THEMES[region.id] || DELVE_THEMES.qingniu;
+    const fName = theme.floors[dv.floor - 1] || `第${dv.floor}层`;
+    const mult = this.delveMultiplier(dv.floor);
+    const eraDelve = 1 + (currentWorldEra(s).delveLoot || 0);
+    const isBoss = dv.floor >= dv.maxFloor;
+    const haulNames = dv.haulItems.length
+      ? dv.haulItems.map((id) => ITEM_BY_ID[id]?.name || id).slice(-5).join('、')
+      : '暂无';
+
+    const choices = [];
+    if (isBoss) {
+      choices.push({
+        id: 'delve_boss',
+        label: `挑战镇殿古尊 · 夺终极秘藏（×${mult.toFixed(1)}）`,
+        hint: '高危死斗 · 胜则全收厚利与本州稀世奇珍，败则紧急遁逃损半数战利',
+        action: 'delveStep',
+        params: { kind: 'boss' },
+        effect: 'primary',
+      });
+    } else {
+      choices.push(
+        {
+          id: 'delve_fight',
+          label: `强闯妖守 · 夺灵藏（×${mult.toFixed(1)}）`,
+          hint: '斗法清障 · 胜则获丰厚灵石、奇珍并直入下一层',
+          action: 'delveStep',
+          params: { kind: 'fight' },
+        },
+        {
+          id: 'delve_chest',
+          label: `破禁寻宝 · 探暗格（×${mult.toFixed(1)}）`,
+          hint: '神识/气运检定 · 成则斩获稀世灵材，败则触动禁制受创',
+          action: 'delveStep',
+          params: { kind: 'chest' },
+        },
+        {
+          id: 'delve_stele',
+          label: '参悟古碑 · 稳步深入',
+          hint: '安全推进 · 积攒法则感悟与实战修为，并进入下一层',
+          action: 'delveStep',
+          params: { kind: 'stele' },
+        },
+      );
+    }
+    choices.push({
+      id: 'delve_extract',
+      label: dv.floor === 1 && !dv.haulStones && !dv.haulItems.length ? '退出秘境' : '见好就收 · 携宝撤离',
+      hint: `稳妥带出全部未结算战利（灵石 ${dv.haulStones.toLocaleString()} · 奇珍 ${dv.haulItems.length} 件）`,
+      action: 'delveExtract',
+      effect: dv.haulItems.length >= 2 ? 'primary' : '',
+    });
+
+    return {
+      id: 'delve',
+      title: `${dv.name} · 第 ${dv.floor}/${dv.maxFloor} 层【${fName}】`,
+      text: `地宫幽深，灵光与煞气交织（当前层数收益倍率 ×${mult.toFixed(1)}${eraDelve > 1 ? ` · 妖潮天象 ×${eraDelve.toFixed(2)}` : ''}）。\n\n【行囊暂存（未撤离）】灵石 ${dv.haulStones.toLocaleString()} · 修为 ${dv.haulExp.toLocaleString()} · 法则 +${dv.haulLaw} · 奇珍：${haulNames}\n\n${dv.log.slice(-4).join('\n')}`,
+      choices,
+      subhub: true,
+    };
+  }
+
+  act_delveStep(ch) {
+    const s = this.state;
+    const c = s.char;
+    const dv = s.delve;
+    if (!dv) return this.act_openRegion();
+    const kind = ch.params?.kind || 'stele';
+    const region = REGION_BY_ID[dv.regionId] || REGION_BY_ID.qingniu;
+    const mult = this.delveMultiplier(dv.floor);
+    const eraDelve = 1 + (currentWorldEra(s).delveLoot || 0);
+    const pm = REALMS[c.realm]?.powerMult || 1;
+    const baseStones = Math.round((55 + region.danger * 70) * Math.pow(pm, 0.5) * mult * eraDelve);
+    const baseExp = Math.round(monthlyExp(s) * (1.2 + dv.floor * 0.45) * eraDelve);
+    const rewardPool = region.exploreRewards?.length ? region.exploreRewards : ['lingcao'];
+
+    if (kind === 'fight' || kind === 'boss') {
+      const enemies = region.enemies || ['wolf'];
+      const eid = kind === 'boss'
+        ? enemies[enemies.length - 1]
+        : this.rng.pick(enemies.slice(Math.min(enemies.length - 1, Math.floor(dv.floor / 2))));
+      const item = this.rng.pick(kind === 'boss' ? (region.veinYield?.items || rewardPool) : rewardPool);
+      const stoneWin = kind === 'boss' ? Math.round(baseStones * 1.9) : baseStones;
+      const expWin = kind === 'boss' ? Math.round(baseExp * 1.8) : baseExp;
+      const lawWin = kind === 'boss' ? 32 + region.danger * 8 : 10 + dv.floor * 4;
+      return this.startCombat({
+        enemy: eid,
+        win: {
+          text: kind === 'boss'
+            ? `镇殿强敌轰然倒地！秘境最深处的封印洞开，满殿奇珍灵石尽入你囊中！`
+            : `斩灭守关妖邪！你搜刮秘室灵藏，沿石阶继续向第 ${dv.floor + 1} 层迈进。`,
+          delveAdvance: { kind, stones: stoneWin, exp: expWin, law: lawWin, item },
+          returnTo: kind === 'boss' ? 'regionHub' : 'delve',
+          fx: kind === 'boss' ? 'breakthrough' : 'alchemy',
+        },
+        lose: {
+          text: '秘境守卫煞威滔天！危急关头你捏碎逃生玉符破阵遁出——性命无忧，却遗落了半数未带出的秘境战利。',
+          delveEscape: true,
+          effects: { injury: 1 },
+          returnTo: 'regionHub',
+        },
+      }, { lines: [`【${dv.name}·第${dv.floor}层】强敌现身拦路！`] });
+    }
+
+    if (kind === 'chest') {
+      const p = clamp(0.46 + c.attrs.神识 * 0.008 + c.attrs.气运 * 0.008 + (c.goldenFingerId === 'gf_karma_mirror' ? 0.12 : 0), 0.25, 0.92);
+      if (this.rng.chance(p)) {
+        const item = this.rng.pick(rewardPool);
+        const stones = Math.round(baseStones * 1.15);
+        dv.haulStones += stones;
+        dv.haulItems.push(item);
+        dv.haulExp += Math.round(baseExp * 0.6);
+        dv.floor = Math.min(dv.maxFloor, dv.floor + 1);
+        dv.log.push(`破禁得手！暂存灵石 +${stones.toLocaleString()}、${ITEM_BY_ID[item]?.name || item} ×1，踏入第 ${dv.floor} 层。`);
+        s.scene.result = {
+          text: `你神识如丝拆解了三道古禁，暗格弹开，露出灵光湛湛的「${ITEM_BY_ID[item]?.name || item}」与满匣灵石！`,
+          lines: [`暂存战利：灵石 +${stones.toLocaleString()}，${ITEM_BY_ID[item]?.name || item} ×1`, `已深入第 ${dv.floor}/${dv.maxFloor} 层`],
+          fx: 'alchemy',
+          returnTo: 'delve',
+        };
+      } else {
+        const dmg = Math.max(1, Math.round(c.maxHp * 0.16));
+        c.hp = Math.max(1, c.hp - dmg);
+        c.injuries = (c.injuries || 0) + 1;
+        dv.floor = Math.min(dv.maxFloor, dv.floor + 1);
+        dv.log.push(`禁制反噬！气血 -${dmg}，你咬牙冲过暗道进入第 ${dv.floor} 层。`);
+        s.scene.result = {
+          text: '古禁突生变故，数道赤色阵雷炸裂！你仓促护体受了皮外伤，顺势跃入下一层石廊。',
+          lines: [`气血 -${dmg}，伤势 +1`, `已深入第 ${dv.floor}/${dv.maxFloor} 层`],
+          fx: 'combat_hit',
+          returnTo: 'delve',
+        };
+      }
+      this.afterAction();
+      this.emit();
+      return;
+    }
+
+    // kind === 'stele'
+    const lawGain = 14 + dv.floor * 5 + region.danger * 3;
+    dv.haulLaw += lawGain;
+    dv.haulExp += Math.round(baseExp * 0.9);
+    dv.haulStones += Math.round(baseStones * 0.45);
+    dv.floor = Math.min(dv.maxFloor, dv.floor + 1);
+    dv.log.push(`残碑悟道！暂存法则 +${lawGain}、修为 +${Math.round(baseExp * 0.9).toLocaleString()}，进入第 ${dv.floor} 层。`);
+    s.scene.result = {
+      text: '石壁残碑上留着前代大能的剑痕道韵。你驻足静观一炷香，受益匪浅，随后从容踏入更深处。',
+      lines: [`暂存战利：法则感悟 +${lawGain}，修为 +${Math.round(baseExp * 0.9).toLocaleString()}`, `已深入第 ${dv.floor}/${dv.maxFloor} 层`],
+      returnTo: 'delve',
+    };
+    this.afterAction();
+    this.emit();
+  }
+
+  bankDelveHaul(ratio = 1, clearedAll = false) {
+    const s = this.state;
+    const c = s.char;
+    const dv = s.delve;
+    if (!dv) return [];
+    const lines = [];
+    const stones = Math.round(dv.haulStones * ratio);
+    const exp = Math.round(dv.haulExp * ratio);
+    const law = Math.round(dv.haulLaw * ratio);
+    if (stones > 0) { c.stones += stones; lines.push(`带出灵石 +${stones.toLocaleString()}`); }
+    if (exp > 0) { const got = gainExp(s, exp); if (got) lines.push(`沉淀修为 +${got.toLocaleString()}`); }
+    if (law > 0) lines.push(...gainLawExp(s, law));
+    const keepCount = Math.ceil(dv.haulItems.length * ratio);
+    const kept = dv.haulItems.slice(0, keepCount);
+    for (const id of kept) {
+      addItem(s, id, 1);
+      lines.push(`收入储物袋：${ITEM_BY_ID[id]?.name || id} ×1`);
+    }
+    if (clearedAll) {
+      s.counters.delves = (s.counters.delves || 0) + 1;
+      s.counters.secrets = (s.counters.secrets || 0) + 1;
+      c.reputation += 25 + (REGION_BY_ID[dv.regionId]?.danger || 1) * 10;
+      lines.push(`【五层秘境通关】累计通关 ${s.counters.delves} 次，声望大涨！`);
+      this.pushRumor(`【秘境奇闻】「${c.name}」独自踏破「${dv.name}」五重险关，满载重宝而归！`);
+    }
+    s.delve = null;
+    return lines;
+  }
+
+  act_delveExtract() {
+    const s = this.state;
+    const dv = s.delve;
+    if (!dv) return this.act_openRegion();
+    const name = dv.name;
+    const floor = dv.floor;
+    const lines = this.bankDelveHaul(1, false);
+    s.scene = {
+      id: 'regionHub',
+      result: {
+        text: lines.length
+          ? `你见好就收，于「${name}」第 ${floor} 层激发传送玉符安然退回地面，所有战利分毫不失！`
+          : `你审时度势，退出了「${name}」。`,
+        lines,
+        fx: lines.length ? 'alchemy' : null,
+        returnTo: 'regionHub',
+      },
+    };
+    this.afterAction();
+    this.emit();
+  }
+
   act_regionVein() {
     const s = this.state;
     const c = s.char;
@@ -794,11 +1223,13 @@ export class Game {
     if ((c.regionProgress?.[region.id] || 0) < 100 || !region.veinYield) return { error: '须探索度满 100% 方可采撷' };
     const lines = advanceMonths(s, 6, this.rng);
     const vy = region.veinYield;
+    const eraVein = currentWorldEra(s).veinMult || 1;
     const item = this.rng.pick(vy.items || region.exploreRewards || ['lingcao']);
-    const gotExp = gainExp(s, Math.round(needExp(c) * (vy.expPct || 0.08)));
-    c.stones += vy.stones || 100;
+    const gotExp = gainExp(s, Math.round(needExp(c) * (vy.expPct || 0.08) * eraVein));
+    const gotStones = Math.round((vy.stones || 100) * eraVein);
+    c.stones += gotStones;
     addItem(s, item, 1);
-    lines.push(`【${vy.label}】灵石 +${(vy.stones || 100).toLocaleString()}，修为 +${gotExp.toLocaleString()}，采得「${ITEM_BY_ID[item]?.name || item}」×1！`);
+    lines.push(`【${vy.label}】灵石 +${gotStones.toLocaleString()}，修为 +${gotExp.toLocaleString()}，采得「${ITEM_BY_ID[item]?.name || item}」×1！`);
     s.scene.result = {
       text: `你熟门熟路潜入${region.name}核心灵眼，趁潮汐吐纳之机采撷灵粹，满载而归。`,
       lines,
@@ -831,6 +1262,7 @@ export class Game {
     let months = Math.min(12, Math.max(3, dist * 3));
     if (c.rootId === 'kongjian') months = Math.max(2, Math.round(months * 0.5));
     else if (c.rootId === 'feng') months = Math.max(2, Math.round(months * 0.7));
+    if (sectPerks(c).freedom) months = Math.max(2, months - 1);
     return months;
   }
 
@@ -945,7 +1377,14 @@ export class Game {
         disabled: !nextTrial,
         reason: '已至最高职阶',
       },
-      { id: 'sect_leave', label: '叛出师门', hint: '永入原宗黑名单、5年禁入他宗、声望与业力重创', action: 'sectLeave' },
+      {
+        id: 'sect_leave',
+        label: c.sectId === 'sanxiu' ? '辞别散修盟' : '叛出师门',
+        hint: c.sectId === 'sanxiu'
+          ? '散修本无山门束缚，可自由离去另拜十三宗，无叛门惩戒'
+          : '永入原宗黑名单、5年禁入他宗、声望与业力重创',
+        action: 'sectLeave',
+      },
       { id: 'back_hub', label: '离开山门', hint: '返回主界面', action: 'backHub' },
     ];
     return {
@@ -1031,14 +1470,22 @@ export class Game {
     if (s.sectBoard && s.sectBoard.sectId === key && c.age < s.sectBoard.refreshAt) {
       return s.sectBoard;
     }
-    // 筛选当前职阶/境界可达或略高 1 档的任务，随机抽取 3 个不重复任务
+    // 筛选当前职阶/境界可达的任务；确保至少有 1 项可执行悬赏，避免炼气新人整榜全锁
     const eligible = list.filter((m) => (c.sectRank || 0) >= m.minRank && c.realm >= m.minRealm);
-    const pool = eligible.length >= 3 ? eligible : list;
-    const shuffled = [...pool].sort(() => this.rng.next() - 0.5).slice(0, 3);
+    const lowFallback = [...list].sort((a, b) => (a.minRealm - b.minRealm) || (a.minRank - b.minRank));
+    let picked = [];
+    if (eligible.length >= 3) {
+      picked = [...eligible].sort(() => this.rng.next() - 0.5).slice(0, 3);
+    } else if (eligible.length > 0) {
+      const rest = lowFallback.filter((m) => !eligible.some((e) => e.id === m.id)).sort(() => this.rng.next() - 0.5);
+      picked = [...eligible, ...rest].slice(0, 3);
+    } else {
+      picked = lowFallback.slice(0, 3);
+    }
     s.sectBoard = {
       sectId: key,
       refreshAt: c.age + 24,
-      slots: shuffled.map((m) => ({ missionId: m.id, done: false })),
+      slots: picked.map((m) => ({ missionId: m.id, done: false })),
     };
     return s.sectBoard;
   }
@@ -1122,7 +1569,7 @@ export class Game {
         },
         lose: {
           text: '强敌难挡，你及时抽身退回山门（仅耗筹备时日），任务堂暂将榜文挂回。',
-          effects: { hp: Math.max(10, Math.round(c.maxHp * 0.25)), injuries: 1 },
+          effects: { hp: Math.max(10, Math.round(c.maxHp * 0.25)), injury: 1 },
           returnTo: 'sectHall',
         },
       }, { lines });
@@ -1374,6 +1821,21 @@ export class Game {
     const c = s.char;
     const oldId = c.sectId;
     if (!oldId || oldId === 'player_sect') return;
+    if (oldId === 'sanxiu') {
+      c.sectId = null;
+      c.sectRank = 0;
+      c.contribution = 0;
+      s.sectBoard = null;
+      recomputeDerived(c);
+      s.scene.result = {
+        text: '你向散修盟茶楼掌柜抱拳作别。本是无拘无束之身，天地广阔，随时可叩问十三宗山门。',
+        lines: ['已辞别散修盟（无黑名单、无冷却）'],
+        returnTo: 'hub',
+      };
+      this.afterAction();
+      this.emit();
+      return;
+    }
     const oldName = SECT_BY_ID[oldId]?.name || '宗门';
     c.sectBlacklist = c.sectBlacklist || {};
     c.sectBlacklist[oldId] = true;
@@ -1381,11 +1843,16 @@ export class Game {
     c.sectLeaveUntil = c.age + 60; // 5 年冷却
     const repLoss = 100 * c.betrayCount;
     const karmaLoss = 40 * c.betrayCount;
-    // 卸下原宗未达真传的秘传功法
+    // 卸下原宗未达真传的秘传功法，防止 activeTechniques 自动重新装回原宗功法
     c.equippedTechs = (c.equippedTechs || []).filter((tid) => {
       const t = c.techniques.find((x) => x.id === tid);
       return !(t && t.sectId === oldId);
     });
+    if (c.equippedTechs.length === 0) {
+      const nonSect = c.techniques.filter((t) => t.sectId !== oldId).slice(0, maxTechSlots(c.realm));
+      c.equippedTechs = nonSect.map((t) => t.id);
+      if (c.equippedTechs.length === 0) c._manualUnequip = true;
+    }
     c.sectId = null;
     c.sectRank = 0;
     c.contribution = 0;
@@ -1482,48 +1949,77 @@ export class Game {
     }, { lines: [...lines, '锣声一响，问道擂台斗法开启！'] });
   }
 
-  act_openTechShop() {
-    this.state.scene = { id: 'techShop', result: null };
+  act_openTechShop(ch = {}) {
+    const page = Math.max(0, Number(ch?.params?.page) || 0);
+    const tier = ch?.params?.tier || 'all';
+    this.state.scene = { id: 'techShop', page, tier, result: null };
     this.emit();
   }
 
   shopDiscountMult() {
     const s = this.state;
     const c = s.char;
-    return (1 - Math.min(0.25, c.attrs.魅力 * 0.004))
+    const eraDisc = currentWorldEra(s).shopDiscount || 0;
+    return Math.max(0.5, (1 - Math.min(0.25, c.attrs.魅力 * 0.004))
       * (c.sectId === 'wanbao' ? 0.85 : 1)
       * (c.goldenFingerId === 'gf_karma_mirror' ? 0.85 : 1)
-      * (1 - Math.min(0.15, s.buffs?.shopDiscount || 0));
+      * (1 - Math.min(0.15, s.buffs?.shopDiscount || 0))
+      * (1 - eraDisc));
   }
 
   buildTechShopNode() {
     const s = this.state;
     const c = s.char;
-    const gradeOrder = { 凡: 0, 黄: 1, 玄: 2, 地: 3, 天: 4, 仙: 6 };
+    const gradeOrder = TECH_GRADE_ORDER;
     const gradePrice = { 凡: 260, 黄: 1100, 玄: 3800, 地: 13500, 天: 48000, 仙: 180000 };
     const discount = this.shopDiscountMult();
-    // 严格排除 12 位道友的唯一传艺功法
-    const available = WORLD_TECHNIQUES.filter(
-      (t) => !NPC_EXCLUSIVE_TECH_IDS.has(t.id) && (gradeOrder[t.grade] ?? 0) <= c.realm + 1 && !c.techniques.some((x) => x.id === t.id),
-    );
-    const shown = available.slice(0, 8);
+    const tier = s.scene.tier || 'all';
+    const tierSets = { all: null, low: new Set(['凡', '黄']), mid: new Set(['玄', '地']), high: new Set(['天', '仙']) };
+    const tierNames = { all: '全部', low: '凡·黄', mid: '玄·地', high: '天·仙' };
+    const nextTier = { all: 'low', low: 'mid', mid: 'high', high: 'all' }[tier] || 'all';
+
+    // 严格排除 12 位道友的唯一传艺功法，按品阶由高到低排列，支持分页与品阶筛选
+    const available = WORLD_TECHNIQUES.filter((t) => {
+      if (NPC_EXCLUSIVE_TECH_IDS.has(t.id)) return false;
+      if ((gradeOrder[t.grade] ?? 0) > c.realm + 1) return false;
+      if (c.techniques.some((x) => x.id === t.id)) return false;
+      if (tierSets[tier] && !tierSets[tier].has(t.grade)) return false;
+      return true;
+    }).sort((a, b) => (gradeOrder[b.grade] ?? 0) - (gradeOrder[a.grade] ?? 0));
+
+    const perPage = 6;
+    const totalPages = Math.max(1, Math.ceil(available.length / perPage));
+    const page = clamp(Number(s.scene.page) || 0, 0, totalPages - 1);
+    const shown = available.slice(page * perPage, (page + 1) * perPage);
+
     const choices = shown.map((t) => {
       const price = Math.round((gradePrice[t.grade] || 1200) * discount);
       return {
         id: `wt_${t.id}`,
         label: `【${t.grade}·${t.align || '中'}】${t.name}（${price.toLocaleString()} 石）`,
-        hint: `修炼+${Math.round(t.speed * 100)}% 攻+${Math.round(t.atk * 100)}% · 「${t.artName}」`,
+        hint: `修炼+${Math.round(t.speed * 100)}% 攻+${Math.round(t.atk * 100)}% 防+${Math.round((t.def || 0) * 100)}% · 「${t.artName}」`,
         action: 'buyWorldTech',
-        params: { techId: t.id, price },
+        params: { techId: t.id, price, page, tier },
         disabled: c.stones < price,
         reason: `需 ${price.toLocaleString()} 灵石`,
       };
     });
+    if (totalPages > 1) {
+      if (page > 0) choices.push({ id: 'ts_prev', label: `上一页（${page}/${totalPages}）`, hint: '浏览前页孤本', action: 'openTechShop', params: { page: page - 1, tier } });
+      if (page < totalPages - 1) choices.push({ id: 'ts_next', label: `下一页（${page + 2}/${totalPages}）`, hint: `余下可购共 ${available.length} 部`, action: 'openTechShop', params: { page: page + 1, tier } });
+    }
+    choices.push({
+      id: 'ts_filter',
+      label: `筛选品阶：当前【${tierNames[tier]}】→ 切至【${tierNames[nextTier]}】`,
+      hint: '按凡黄 / 玄地 / 天仙自由翻阅全部可购秘典',
+      action: 'openTechShop',
+      params: { page: 0, tier: nextTier },
+    });
     choices.push({ id: 'back_city', label: '离开秘阁', hint: '', action: 'openCity' });
     return {
       id: 'techShop',
-      title: '仙城 · 古籍秘阁',
-      text: `阁内收录九州散落孤本（十二位绝世名修之独门绝学不对外售卖，唯亲传可得）。购入后收录藏经簿，须至洞府槽位运使生效。\n\n已参悟功法：${c.techniques.length} 部 | 持有灵石：${c.stones.toLocaleString()}`,
+      title: `仙城 · 古籍秘阁（${tierNames[tier]} · 第${page + 1}/${totalPages}页）`,
+      text: `阁内收录九州散落孤本（十二位绝世名修之独门绝学不对外售卖，唯亲传可得），按高阶优先陈列，支持品阶筛选与翻页。\n\n当前可购：${available.length} 部 | 已参悟：${c.techniques.length} 部 | 持有灵石：${c.stones.toLocaleString()}`,
       choices,
     };
   }
@@ -1628,23 +2124,39 @@ export class Game {
     const npc = NPC_BY_ID[s.scene.npcId] || NPCS[0];
     const rel = c.relations?.[npc.relationKey] || 0;
     const likeNames = npc.likeItems.map((id) => ITEM_BY_ID[id]?.name || id).join(' / ');
-    // 按价值从高到低展示可赠礼的喜好物
-    const giftItem = npc.likeItems.find((id) => hasItem(s, id));
-    const giftDef = giftItem ? ITEM_BY_ID[giftItem] : null;
-    const giftGain = giftDef ? this.giftAffinityGain(giftDef) : 0;
+    // 展示储物袋中所有对方喜爱的物品（按价值由高到低排序），任君挑选不再锁死首项
+    const ownedGifts = npc.likeItems
+      .filter((id) => hasItem(s, id))
+      .sort((a, b) => (ITEM_BY_ID[b]?.price || 0) - (ITEM_BY_ID[a]?.price || 0));
     const choices = [
       { id: 'npc_chat', label: '品茶论道', hint: '两月 · 触发专属道友指点与好感 +6', action: 'npcChat', params: { npcId: npc.id } },
-      {
-        id: 'npc_gift',
-        label: giftDef ? `赠礼 · ${giftDef.name}` : '赠礼结缘',
-        hint: giftDef ? `一月 · 依物价增好感 +${giftGain}（上限100）` : `喜好：${likeNames}`,
-        action: 'npcGift',
-        params: { npcId: npc.id, itemId: giftItem },
-        disabled: !giftItem || rel >= 100,
-        reason: rel >= 100 ? '好感已至生死之交（100）' : `无对方喜好之物（${likeNames}）`,
-      },
-      { id: 'npc_spar', label: '切磋试剑', hint: '一月 · 迎战名宿本境实力，获专属法则感悟', action: 'npcSpar', params: { npcId: npc.id } },
     ];
+    if (ownedGifts.length) {
+      for (const gid of ownedGifts) {
+        const gdef = ITEM_BY_ID[gid];
+        const gain = this.giftAffinityGain(gdef);
+        choices.push({
+          id: `npc_gift_${gid}`,
+          label: `赠礼 · ${gdef?.name || gid}（有${itemCount(s, gid)}）`,
+          hint: `一月 · 估价 ${(gdef?.price || 0).toLocaleString()} 石，好感 +${gain}（上限100）`,
+          action: 'npcGift',
+          params: { npcId: npc.id, itemId: gid },
+          disabled: rel >= 100,
+          reason: '好感已至生死之交（100）',
+        });
+      }
+    } else {
+      choices.push({
+        id: 'npc_gift_none',
+        label: '赠礼结缘',
+        hint: `喜好：${likeNames}`,
+        action: 'npcGift',
+        params: { npcId: npc.id, itemId: null },
+        disabled: true,
+        reason: rel >= 100 ? '好感已至生死之交（100）' : `无对方喜好之物（${likeNames}）`,
+      });
+    }
+    choices.push({ id: 'npc_spar', label: '切磋试剑', hint: '一月 · 迎战名宿本境实力，获专属法则感悟', action: 'npcSpar', params: { npcId: npc.id } });
     const teachTech = npc.teachTechId ? WORLD_TECH_BY_ID[npc.teachTechId] : null;
     if (teachTech && rel >= 35 && !c.techniques.some((t) => t.id === teachTech.id)) {
       choices.push({
@@ -1680,8 +2192,8 @@ export class Game {
   giftAffinityGain(itemDef) {
     const price = Math.max(10, itemDef?.price || 30);
     const raw = Math.round(3 + Math.log2(price / 10) * 1.8);
-    const mult = 1 + (this.state.buffs?.npcAffinity || 0);
-    return clamp(Math.round(raw * mult), 4, 30);
+    const charmMult = 1 + (this.state.buffs?.npcAffinity || 0) + (sectPerks(this.state.char).charm ? 0.25 : 0);
+    return clamp(Math.round(raw * charmMult), 4, 32);
   }
 
   act_npcChat(ch) {
@@ -1690,7 +2202,8 @@ export class Game {
     const npc = NPC_BY_ID[ch.params?.npcId];
     if (!npc) return;
     const lines = advanceMonths(s, 2, this.rng);
-    const addRel = Math.round(6 * (1 + (s.buffs?.npcAffinity || 0)));
+    const charmMult = 1 + (s.buffs?.npcAffinity || 0) + (sectPerks(c).charm ? 0.25 : 0);
+    const addRel = Math.round(6 * charmMult);
     c.relations[npc.relationKey] = clamp((c.relations[npc.relationKey] || 0) + addRel, -100, 100);
     const rel = c.relations[npc.relationKey];
     const line = this.rng.pick(npc.chatLines);
@@ -1759,7 +2272,7 @@ export class Game {
         lines.push('【青莲剑歌】剑道感悟暴涨，悟性 +2！', ...gainLawExp(s, 45, 'sword'));
         break;
       case 'npc_siming':
-        s.buffs.breakBonus = Math.min(25, (s.buffs.breakBonus || 0) + 6);
+        s.buffs.breakBonus = Math.max(s.buffs.breakBonus || 0, Math.min(45, (s.buffs.breakBonus || 0) + 6));
         c.bonusLifespan = (c.bonusLifespan || 0) + 12 * 10;
         recomputeDerived(c);
         lines.push('【星穹窥劫】窥破天劫玄机，下次破境成算 +6%、寿元微增！', ...gainLawExp(s, 45, 'star'));
@@ -1812,9 +2325,12 @@ export class Game {
     const lines = advanceMonths(s, 1, this.rng);
     const sparLaw = WORLD_TECH_BY_ID[npc.teachTechId]?.lawId || 'sword';
     const expGain = Math.round(monthlyExp(s) * (1.8 + npc.minRealm * 0.25));
+    const sparEnemyId = npc.sparEnemy || 'cultivator';
+    const def = ENEMY_BY_ID[sparEnemyId] || ENEMY_BY_ID.cultivator;
+    const targetRealm = Math.min(def.realm, Math.max(c.realm + 1, npc.minRealm || 0));
     return this.startCombat({
-      enemy: npc.sparEnemy || 'cultivator',
-      preserveEnemyRealm: true,
+      enemy: sparEnemyId,
+      customRealm: targetRealm,
       win: {
         text: `收剑归鞘，${npc.name}抚掌大笑：「好俊的功夫！此战痛快！」`,
         effects: { exp: expGain, attrs: { 根骨: 1 }, relation: { [npc.relationKey]: 8 }, lawExp: 25 + npc.minRealm * 6, lawId: sparLaw },
@@ -1837,6 +2353,7 @@ export class Game {
     const npc = NPC_BY_ID[ch.params?.npcId];
     const tech = WORLD_TECH_BY_ID[ch.params?.techId];
     if (!npc || !tech) return;
+    if ((c.relations?.[npc.relationKey] || 0) < 35) return { error: `与${npc.name}好感尚不足 35` };
     if (c.techniques.some((t) => t.id === tech.id)) return { error: '已习得此绝学' };
     const techObj = {
       id: tech.id, name: tech.name, speed: tech.speed, atk: tech.atk, def: tech.def,
@@ -1863,6 +2380,9 @@ export class Game {
     const c = s.char;
     const npc = NPC_BY_ID[ch.params?.npcId];
     if (!npc) return;
+    const threshold = npc.id === 'npc_su' ? 40 : 60;
+    if (!ROMANCEABLE_NPCS.has(npc.id)) return { error: '此道友一心向道，不结道侣' };
+    if ((c.relations?.[npc.relationKey] || 0) < threshold) return { error: `与${npc.name}好感需达 ${threshold} 方可结侣` };
     if (s.flags['道侣']) return { error: '此生已有道侣相伴' };
     s.flags['道侣'] = true;
     c.spouseNpcId = npc.id;
@@ -1888,10 +2408,11 @@ export class Game {
   act_cultivate(ch = {}) {
     const s = this.state;
     const months = ch.params?.months || MONTHS;
-    const gain = monthlyExp(s) * months;
+    const taiyinMult = (s.char.rootId === 'taiyin' && months >= 24) ? 1.3 : 1;
+    const gain = Math.round(monthlyExp(s) * months * taiyinMult);
     const got = gainExp(s, gain);
     s.counters.night_cultivate = (s.counters.night_cultivate || 0) + Math.max(1, Math.round(months / 3));
-    const lines = [`闭关${months}月，修为 +${got.toLocaleString()}。`];
+    const lines = [`闭关${months}月${taiyinMult > 1 ? '（太阴月华 +30%）' : ''}，修为 +${got.toLocaleString()}。`];
     if (s.char.goldenFingerId === 'gf_bottle' && this.rng.chance(months >= 24 ? 0.72 : 0.35)) {
       const herb = s.char.realm >= 2 ? 'qiannian_lingcao' : 'lingcao';
       addItem(s, herb, 1);
@@ -2003,8 +2524,10 @@ export class Game {
     if (entries.length) {
       const nextId = this.rng.pick(entries);
       c.secretsCleared = c.secretsCleared || [];
-      if (!c.secretsCleared.includes(nextId)) c.secretsCleared.push(nextId);
-      s.counters.secrets = c.secretsCleared.length;
+      if (!c.secretsCleared.includes(nextId)) {
+        c.secretsCleared.push(nextId);
+        s.counters.secrets = Math.max((s.counters.secrets || 0) + 1, c.secretsCleared.length);
+      }
       this.openScene(nextId);
       this.afterAction();
       this.emit();
@@ -2048,6 +2571,7 @@ export class Game {
       const eq = this.autoEquipIfSpace(techObj);
       const lines = [`习得功法 ${def.name}${eq ? '（已自动运使）' : '（已收录藏经簿）'}`];
       if (def.technique.attrs) lines.push(...applyEffects(s, { attrs: def.technique.attrs }, this.effectCtx()));
+      if (def.technique.lawId) lines.push(...gainLawExp(s, 28, def.technique.lawId));
       recomputeDerived(s.char);
       this.pushLog(`研读${def.name}`);
       this.checkAchievements();
@@ -2065,6 +2589,8 @@ export class Game {
         if (eff.hpPct) eff.hpPct = Math.min(1, eff.hpPct * 1.25);
       }
       const lines = applyEffects(s, eff, this.effectCtx());
+      // 非战斗服丹/启符不会自损致死，至少保留 1 点气血
+      if (s.char.hp <= 0) s.char.hp = 1;
       recomputeDerived(s.char);
       this.pushLog(`使用${def.name}`);
       this.checkAchievements();
@@ -2108,11 +2634,11 @@ export class Game {
     const c = s.char;
     const lvl = c.artifactLevel || 0;
     if (lvl >= ARTIFACT_TIERS.length - 1) {
-      s.scene.result = { text: `你的本命法宝「${c.artifactName}」已臻太古混沌仙剑极境，再无瑕疵可炼。`, lines: [], returnTo: ch.params?.returnTo || null };
+      s.scene.result = { text: `你的本命法宝「${c.artifactName}」已臻${ARTIFACT_TIERS[ARTIFACT_TIERS.length - 1]}极境，再无瑕疵可炼。`, lines: [], returnTo: ch.params?.returnTo || null };
       this.emit();
       return;
     }
-    const stoneCost = Math.round((260 + lvl * 420) * Math.pow(2.1, Math.max(0, lvl)));
+    const stoneCost = this.refineStoneCost();
     // 严格按最低价值优先消耗灵材，绝不误烧龙血精！
     const availMat = REFINE_MATS_BY_PRICE.find((id) => hasItem(s, id));
     if (c.stones < stoneCost && !availMat) {
@@ -2397,7 +2923,9 @@ export class Game {
     c.sectId = 'player_sect';
     c.playerSectName = `${c.name}道宗`;
     c.playerSectLevel = 1;
+    c.playerSectDisciples = Math.max(c.playerSectDisciples || 0, s.counters.disciples || 0);
     c.sectRank = 5;
+    s.sectBoard = null;
     if (!c.titles.includes('开山祖师')) c.titles.push('开山祖师');
     c.reputation += 200;
     recomputeDerived(c);
@@ -2565,7 +3093,8 @@ export class Game {
         c.realm++;
         c.layer = 0;
         const extraMajor = [];
-        if (s.flags['前世秘藏']) {
+        if (s.flags['前世秘藏'] && !s.flags[`秘藏已领:${c.realm}`]) {
+          s.flags[`秘藏已领:${c.realm}`] = true;
           const legacy = Math.round(1500 * Math.pow(REALMS[c.realm].powerMult || 1, 0.5));
           c.stones += legacy;
           extraMajor.push(`【前世秘藏】破境感应旧藏，灵石 +${legacy.toLocaleString()}`);
@@ -2586,12 +3115,12 @@ export class Game {
           this.pushRumor(`【九州震动】「${c.name}」丹成紫气东来，竟是「${chosen.name}」！`);
         }
         recomputeDerived(c);
+        c.hp = c.maxHp;
+        c.mp = c.maxMp;
         if (REALMS[c.realm]?.tribulation) {
           s.stats.tribulations++;
           return this.startTribulation([prefix, ...extraMajor].filter(Boolean).join('\n'));
         }
-        c.hp = c.maxHp;
-        c.mp = c.maxMp;
         s.scene = {
           id: 'hub',
           result: {
@@ -2655,7 +3184,7 @@ export class Game {
       text: `天色骤暗，墨云压顶，紫霄神雷在云海翻滚。${realm.name}之劫，既是天道拷问，亦是脱凡洗礼。\n\n第${t.stage}重天雷正在凝聚。${t.logs?.length ? `\n\n${t.logs.slice(-2).join('\n')}` : ''}`,
       choices: [
         { label: '以肉身硬抗', hint: `成算 ${Math.round(p * 100)}% · 淬炼道体但气血消耗重`, action: 'tribulationStage', params: { p, mode: 'body' } },
-        { label: '祭出本命法宝抵御', hint: '耗灵力，成算更高', action: 'tribulationStage', params: { p: Math.min(0.97, p + 0.1), mode: 'artifact' } },
+        { label: '祭出本命法宝抵御', hint: '耗 25% 灵力，成算 +10%，护身减伤', action: 'tribulationStage', params: { p: Math.min(0.97, p + 0.1), mode: 'artifact' }, require: 'char.mp >= char.maxMp * 0.25', requireHint: '灵力不足以御使法宝' },
         { label: '吞服天劫丹', hint: '消耗天劫丹，成算 +30%', action: 'tribulationStage', params: { p: Math.min(0.98, p + 0.3), mode: 'pill' }, require: 'has("tianjie_dan")', requireHint: '没有天劫丹' },
         { label: '散功求生', hint: '放弃此劫，境界跌落，保住性命', action: 'tribulationFlee' },
       ],
@@ -2680,12 +3209,14 @@ export class Game {
       s.scene.fx = 'tribulation_hit';
       if (s.char.hp <= 0) {
         s.flags['渡劫失败'] = true;
-        return this.finishEnding('e_tribulation_death');
+        return this.finishEnding(this.pickNaturalEnding());
       }
       t.stage++;
       if (t.stage > t.total) {
         s.tribulation = null;
+        s.flags['渡过天劫'] = (s.flags['渡过天劫'] || 0) + 1;
         s.scene = { id: 'hub', result: { text: '劫云散去。你虽捡回一命，此劫终未圆满，寿元折损十年。', lines: ['渡劫受创：寿元 -10 年'], fx: 'tribulation_hit' } };
+        this.afterAction();
         this.emit();
         return;
       }
@@ -2695,8 +3226,8 @@ export class Game {
     const baseDmg = mode === 'body' ? 0.28 : 0.12;
     const dmg = Math.round(s.char.maxHp * baseDmg * rootDmgMult);
     s.char.hp = Math.max(1, s.char.hp - dmg);
-    s.char.mp = Math.max(0, s.char.mp - Math.round(s.char.maxMp * 0.25));
-    if (mode === 'artifact') s.char.injuries = (s.char.injuries || 0) + 1;
+    if (mode === 'artifact') s.char.mp = Math.max(0, s.char.mp - Math.round(s.char.maxMp * 0.25));
+    if (mode === 'body' && dmg > s.char.maxHp * 0.25) s.char.injuries = (s.char.injuries || 0) + 1;
     t.logs.push(`第${t.stage}重神雷为你硬生生震散！${s.char.rootId === 'lei' ? '雷灵根鲸吞余电，反淬经脉。' : ''}`);
     s.scene.fx = 'tribulation_pass';
     t.stage++;
@@ -2744,6 +3275,7 @@ export class Game {
     s.char.demon = clamp(s.char.demon + 20, 0, 100);
     recomputeDerived(s.char);
     s.scene = { id: 'hub', result: { text: '你散功避劫，劫云在头顶盘旋三匝后散去。境界跌落，心魔滋长，但你活了下来。', lines: ['境界跌落，心魔 +20'] } };
+    this.afterAction();
     this.emit();
   }
 
@@ -2754,7 +3286,24 @@ export class Game {
 
   act_backHub() { this.state.scene = { id: 'hub', result: null }; this.emit(); }
 
-  /* ---------------- 指数战力战斗系统（槽位功法 + 十阶法宝百分比 + 称号 + 灵兽全实装） ---------------- */
+  /* ---------------- 战术斗法 2.0（敌手意图预告 + 守势蓄力反击 + 战斗符箓 + 法则领域 + 全特性实装） ---------------- */
+
+  rollEnemyIntent(enemy, turn, hpRatio = 1) {
+    if (turn % 3 === 0) {
+      return { kind: 'heavy', label: '蓄力重击（1.65× · 守势可化劲反击！）', mult: 1.65 };
+    }
+    if (hpRatio < 0.5 && turn > 1 && this.rng.chance(0.32)) {
+      return { kind: 'heal', label: '聚气回血（+12% · 绝招/祭符可打断！）', mult: 0.72 };
+    }
+    if (enemy.trait && turn % 2 === 0 && this.rng.chance(0.65)) {
+      return { kind: 'special', label: `施展【${enemy.trait}】秘术`, mult: 1.15 };
+    }
+    return { kind: 'strike', label: '常规攻伐', mult: 1.0 };
+  }
+
+  bestCombatTalisman() {
+    return COMBAT_TALISMAN_IDS.find((id) => hasItem(this.state, id)) || null;
+  }
 
   startCombat(spec, { lines = [] } = {}) {
     const s = this.state;
@@ -2762,10 +3311,16 @@ export class Game {
     const def = ENEMY_BY_ID[defId];
     if (!def) { this.state.scene.result = { text: '敌手见势不妙，早已远遁。', lines }; return; }
     const preserve = typeof spec === 'object' && spec.preserveEnemyRealm;
-    const enemy = preserve ? { ...def } : scaleEnemy(def, s.char.realm);
+    const customRealm = typeof spec === 'object' && spec.customRealm != null ? spec.customRealm : null;
+    const enemy = preserve ? { ...def } : scaleEnemy(def, customRealm != null ? customRealm : s.char.realm);
     s.stats.encounters = (s.stats.encounters || 0) + 1;
+    const intent = this.rollEnemyIntent(enemy, 1, 1);
     s.combat = {
       enemy, hp: enemy.hp, maxHp: enemy.hp, turn: 1, log: [...lines],
+      intent,
+      counterReady: false,
+      domainTurns: 0,
+      domainUsed: false,
       onWin: typeof spec === 'object' ? spec.win || null : null,
       onLose: typeof spec === 'object' ? spec.lose || null : null,
     };
@@ -2785,22 +3340,76 @@ export class Game {
     const s = this.state;
     const cb = s.combat;
     if (!cb) return buildHub(this);
+    const c = s.char;
     const e = cb.enemy;
     const artName = this.bestSignatureArt();
     const traitTag = e.trait ? `【特性：${e.trait}】` : '';
     const realmTag = REALMS[e.realm]?.name || '炼气';
+    if (!cb.intent) cb.intent = this.rollEnemyIntent(e, cb.turn || 1, cb.hp / Math.max(1, cb.maxHp));
+    const statusTags = [];
+    if (cb.counterReady) statusTags.push('⚡【蓄势反击就绪：下击 ×1.55 必暴！】');
+    if (cb.domainTurns > 0) statusTags.push(`🌌【法则领域生效：余 ${cb.domainTurns} 合，攻防 +30%】`);
+    const talismanId = this.bestCombatTalisman();
+    const talismanDef = talismanId ? ITEM_BY_ID[talismanId] : null;
+    const mainLaw = LAW_BY_ID[defaultLawFor(c)];
+    const canDomain = maxLawLevel(c) >= 1 && !cb.domainUsed;
+
+    const choices = [
+      {
+        label: cb.counterReady ? '蓄势破招 · 斩！' : '出剑',
+        hint: cb.counterReady
+          ? `蓄势反击！1.55× 必定暴击（攻 ${this.playerAtk().toLocaleString()}）`
+          : `物理攻伐（攻 ${this.playerAtk().toLocaleString()}）`,
+        action: 'combatAttack',
+        effect: cb.counterReady ? 'primary' : '',
+      },
+      { label: '运使法术', hint: `耗 12% 灵力，神识破甲（术 ${this.playerSpellAtk().toLocaleString()}）`, action: 'combatSpell', require: 'char.mp >= char.maxMp * 0.12', requireHint: '灵力不足以施展法术' },
+      {
+        label: `绝招 · ${artName}`,
+        hint: cb.intent.kind === 'heal' ? '耗 24% 灵力 · 可打断敌手回血并倾泻绝杀！' : '耗 24% 灵力，无视大半防御倾泻绝杀',
+        action: 'combatArt',
+        require: 'char.mp >= char.maxMp * 0.24',
+        requireHint: '灵力不足以催动神通',
+      },
+      {
+        label: cb.intent.kind === 'heavy' ? '守势化劲（破蓄力！）' : '守势',
+        hint: cb.intent.kind === 'heavy' ? '减伤 70% 并触发【蓄势反击】，下合反杀 ×1.55！' : '减伤 60%，抵御毒煞/天威并回灵 16%',
+        action: 'combatGuard',
+        effect: cb.intent.kind === 'heavy' ? 'primary' : '',
+      },
+    ];
+    if (talismanDef) {
+      choices.push({
+        label: `祭符 · ${talismanDef.name}`,
+        hint: '消耗 1 符 · 破甲雷剑打击并打断敌手蓄力/回血',
+        action: 'combatTalisman',
+        params: { itemId: talismanId },
+      });
+    }
+    if (canDomain) {
+      choices.push({
+        label: `展开 · ${mainLaw?.name || '大道'}法则领域`,
+        hint: '每战一次 · 瞬间爆发并获 3 回合攻防 +30% 领域压制',
+        action: 'combatDomain',
+        effect: 'primary',
+      });
+    }
+    choices.push(
+      {
+        label: '服丹',
+        hint: '大还丹 / 碧血丹 / 疗伤丹 / 回灵丹（按百分比回复）',
+        action: 'combatPill',
+        require: 'has("dahuan_dan") || has("bixue_dan") || has("liaoshang_dan") || has("huiling_dan") || has("jiexin_dan")',
+        requireHint: '储物袋无战斗丹药',
+      },
+      { label: '遁走', hint: '风灵根/空间法则/神行符大幅提升遁速', action: 'combatFlee' },
+    );
+
     return {
       id: 'combat',
       title: `斗法 · ${e.name}（${realmTag}）`,
-      text: `${e.desc}${traitTag ? ` ${traitTag}` : ''}\n\n${cb.log.slice(-6).join('\n')}`,
-      choices: [
-        { label: '出剑', hint: `物理攻伐（攻 ${this.playerAtk().toLocaleString()}）`, action: 'combatAttack' },
-        { label: '运使法术', hint: `耗 12% 灵力，神识破甲（术 ${this.playerSpellAtk().toLocaleString()}）`, action: 'combatSpell' },
-        { label: `绝招 · ${artName}`, hint: '耗 24% 灵力，无视大半防御倾泻绝杀', action: 'combatArt', require: 'char.mp >= char.maxMp * 0.24', requireHint: '灵力不足以催动神通' },
-        { label: '守势', hint: '减伤 60%，抵御毒煞/天威并回灵', action: 'combatGuard' },
-        { label: '服丹', hint: '大还丹 / 疗伤丹 / 回灵丹（按百分比回复）', action: 'combatPill', require: 'has("dahuan_dan") || has("liaoshang_dan") || has("huiling_dan")', requireHint: '储物袋无战斗丹药' },
-        { label: '遁走', hint: '风灵根/空间法则/神行符大幅提升遁速', action: 'combatFlee' },
-      ],
+      text: `${e.desc}${traitTag ? ` ${traitTag}` : ''}\n【敌手意图】${cb.intent.label}${statusTags.length ? `\n${statusTags.join(' ')}` : ''}\n\n${cb.log.slice(-6).join('\n')}`,
+      choices,
     };
   }
 
@@ -2810,8 +3419,9 @@ export class Game {
     const layerMult = 1 + (c.layer || 0) * 0.1;
     const qMult = qualityMultiplier(c);
     const best = c.inventory.reduce((max, it) => Math.max(max, ITEM_BY_ID[it.id]?.equip?.atk || 0), 0);
-    const artifactMult = 1 + (c.artifactLevel || 0) * 0.08;
-    const sectAtk = SECT_BY_ID[c.sectId]?.perks?.atk || 0;
+    const craftBoost = sectPerks(c).craft ? 1.1 : 1;
+    const artifactMult = 1 + (c.artifactLevel || 0) * 0.08 * craftBoost;
+    const sectAtk = sectPerks(c).atk || 0;
     const techAtk = activeTechniques(c).reduce((acc, t) => acc + (t.atk || 0), 0)
       + techCollectionBonus(c)
       + techAlignmentConflict(c).evilMasteryBonus;
@@ -2820,9 +3430,10 @@ export class Game {
     const petAtk = petBonuses(c).atk || 0;
     const titleAtk = titleBonuses(c).atk || 0;
     const lawAtk = lawBonusSum(c, 'atk');
+    const domainMult = (this.state.combat?.domainTurns || 0) > 0 ? 1.3 : 1;
     const statTerm = Math.min(c.attrs.根骨, 160) * 0.65;
     return Math.round(
-      (14 + statTerm + best * 0.35) * pm * layerMult * qMult * artifactMult
+      (14 + statTerm + best * 0.35) * pm * layerMult * qMult * artifactMult * domainMult
       * (1 + sectAtk + techAtk + rootAtk + gfAtk + petAtk + titleAtk + lawAtk),
     );
   }
@@ -2832,12 +3443,16 @@ export class Game {
     const pm = REALMS[c.realm]?.powerMult || 1;
     const layerMult = 1 + (c.layer || 0) * 0.1;
     const qMult = qualityMultiplier(c);
-    const artifactMult = 1 + (c.artifactLevel || 0) * 0.08;
+    const craftBoost = sectPerks(c).craft ? 1.1 : 1;
+    const artifactMult = 1 + (c.artifactLevel || 0) * 0.08 * craftBoost;
     const techAtk = activeTechniques(c).reduce((acc, t) => acc + (t.atk || 0), 0) + techCollectionBonus(c);
     const lawAtk = lawBonusSum(c, 'atk');
     const titleAtk = titleBonuses(c).atk || 0;
+    const arrayBoost = sectPerks(c).array ? 0.12 : 0;
+    const rootSpell = c.rootId === 'jin' ? 0.2 : 0;
+    const domainMult = (this.state.combat?.domainTurns || 0) > 0 ? 1.3 : 1;
     const statTerm = Math.min(c.attrs.神识, 160) * 0.8;
-    return Math.round((16 + statTerm) * pm * layerMult * qMult * artifactMult * (1 + techAtk * 0.75 + lawAtk + titleAtk));
+    return Math.round((16 + statTerm) * pm * layerMult * qMult * artifactMult * domainMult * (1 + techAtk * 0.75 + lawAtk + titleAtk + arrayBoost + rootSpell));
   }
 
   playerDef() {
@@ -2845,13 +3460,16 @@ export class Game {
     const pm = REALMS[c.realm]?.powerMult || 1;
     const layerMult = 1 + (c.layer || 0) * 0.1;
     const qMult = qualityMultiplier(c);
-    const artifactMult = 1 + (c.artifactLevel || 0) * 0.08;
+    const craftBoost = sectPerks(c).craft ? 1.1 : 1;
+    const artifactMult = 1 + (c.artifactLevel || 0) * 0.08 * craftBoost;
     const bestDef = c.inventory.reduce((max, it) => Math.max(max, ITEM_BY_ID[it.id]?.equip?.def || 0), 0);
+    const sectDef = sectPerks(c).def || 0;
     const techDef = activeTechniques(c).reduce((acc, t) => acc + (t.def || 0), 0);
     const lawDef = lawBonusSum(c, 'def');
     const titleDef = titleBonuses(c).def || 0;
+    const domainMult = (this.state.combat?.domainTurns || 0) > 0 ? 1.3 : 1;
     const statTerm = Math.min(c.attrs.根骨, 160) * 0.32;
-    return Math.round((4 + statTerm + bestDef * 0.4) * pm * layerMult * qMult * artifactMult * (1 + techDef + lawDef + titleDef));
+    return Math.round((4 + statTerm + bestDef * 0.4) * pm * layerMult * qMult * artifactMult * domainMult * (1 + sectDef + techDef + lawDef + titleDef));
   }
 
   act_combatAttack() { return this.combatRound('attack'); }
@@ -2860,18 +3478,39 @@ export class Game {
   act_combatGuard() { return this.combatRound('guard'); }
   act_combatFlee() { return this.combatRound('flee'); }
 
+  act_combatTalisman(ch = {}) {
+    const id = ch.params?.itemId || this.bestCombatTalisman();
+    if (!id || !hasItem(this.state, id)) return { error: '储物袋无可用战符' };
+    return this.combatRound('talisman', { itemId: id });
+  }
+
+  act_combatDomain() {
+    const s = this.state;
+    const cb = s.combat;
+    if (!cb || cb.domainUsed || maxLawLevel(s.char) < 1) return { error: '尚未展开法则领域条件' };
+    return this.combatRound('domain');
+  }
+
   act_combatPill() {
     const s = this.state;
     const c = s.char;
     let used = '';
     const healMult = (c.rootId === 'mu' ? 1.3 : 1) * (c.goldenFingerId === 'gf_bottle' ? 1.2 : 1);
-    if (hasItem(s, 'dahuan_dan') && (c.hp < c.maxHp * 0.55 || c.mp < c.maxMp * 0.4)) {
+    const useDahuan = () => {
       removeItem(s, 'dahuan_dan', 1);
       const hpG = Math.round(c.maxHp * 0.75 * healMult);
       const mpG = Math.round(c.maxMp * 0.5);
       c.hp = Math.min(c.maxHp, c.hp + hpG);
       c.mp = Math.min(c.maxMp, c.mp + mpG);
-      used = `大还丹（气血 +${hpG.toLocaleString()}，灵力 +${mpG.toLocaleString()}）`;
+      return `大还丹（气血 +${hpG.toLocaleString()}，灵力 +${mpG.toLocaleString()}）`;
+    };
+    if (hasItem(s, 'dahuan_dan') && (c.hp < c.maxHp * 0.55 || c.mp < c.maxMp * 0.4)) {
+      used = useDahuan();
+    } else if (hasItem(s, 'bixue_dan') && c.hp < c.maxHp * 0.85) {
+      removeItem(s, 'bixue_dan', 1);
+      const hpG = Math.round(c.maxHp * 0.45 * healMult);
+      c.hp = Math.min(c.maxHp, c.hp + hpG);
+      used = `碧血生肌丹（气血 +${hpG.toLocaleString()}）`;
     } else if (hasItem(s, 'liaoshang_dan')) {
       removeItem(s, 'liaoshang_dan', 1);
       const hpG = Math.round(c.maxHp * 0.4 * healMult);
@@ -2882,19 +3521,31 @@ export class Game {
       const mpG = Math.round(c.maxMp * 0.45);
       c.mp = Math.min(c.maxMp, c.mp + mpG);
       used = `回灵丹（灵力 +${mpG.toLocaleString()}）`;
+    } else if (hasItem(s, 'jiexin_dan')) {
+      removeItem(s, 'jiexin_dan', 1);
+      const hpG = Math.round(c.maxHp * 0.25 * healMult);
+      c.hp = Math.min(c.maxHp, c.hp + hpG);
+      c.demon = Math.max(0, c.demon - 8);
+      used = `清毒解障丹（气血 +${hpG.toLocaleString()}，心魔 -8）`;
+    } else if (hasItem(s, 'dahuan_dan')) {
+      used = useDahuan();
+    } else {
+      return { error: '储物袋无战斗丹药' };
     }
-    if (used) s.stats.pills = (s.stats.pills || 0) + 1;
-    s.combat.log.push(`你迅速吞服${used || '灵丹'}。`);
+    s.stats.pills = (s.stats.pills || 0) + 1;
+    s.combat.log.push(`你迅速吞服${used}。`);
     return this.combatRound('item');
   }
 
-  combatRound(mode) {
+  combatRound(mode, extra = {}) {
     const s = this.state;
     const cb = s.combat;
     if (!cb) return;
     const c = s.char;
     const e = cb.enemy;
     const log = cb.log;
+    const intent = cb.intent || { kind: 'strike', mult: 1 };
+    let interrupted = false;
 
     if (mode === 'flee') {
       const hasTalisman = (s.buffs.escape || 0) > 0 || hasItem(s, 'shenxing_fu');
@@ -2902,12 +3553,19 @@ export class Game {
       const spaceLaw = lawBonusSum(c, 'flee');
       const chance = (c.rootId === 'feng' || hasTalisman) ? 1 : clamp(0.45 + c.attrs.气运 * 0.01 + stealthBonus + spaceLaw, 0.2, 0.96);
       if (this.rng.chance(chance)) {
-        if ((s.buffs.escape || 0) > 0) s.buffs.escape--;
-        else if (c.rootId !== 'feng' && hasItem(s, 'shenxing_fu')) removeItem(s, 'shenxing_fu', 1);
-        log.push(hasTalisman ? '神行符化作青风托身，你瞬息千里。' : '你脚踏遁光抽身而退。');
+        if (c.rootId !== 'feng') {
+          if ((s.buffs.escape || 0) > 0) s.buffs.escape--;
+          else if (hasItem(s, 'shenxing_fu')) removeItem(s, 'shenxing_fu', 1);
+        }
+        log.push(c.rootId === 'feng' ? '风灵根御风而起，瞬息千里脱身。' : hasTalisman ? '神行符化作青风托身，你瞬息千里。' : '你脚踏遁光抽身而退。');
         s.stats.escapes = (s.stats.escapes || 0) + 1;
         s.combat = null;
-        s.scene = { id: 'hub', result: { text: '你成功脱身。留得青山在，来日再论高低。', lines: [] } };
+        if (s.delve) {
+          const escapeLines = this.bankDelveHaul(0.5, false);
+          s.scene = { id: 'regionHub', result: { text: '你催动遁术强行脱离秘境，保住性命并带出半数战利。', lines: [...log.slice(-1), ...escapeLines], returnTo: 'regionHub' } };
+        } else {
+          s.scene = { id: 'hub', result: { text: '你成功脱身。留得青山在，来日再论高低。', lines: log.slice(-2) } };
+        }
         this.emit();
         return;
       }
@@ -2916,29 +3574,37 @@ export class Game {
 
     const sunMult = c.rootId === 'taiyang' && e.isDemon ? 1.4 : 1;
     const armorMult = e.trait === '护甲' ? 1.35 : 1;
-    const critChance = clamp(0.08 + (c.attrs.气运 + (petBonuses(c).luck || 0)) * 0.004 + lawBonusSum(c, 'crit'), 0.05, 0.65);
+    const bestEquipCrit = c.inventory.reduce((m, it) => Math.max(m, ITEM_BY_ID[it.id]?.equip?.crit || 0), 0) / 100;
+    const eraCrit = currentWorldEra(s).crit || 0;
+    const critChance = clamp(0.08 + (c.attrs.气运 + (petBonuses(c).luck || 0)) * 0.004 + lawBonusSum(c, 'crit') + bestEquipCrit + eraCrit, 0.05, 0.72);
     const lifesteal = lawBonusSum(c, 'lifesteal');
     let dealt = 0;
 
     if (mode === 'attack') {
-      if (e.trait === '虚空' && this.rng.chance(0.18)) {
+      const counter = cb.counterReady;
+      cb.counterReady = false;
+      if (!counter && e.trait === '虚空' && this.rng.chance(0.18)) {
         log.push(`${e.name}【虚空闪烁】化实为虚，你的平剑斩空了！`);
       } else {
-        const crit = this.rng.chance(critChance);
-        const dmg = Math.max(1, Math.round(this.playerAtk() * sunMult * (crit ? 1.75 : 1) - e.def * 0.45 * armorMult));
+        const crit = counter || this.rng.chance(critChance);
+        const cMult = counter ? 1.55 : 1;
+        const dmg = Math.max(1, Math.round(this.playerAtk() * sunMult * cMult * (crit ? 1.75 : 1) - e.def * (counter ? 0.2 : 0.45) * armorMult));
         cb.hp -= dmg;
         dealt = dmg;
         s.scene.fx = 'combat_slash';
-        log.push(`${crit ? '剑光破空，正中要害！' : '你一剑斩出。'}造成 ${dmg.toLocaleString()} 伤害。`);
+        log.push(`${counter ? '【蓄势反击】剑随身走破尽破绽！' : crit ? '剑光破空，正中要害！' : '你一剑斩出。'}造成 ${dmg.toLocaleString()} 伤害。`);
       }
     } else if (mode === 'art') {
+      const counter = cb.counterReady;
+      cb.counterReady = false;
       const cost = Math.round(c.maxMp * 0.24);
       c.mp = Math.max(0, c.mp - cost);
-      const dmg = Math.max(2, Math.round((this.playerAtk() * 1.7 + this.playerSpellAtk() * 0.45) * sunMult - e.def * 0.15));
+      const dmg = Math.max(2, Math.round((this.playerAtk() * 1.7 + this.playerSpellAtk() * 0.45) * sunMult * (counter ? 1.35 : 1) - e.def * 0.15));
       cb.hp -= dmg;
       dealt = dmg;
+      if (intent.kind === 'heal') interrupted = true;
       s.scene.fx = 'combat_slash';
-      log.push(`【${this.bestSignatureArt()}】破开护体灵光，重创 ${dmg.toLocaleString()} 伤害！`);
+      log.push(`【${this.bestSignatureArt()}】破开护体灵光，重创 ${dmg.toLocaleString()} 伤害${interrupted ? '并打断敌手疗伤！' : '！'}`);
     } else if (mode === 'spell') {
       const cost = Math.round(c.maxMp * 0.12);
       if (c.mp >= cost) {
@@ -2951,9 +3617,41 @@ export class Game {
       } else {
         log.push('灵力不济，法诀半途溃散。');
       }
+    } else if (mode === 'talisman') {
+      const tid = extra.itemId;
+      if (removeItem(s, tid, 1)) {
+        const tdef = ITEM_BY_ID[tid];
+        let mult = 1.9;
+        if (tid === 'jianqi_fu') mult = 2.0;
+        else if (tid === 'poxie_fu') { mult = e.isDemon ? 2.4 : 1.7; c.demon = Math.max(0, c.demon - 8); s.buffs.shield = (s.buffs.shield || 0) + 1; }
+        else if (tid === 'jiuxiao_leifu') { mult = 2.6; s.buffs.shield = (s.buffs.shield || 0) + 1; }
+        else if (tid === 'taiyi_hudaofu') { mult = 3.2; s.buffs.shield = (s.buffs.shield || 0) + 2; c.hp = Math.min(c.maxHp, c.hp + Math.round(c.maxHp * 0.35)); }
+        const dmg = Math.max(2, Math.round(Math.max(this.playerAtk(), this.playerSpellAtk()) * mult * sunMult - e.def * 0.1));
+        cb.hp -= dmg;
+        dealt = dmg;
+        interrupted = true;
+        s.scene.fx = 'combat_spell';
+        log.push(`祭出【${tdef?.name || tid}】！神光炸裂轰出 ${dmg.toLocaleString()} 破甲伤害并震散敌手蓄势！`);
+      }
+    } else if (mode === 'domain') {
+      cb.domainUsed = true;
+      cb.domainTurns = 3;
+      const mainLaw = LAW_BY_ID[defaultLawFor(c)];
+      const lawLvl = Math.max(1, maxLawLevel(c));
+      const dmg = Math.max(2, Math.round((this.playerAtk() * 1.1 + this.playerSpellAtk() * 0.9) * (1 + lawLvl * 0.15) - e.def * 0.1));
+      cb.hp -= dmg;
+      dealt = dmg;
+      interrupted = true;
+      s.scene.fx = 'breakthrough';
+      log.push(`【${mainLaw?.name || '大道'}法则领域】轰然展开（持续 3 合，攻防 +30%）！法则威压震伤 ${dmg.toLocaleString()} 并打断敌招！`);
     } else if (mode === 'guard') {
-      c.mp = Math.min(c.maxMp, c.mp + Math.round(c.maxMp * 0.14));
-      log.push('你收剑结印护体，化解来势并吐纳回灵。');
+      c.mp = Math.min(c.maxMp, c.mp + Math.round(c.maxMp * 0.16));
+      if (intent.kind === 'heavy') {
+        cb.counterReady = true;
+        log.push('你稳扎马步以守待攻，看破敌手蓄力破绽——【蓄势反击】已就绪！');
+      } else {
+        log.push('你收剑结印护体，化解来势并吐纳回灵。');
+      }
     } else if (mode === 'item') {
       s.scene.fx = 'heal';
     }
@@ -2969,8 +3667,9 @@ export class Game {
       if (e.id === 'demon_king') s.flags['斩妖王'] = true;
       if (e.isDemon) s.counters.demons_slain = (s.counters.demons_slain || 0) + 1;
       if (e.id === 'cultivator' && !c.inventory.some((it) => ITEM_BY_ID[it.id]?.equip)) s.flags['空手胜筑基'] = true;
-      const exp = Math.round(e.exp * (1 + c.attrs.气运 * 0.01));
-      const stones = Math.round(e.stones * (1 + (petBonuses(c).stones || 0)));
+      const eraLoot = 1 + (currentWorldEra(s).combatLoot || 0);
+      const exp = Math.round(e.exp * (1 + c.attrs.气运 * 0.01) * eraLoot);
+      const stones = Math.round(e.stones * (1 + (petBonuses(c).stones || 0)) * eraLoot);
       c.stones += stones;
       const gained = gainExp(s, exp);
       log.push(`${e.name}伏诛！搜得灵石 +${stones.toLocaleString()}，实战修为 +${gained.toLocaleString()}。`);
@@ -2988,41 +3687,52 @@ export class Game {
       return;
     }
 
+    // 敌手回合结算（结合意图与打断）
+    if (intent.kind === 'heal' && !interrupted) {
+      const eHeal = Math.max(1, Math.round(cb.maxHp * 0.12));
+      cb.hp = Math.min(cb.maxHp, cb.hp + eHeal);
+      log.push(`${e.name}聚气疗伤，回复气血 +${eHeal.toLocaleString()}！`);
+    }
+
     const defMult = (c.rootId === 'tu' ? 0.8 : 1)
       * (c.goldenFingerId === 'gf_stealth' ? 0.82 : 1)
-      * (1 - Math.min(0.4, petBonuses(c).def || 0));
-    const guardMult = mode === 'guard' ? 0.4 : 1;
-    let traitAtkMult = 1;
+      * (1 - Math.min(0.45, petBonuses(c).def || 0));
+    const guardMult = mode === 'guard' ? (intent.kind === 'heavy' ? 0.3 : 0.4) : 1;
+    let traitAtkMult = interrupted ? 0.72 : (intent.mult || 1);
     let defIgnore = 1;
-    let traitNote = '';
+    let traitNote = intent.kind === 'heavy' && !interrupted ? '【蓄力重击】' : '';
 
-    if (e.trait === '猛扑' && this.rng.chance(0.26)) { traitAtkMult = 1.35; traitNote = '【猛扑】'; }
-    else if (e.trait === '快刀' && this.rng.chance(0.28)) { traitAtkMult = 1.3; traitNote = '【快刀连斩】'; }
-    else if (e.trait === '剑意') { defIgnore = 0.65; }
-    else if (e.trait === '天威') { traitAtkMult = 1.18; if (mode !== 'guard') c.demon = clamp(c.demon + 1, 0, 100); }
-    else if (e.trait === '水煞') { traitAtkMult = 1.1; c.mp = Math.max(0, c.mp - Math.round(c.maxMp * 0.06)); }
-    else if (e.trait === '心魔') { traitAtkMult = 1 + c.demon * 0.004; }
+    if (!interrupted) {
+      if (e.trait === '猛扑' && this.rng.chance(0.26)) { traitAtkMult *= 1.25; traitNote += '【猛扑】'; }
+      else if (e.trait === '快刀' && this.rng.chance(0.28)) { traitAtkMult *= 1.22; traitNote += '【快刀连斩】'; }
+      else if (e.trait === '剑意') { defIgnore = 0.65; }
+      else if (e.trait === '天威') { traitAtkMult *= 1.12; if (mode !== 'guard') c.demon = clamp(c.demon + 1, 0, 100); }
+      else if (e.trait === '水煞') { traitAtkMult *= 1.08; c.mp = Math.max(0, c.mp - Math.round(c.maxMp * 0.06)); traitNote += '【水煞】'; }
+      else if (e.trait === '心魔') { traitAtkMult *= 1 + c.demon * 0.004; }
+    }
 
     const effectiveDef = this.playerDef() * defIgnore;
     let edmg = Math.max(1, Math.round((e.atk * traitAtkMult * guardMult - effectiveDef * 0.55) * defMult));
-    if (e.trait === '毒煞' && mode !== 'guard') {
+    if (e.trait === '毒煞' && mode !== 'guard' && !interrupted) {
       const poison = Math.max(1, Math.round(c.maxHp * 0.045));
       edmg += poison;
-      traitNote = '【毒煞蚀体】';
+      traitNote += '【毒煞蚀体】';
     }
     c.hp -= edmg;
-    if (e.trait === '噬灵') {
+    if (e.trait === '噬灵' && !interrupted) {
       const drain = Math.round(c.maxMp * 0.08);
       c.mp = Math.max(0, c.mp - drain);
-      traitNote = '【噬灵】';
+      traitNote += '【噬灵】';
     }
-    if (e.trait === '血煞') {
+    if (e.trait === '血煞' && !interrupted) {
       const eHeal = Math.max(1, Math.round(edmg * 0.25));
       cb.hp = Math.min(cb.maxHp, cb.hp + eHeal);
-      traitNote = `【血煞回气 +${eHeal.toLocaleString()}】`;
+      traitNote += `【血煞回气 +${eHeal.toLocaleString()}】`;
     }
     log.push(`${e.name}${traitNote}反击，你受了 ${edmg.toLocaleString()} 点伤。`);
     cb.turn++;
+    if (cb.domainTurns > 0) cb.domainTurns--;
+    cb.intent = this.rollEnemyIntent(e, cb.turn, cb.hp / Math.max(1, cb.maxHp));
 
     if (c.hp <= 0) {
       if ((s.buffs.shield || 0) > 0 || hasItem(s, 'huxin_fu')) {
@@ -3037,8 +3747,14 @@ export class Game {
       const onLose = cb.onLose;
       s.combat = null;
       s.scene = { id: 'hub', result: null };
-      if (onLose) this.resolveOutcome(onLose, log);
-      else this.finishEnding('e_killed');
+      if (onLose) {
+        // 关键修复：所有非致死事件战败分支（如切磋/擂台/逃脱）保留残血，绝不再于点击继续时暴毙！
+        if (!onLose.ending) c.hp = Math.max(1, Math.round(c.maxHp * 0.12));
+        this.resolveOutcome(onLose, log);
+        if (!onLose.ending && c.hp <= 0) c.hp = 1;
+      } else {
+        this.finishEnding(this.pickNaturalEnding());
+      }
       this.emit();
       return;
     }
@@ -3149,25 +3865,53 @@ export class Game {
 
   /* ---------------- 坊市 / 招徒 ---------------- */
 
+  sellRate() {
+    const s = this.state;
+    const tradeBonus = sectPerks(s.char).trade ? 0.15 : 0;
+    const eraBonus = currentWorldEra(s).sellBonus || 0;
+    return Math.min(0.85, 0.55 + tradeBonus + eraBonus * 0.5);
+  }
+
   buildSellNode() {
     const s = this.state;
+    const rate = this.sellRate();
     const sellable = s.char.inventory.filter((it) => (ITEM_BY_ID[it.id]?.price || 0) > 0 && it.qty > 0);
-    const choices = sellable.map((it) => {
+    const perPage = 8;
+    const totalPages = Math.max(1, Math.ceil(sellable.length / perPage));
+    const page = clamp(Number(s.scene.page) || 0, 0, totalPages - 1);
+    const slice = sellable.slice(page * perPage, (page + 1) * perPage);
+    const choices = slice.map((it) => {
       const def = ITEM_BY_ID[it.id];
-      const price = Math.round(def.price * 0.55);
+      const price = Math.round(def.price * rate);
       return {
         id: `sell_${it.id}`,
         label: `卖 ${def.name} ×1（${price.toLocaleString()} 灵石）`,
-        hint: `持有 ${it.qty} 件`,
+        hint: `持有 ${it.qty} 件 · 回收价 ${Math.round(rate * 100)}%`,
         action: 'sellItem',
-        params: { id: it.id, price },
+        params: { id: it.id, price, page },
       };
     });
+    if (totalPages > 1) {
+      if (page > 0) choices.push({ id: 'sell_prev', label: `上一页（${page}/${totalPages}）`, hint: '', action: 'sellMenu', params: { page: page - 1 } });
+      if (page < totalPages - 1) choices.push({ id: 'sell_next', label: `下一页（${page + 2}/${totalPages}）`, hint: '', action: 'sellMenu', params: { page: page + 1 } });
+    }
+    const lowExtras = sellable.filter((it) => {
+      const def = ITEM_BY_ID[it.id];
+      return def && (def.tier === '凡' || def.tier === '黄') && def.type === '灵材' && it.qty > 2;
+    });
+    if (lowExtras.length) {
+      choices.push({
+        id: 'sell_bulk_low',
+        label: '一键清售多余凡黄灵材',
+        hint: '每种保留 2 份备用，其余折价变现',
+        action: 'sellBulkLow',
+      });
+    }
     choices.push({ id: 'back_market', label: '返回商行', hint: '', action: 'marketBack' });
     return {
       id: 'sell',
-      title: '坊市 · 出售灵材',
-      text: '老掌柜拨弄着算盘，只看成色不问来历。',
+      title: `坊市 · 出售灵材${totalPages > 1 ? `（第${page + 1}/${totalPages}页）` : ''}`,
+      text: `老掌柜拨弄着算盘，只看成色不问来历（当前回收折率 ${Math.round(rate * 100)}%）。`,
       choices,
     };
   }
@@ -3218,10 +3962,11 @@ export class Game {
       lines: [`购得 ${ITEM_BY_ID[id].name}`],
       returnTo: 'market',
     };
+    this.checkAchievements();
     this.emit();
   }
 
-  act_sellMenu() {
+  act_sellMenu(ch = {}) {
     const s = this.state;
     const sellable = s.char.inventory.filter((it) => (ITEM_BY_ID[it.id]?.price || 0) > 0 && it.qty > 0);
     if (!sellable.length) {
@@ -3229,20 +3974,47 @@ export class Game {
       this.emit();
       return;
     }
-    s.scene = { id: 'sell', result: null };
+    const page = Math.max(0, Number(ch?.params?.page) || 0);
+    s.scene = { id: 'sell', page, result: null };
     this.emit();
   }
 
   act_sellItem(ch) {
     const s = this.state;
-    const { id, price } = ch.params;
+    const { id, price, page = 0 } = ch.params;
     if (!removeItem(s, id, 1)) return { error: '没有这件东西' };
     s.char.stones += price;
     s.scene.result = {
       text: '掌柜验过成色，爽快奉上一袋灵石。',
       lines: [`出售 ${ITEM_BY_ID[id]?.name || id}，灵石 +${price.toLocaleString()}`],
       returnTo: 'sell',
+      returnMeta: { page },
     };
+    this.checkAchievements();
+    this.emit();
+  }
+
+  act_sellBulkLow() {
+    const s = this.state;
+    const rate = this.sellRate();
+    let total = 0;
+    let count = 0;
+    for (const it of [...s.char.inventory]) {
+      const def = ITEM_BY_ID[it.id];
+      if (!def || !(def.tier === '凡' || def.tier === '黄') || def.type !== '灵材' || it.qty <= 2) continue;
+      const sellQty = it.qty - 2;
+      if (removeItem(s, it.id, sellQty)) {
+        total += Math.round(def.price * rate) * sellQty;
+        count += sellQty;
+      }
+    }
+    s.char.stones += total;
+    s.scene.result = {
+      text: count ? '掌柜拨动算盘清点成箱灵材，将整袋灵石推到你面前。' : '储物袋中暂无多余凡黄灵材可清售。',
+      lines: count ? [`清售 ${count} 件凡黄灵材，收入灵石 +${total.toLocaleString()}`] : [],
+      returnTo: 'sell',
+    };
+    this.checkAchievements();
     this.emit();
   }
 
@@ -3289,13 +4061,13 @@ export class Game {
   afterAction() {
     const s = this.state;
     if (!s || s.flags.finished) return;
-    if (s.char.demon >= 100) return this.finishEnding('e_demon_devour');
+    if (s.char.demon >= 100) return this.finishEnding(this.pickNaturalEnding());
     if (isDead(s)) {
-      if (s.char.hp <= 0) return this.finishEnding('e_killed');
       return this.finishEnding(this.pickNaturalEnding());
     }
     this.checkAchievements();
-    if (s.scene.result?.goto) return;
+    // 仅在返回主界且无结果弹屏/战斗/天劫/秘境探幽时才触发主线插播，绝不吞掉刚打开的奇遇或结果文本！
+    if (s.scene.id !== 'hub' || s.scene.result || s.combat || s.tribulation || s.delve) return;
     const pending = this.pendingStory();
     if (pending) this.openScene(pending);
   }

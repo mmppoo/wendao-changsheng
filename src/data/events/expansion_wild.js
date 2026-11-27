@@ -1158,7 +1158,7 @@ export const WILD_EXPANSION = [
         label: '上擂台', hint: '战斗 · 擂主',
         combat: {
           enemy: 'cultivator',
-          win: { text: '他倒下去的时候还睁着眼。台下静了一瞬，然后有人开始喊你的名字。\n\n你下台时，二十枚灵石砸在你脚边。', effects: { exp: 120, stones: 120, reputation: 20, attrs: { 根骨: 2 } } },
+          win: { text: '他倒下去的时候还睁着眼。台下静了一瞬，然后有人开始喊你的名字。\n\n你下台时，二十枚灵石砸在你脚边。', effects: { exp: 120, stones: 120, reputation: 20, attrs: { 根骨: 2 }, counter: { arena_win: 1 } } },
           lose: { text: '他的一掌贴在你胸口，你飞下擂台，撞翻了三个押注的人。\n\n醒的时候有人往你手里塞了几枚灵石。', effects: { hp: -50, injury: 1, reputation: -5 } },
         },
       },

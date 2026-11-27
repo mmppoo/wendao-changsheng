@@ -73,8 +73,8 @@ export const ITEMS = [
     desc: '日行千里。逃命、赶路、赴约，都用得上。', use: { escape: 1 }, stack: true,
   },
   {
-    id: 'jiuzhuan_gong', name: '《九转元功》', type: '功法', tier: '天', price: 0,
-    desc: '不知来历的残卷，每读一遍，经脉就宽一分。', technique: { speed: 0.25, attrs: { 根骨: 3 }, align: '中' },
+    id: 'jiuzhuan_gong', name: '《九转元功》', type: '功法', tier: '天', price: 18000,
+    desc: '不知来历的残卷，每读一遍，经脉就宽一分。', technique: { speed: 0.25, attrs: { 根骨: 3 }, align: '中', grade: '天', artName: '九转玄元破' },
   },
   {
     id: 'wujian_jue', name: '《无剑诀》', type: '功法', tier: '天', price: 0,

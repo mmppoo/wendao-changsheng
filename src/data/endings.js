@@ -1248,8 +1248,8 @@ export const ENDINGS = [
     text: (s) => `最后几年，你的头发全白了，手抖得握不住剑。\n\n你坐在洞府门口晒太阳，看后辈们御剑飞过。他们飞得比你当年还快。\n\n某个清晨，你没能睁开眼。\n\n——${s.char.name}，享年${Math.floor(s.char.age / 12)}岁，止步于${s.char.realm >= 1 ? '筑基以上' : '炼气'}。你的道，断在了这里。`,
   },
   {
-    id: 'e_mortal', name: '凡人一世', priority: 30, tier: '凡',
-    condition: 'realm === 0 && age >= lifespan * 0.95',
+    id: 'e_mortal', name: '凡人一世', priority: 62, tier: '凡',
+    condition: 'realm === 0 && layer === 0 && stats.breakthroughs === 0 && age >= lifespan * 0.95',
     summary: '你没能踏上仙途，但你活过。',
     text: (s) => `你到死都是炼气一层，或者连一层都没有。\n\n你在山脚下开了个茶馆，给过路的修士倒水。他们出手很大方，也从不看你第二眼。\n\n你娶了/嫁了一个不修仙的人，生了两个孩子。孩子长大了，去了城里。\n\n你死在一个春天。\n\n——${s.char.name}，凡人，享年${Math.floor(s.char.age / 12)}岁。你的一生很短，但确实是你自己的。`,
   },
@@ -1260,8 +1260,8 @@ export const ENDINGS = [
     text: () => `一开始你还记得每一张脸。后来你只记得剑拔出来的手感。\n\n最后你在一个雨夜醒过来，发现自己在洗手——手上没有血。\n\n你洗了一整夜。`,
   },
   {
-    id: 'e_lonely', name: '独行', priority: 20, tier: '黄',
-    condition: 'true',
+    id: 'e_lonely', name: '独行', priority: 61, tier: '黄',
+    condition: 'age >= lifespan && !flag("道侣") && sect() == "" && counters.disciples == 0 && realm >= 1',
     summary: '一个人来，一个人走。',
     text: (s) => `你死在半路上。\n\n没有人知道你叫什么，也没有人知道你走了多远。你的储物袋被野狗刨开，里面的丹药滚了一地，很快被雨泡烂。\n\n——${s.char.name}，卒于途中。`,
   },

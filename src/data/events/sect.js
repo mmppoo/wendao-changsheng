@@ -158,7 +158,7 @@ export const SECT_EVENTS = [
           enemy: 'jindan_elder',
           win: {
             text: '你赢了。台下静了一瞬，然后炸开。\n\n长老在台上站起来，第一次正眼看你。',
-            effects: { contribution: 800, reputation: 100, exp: 500, counter: {}, title: '大比魁首', flag: { 大比魁首: true } },
+            effects: { contribution: 800, reputation: 100, exp: 500, counter: { arena_win: 1 }, title: '大比魁首', flag: { 大比魁首: true } },
           },
           lose: { text: '你输了，输得很干脆。下台时有人拍你的肩：「明年再来。」', effects: { exp: 200, contribution: 100, attrs: { 道心: 3 } } },
         },

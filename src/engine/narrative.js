@@ -8,6 +8,7 @@ import { GOLDEN_FINGER_BY_ID, PET_BY_ID } from '../data/golden_fingers.js';
 import {
   START_AGE_MONTHS, canBreakthrough, needExp, bottleneckStatus, maxLawLevel, defaultLawFor,
   lifespanAlert, activeTechniques, maxTechSlots, techAlignmentConflict,
+  currentWorldEra, activeDaoGoal,
 } from './state.js';
 
 export const EVENTS = [];
@@ -247,7 +248,10 @@ export function buildHub(game) {
       const lawStage = LAW_STAGES[maxLawLevel(c)] || '未入门';
       const lawLine = c.realm >= 2 || maxLawLevel(c) > 0 ? ` · 法则：${mainLaw?.name || '剑道'}（${lawStage}）` : '';
       const needText = Number.isFinite(needExp(c)) ? needExp(c).toLocaleString() : '∞';
-      return `${hours[idx]}${notes.length ? `\n${notes.join('\n')}` : ''}\n\n${Math.floor(c.age / 12)} 岁 · ${realmLabel(c)}（余寿 ${remain} 年）· 身处「${region.name}」${lawLine}\n修为 ${Math.floor(c.exp).toLocaleString()} / ${needText} · 运使功法 ${active.length}/${techCap} · 攻 ${game.playerAtk().toLocaleString()} / 防 ${game.playerDef().toLocaleString()}`;
+      const era = currentWorldEra(state);
+      const eraRemain = state.worldEra ? Math.max(1, Math.ceil((state.worldEra.until - c.age) / 12)) : 30;
+      const goal = activeDaoGoal(state);
+      return `${hours[idx]}${notes.length ? `\n${notes.join('\n')}` : ''}\n\n【天象·${era.name}】${era.tag}（余 ${eraRemain} 年） · 【道途指引】${goal.label}：${goal.detail}\n${Math.floor(c.age / 12)} 岁 · ${realmLabel(c)}（余寿 ${remain} 年）· 身处「${region.name}」${lawLine}\n修为 ${Math.floor(c.exp).toLocaleString()} / ${needText} · 运使功法 ${active.length}/${techCap} · 攻 ${game.playerAtk().toLocaleString()} / 防 ${game.playerDef().toLocaleString()}`;
     },
     choices,
     hub: true,

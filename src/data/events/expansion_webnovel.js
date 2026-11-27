@@ -184,7 +184,6 @@ export const WEBNOVEL_EXPANSION = [
       {
         label: '【天机镜/剑老】直接看穿真身，并反向杀价到十灵石', hint: '金手指专属 · 血赚捡漏',
         require: 'flag("金手指_天机镜") || flag("金手指_剑老")', requireHint: '需天机镜或残剑老祖魂',
-        require2: '',
         cost: { stones: 10 },
         outcome: {
           text: '你一眼照出铁片内蕴的太古星金，面不改色地嫌弃它「铁质太脆」，十块灵石便将其拿下。摊主还暗自庆幸宰了只肥羊。',

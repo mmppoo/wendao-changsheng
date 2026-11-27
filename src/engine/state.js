@@ -6,13 +6,109 @@ import {
 import { ROOT_BY_ID } from '../data/roots.js';
 import { ORIGIN_BY_ID } from '../data/origins.js';
 import { ITEM_BY_ID } from '../data/items.js';
-import { SECT_BY_ID, SECT_RANKS, sectRank } from '../data/sects.js';
+import { SECT_BY_ID, SECT_RANKS, PLAYER_SECT_TEMPLATE, sectRank } from '../data/sects.js';
 import { TALENT_BY_ID } from '../data/talents.js';
 import { GOLDEN_FINGER_BY_ID, PET_BY_ID } from '../data/golden_fingers.js';
-import { REGION_BY_ID } from '../data/regions.js';
+import { REGIONS, REGION_BY_ID } from '../data/regions.js';
 
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 export const START_AGE_MONTHS = 16 * 12;
+
+export const WORLD_ERAS = [
+  {
+    id: 'aura_tide', name: '灵气潮汐', tag: '修炼 +25%',
+    speed: 0.25, veinMult: 1.2,
+    desc: '九州地脉灵雾喷薄，闭关修行与灵脉采撷收益大增。',
+  },
+  {
+    id: 'demon_surge', name: '妖潮动荡', tag: '战利 +35%',
+    combatLoot: 0.35, delveLoot: 0.3,
+    desc: '四方妖邪蠢动，猎妖灵石修为 +35%、秘境探幽收获 +30%。',
+  },
+  {
+    id: 'pill_craft_fair', name: '丹器盛会', tag: '炼丹 +15%',
+    alchemy: 0.15, refineDiscount: 0.2,
+    desc: '九州丹尊器师云集，炼丹成丹率 +15%、祭炼费用 -20%。',
+  },
+  {
+    id: 'trade_boom', name: '万宝商潮', tag: '坊市 -12%',
+    shopDiscount: 0.12, sellBonus: 0.2,
+    desc: '仙商云集百货流转，坊市与秘阁额外 -12% 折扣、出售涨价 +20%。',
+  },
+  {
+    id: 'dao_manifest', name: '天道显化', tag: '悟道 +40%',
+    lawMult: 1.4, breakBonus: 5,
+    desc: '大道道纹映照苍穹，法则感悟 +40%、破境成算 +5%。',
+  },
+  {
+    id: 'trib_storm', name: '劫云暗涌', tag: '暴击 +10% · 声望 +40%',
+    crit: 0.1, repMult: 1.4, demonMult: 1.2,
+    desc: '九霄雷云压境，斗法暴击 +10%、声望 +40%（心魔滋长微增）。',
+  },
+];
+
+export const WORLD_ERA_BY_ID = Object.fromEntries(WORLD_ERAS.map((e) => [e.id, e]));
+
+export function currentWorldEra(state) {
+  const id = state?.worldEra?.id;
+  return WORLD_ERA_BY_ID[id] || WORLD_ERAS[0];
+}
+
+export function rollWorldEra(state, rng, excludeId = null) {
+  const pool = WORLD_ERAS.filter((e) => e.id !== excludeId);
+  const picked = rng ? rng.pick(pool) : pool[0];
+  const duration = rng ? rng.int(360, 540) : 420; // 30–45 年
+  const startAge = state?.char?.age ?? START_AGE_MONTHS;
+  const eraState = { id: picked.id, until: startAge + duration };
+  if (state) state.worldEra = eraState;
+  return { era: picked, eraState };
+}
+
+export function activeDaoGoal(state) {
+  if (!state?.char) return { label: '踏入仙途', detail: '吐纳炼气，初探长生之道', priority: 'normal' };
+  const c = state.char;
+  const life = lifespanAlert(c);
+  if (life.level === 'critical') {
+    return { label: '大限告急', detail: `余寿仅 ${life.remainYears} 年！速破境或寻延寿丹药`, priority: 'critical' };
+  }
+  const conflict = techAlignmentConflict(c);
+  if (conflict.conflict) {
+    return { label: '真气相冲', detail: '正邪功法混修，前往洞府「功法运使」卸除冲突典籍', priority: 'warn' };
+  }
+  const bn = bottleneckStatus(state);
+  if (canBreakthrough(c)) {
+    const nextName = REALMS[c.realm + 1]?.name || '更高境界';
+    if (bn.ok) {
+      return { label: '修为圆满', detail: `即刻点击「冲击境界」迈向${isRealmMaxLayer(c) ? nextName : '下一重'}`, priority: 'primary' };
+    }
+    return { label: '破解瓶颈', detail: `${bn.missing[0]}（前往洞府「参悟大道」）`, priority: 'warn' };
+  }
+  if (c.demon >= 50) {
+    return { label: '镇压心魔', detail: `当前心魔 ${Math.round(c.demon)}，赴洞府「静心涤魔」或服清心丹`, priority: 'warn' };
+  }
+  if (!c.sectId && c.realm <= 2 && !(c.sectLeaveUntil && c.age < c.sectLeaveUntil)) {
+    return { label: '拜入仙门', detail: '叩问十三宗山门，解锁藏经阁、任务堂与宗门宝库', priority: 'normal' };
+  }
+  const needPill = REALMS[c.realm]?.bottleneck?.needItem;
+  if (needPill && isRealmMaxLayer(c) && !hasItem(state, needPill)) {
+    const pillName = ITEM_BY_ID[needPill]?.name || needPill;
+    return { label: `筹备${pillName}`, detail: `大境在即，可于丹房炼制或坊市/宗门宝库寻「${pillName}」`, priority: 'normal' };
+  }
+  const reg = REGION_BY_ID[c.regionId] || REGION_BY_ID.qingniu;
+  const prog = Math.min(100, Math.round(c.regionProgress?.[reg.id] || 0));
+  if (prog < 100) {
+    return { label: `踏破${reg.name}`, detail: `探索度 ${prog}%（满百解锁灵脉采撷，亦可闯五层秘境探幽）`, priority: 'normal' };
+  }
+  const nextRegion = REGIONS.find((r) => c.realm >= r.minRealm && !(c.visitedLocations || []).includes(r.name));
+  if (nextRegion) {
+    return { label: `迁徙${nextRegion.name}`, detail: '前往新灵域获取首临见闻礼与更高阶丹材秘境', priority: 'normal' };
+  }
+  if (c.realm >= 8) {
+    return { label: '叩问九霄天门', detail: '渡劫圆满可飞升真仙，或三拒天门证红尘仙', priority: 'primary' };
+  }
+  const era = currentWorldEra(state);
+  return { label: `顺应「${era.name}」`, detail: `${era.desc}`, priority: 'normal' };
+}
 
 const ATTR_KEYS = ['悟性', '根骨', '神识', '道心', '气运', '魅力'];
 const EVIL_SECTS = new Set(['xuemo', 'hehuan', 'youming']);
@@ -98,8 +194,40 @@ export function techAlignmentConflict(char) {
   const conflict = (righteousCount > 0 && evilCount > 0) || (isRighteousSect && evilCount > 0);
   const demonPerHalfYear = conflict ? 4 : 0;
   const breakPenalty = conflict ? 8 : 0;
-  const evilMasteryBonus = (!conflict && isEvilCultivator && evilCount > 0 && righteousCount === 0) ? 0.12 : 0;
+  const evilMasteryBonus = (!conflict && isEvilCultivator && evilCount > 0 && righteousCount === 0)
+    ? (char?.rootId === 'an' ? 0.25 : 0.12)
+    : 0;
   return { conflict, evilCount, righteousCount, demonPerHalfYear, breakPenalty, evilMasteryBonus };
+}
+
+const TECH_GRADE_RANK = { 凡: 0, 黄: 1, 玄: 2, 地: 3, 天: 4, 仙: 5 };
+
+export function autoEquipBestTechniques(char) {
+  if (!char || !Array.isArray(char.techniques)) return [];
+  const cap = maxTechSlots(char.realm);
+  const sect = char.sectId ? SECT_BY_ID[char.sectId] : null;
+  const preferEvil = EVIL_SECTS.has(char.sectId) || char.rootId === 'xue' || char.rootId === 'an';
+  const forbidEvil = sect?.align === '正';
+  const score = (t) => (TECH_GRADE_RANK[t.grade] ?? 1) * 0.45 + (t.atk || 0) * 1.4 + (t.speed || 0) * 1.3 + (t.def || 0) * 0.9 + (t.lifespan || 0) * 0.002;
+  const sorted = [...char.techniques].sort((a, b) => score(b) - score(a));
+  const picked = [];
+  let hasRight = false;
+  let hasEvil = false;
+  for (const t of sorted) {
+    if (picked.length >= cap) break;
+    const a = techAlign(t);
+    if (forbidEvil && a === '邪') continue;
+    if (a === '邪' && hasRight) continue;
+    if (a === '正' && hasEvil) continue;
+    if (preferEvil && a === '正' && sorted.some((x) => techAlign(x) === '邪' && !picked.includes(x.id))) continue;
+    if (a === '正') hasRight = true;
+    if (a === '邪') hasEvil = true;
+    picked.push(t.id);
+  }
+  char.equippedTechs = picked;
+  char._manualUnequip = picked.length === 0;
+  recomputeDerived(char);
+  return picked;
 }
 
 export function equipTechnique(char, techId) {
@@ -167,22 +295,23 @@ export function petBonuses(char) {
   const zero = { atk: 0, def: 0, stones: 0, luck: 0, explore: 0, demonResist: 0, tribResist: 0, lifespan: 0 };
   if (!char?.petId || !PET_BY_ID[char.petId]) return zero;
   const lvl = clamp(Number(char.petLevel) || 1, 1, 5);
-  const scale = 1 + (lvl - 1) * 0.35;
+  const beastBoost = 1 + (sectPerks(char).beast || 0);
+  const scale = (1 + (lvl - 1) * 0.35) * beastBoost;
   switch (char.petId) {
     case 'pet_turtle':
       return {
         ...zero,
-        def: +(0.14 * scale).toFixed(3),
-        tribResist: +(0.05 * scale).toFixed(3),
-        lifespan: Math.round(40 * (1 + (lvl - 1) * 0.25)),
+        def: Math.min(0.45, +(0.14 * scale).toFixed(3)),
+        tribResist: Math.min(0.25, +(0.05 * scale).toFixed(3)),
+        lifespan: Math.round(40 * (1 + (lvl - 1) * 0.25) * beastBoost),
       };
     case 'pet_bird':
       return {
         ...zero,
         atk: +(0.14 * scale).toFixed(3),
         luck: Math.round(5 * scale),
-        explore: +(0.12 * scale).toFixed(3),
-        tribResist: +(0.03 * scale).toFixed(3),
+        explore: Math.min(0.4, +(0.12 * scale).toFixed(3)),
+        tribResist: Math.min(0.18, +(0.03 * scale).toFixed(3)),
       };
     case 'pet_beetle':
       return {
@@ -197,7 +326,7 @@ export function petBonuses(char) {
         demonResist: Math.min(0.65, +(0.25 * scale).toFixed(3)),
         luck: Math.round(3 * scale),
         def: +(0.06 * scale).toFixed(3),
-        tribResist: +(0.04 * scale).toFixed(3),
+        tribResist: Math.min(0.2, +(0.04 * scale).toFixed(3)),
       };
     default:
       return zero;
@@ -333,6 +462,7 @@ export function createRun({ seed, name, gender, originId, rootId, goldenFingerId
 
   const rootsSeen = Array.from(new Set([...(meta.rootsSeen || []), root.id]));
   const sectsJoined = meta.sectsJoined || [];
+  const techniquesSeen = Array.from(new Set([...(meta.techniquesSeen || []), ...char.techniques.map((t) => t.id)]));
 
   const state = {
     version: SAVE_VERSION,
@@ -341,12 +471,14 @@ export function createRun({ seed, name, gender, originId, rootId, goldenFingerId
     turn: 0,
     char,
     flags: { ...(origin.flags || {}), ...talentFlags },
-    counters: { roots_seen: rootsSeen.length, stay_home: 0, laws: 0 },
+    counters: { roots_seen: rootsSeen.length, stay_home: 0, laws: 0, delves: 0 },
     recent: [],
     achievements: {},
     endings: {},
     buffs,
     combat: null,
+    delve: null,
+    worldEra: { id: WORLD_ERAS[rng.int(0, WORLD_ERAS.length - 1)].id, until: START_AGE_MONTHS + rng.int(360, 540) },
     sectBoard: null,
     scene: { id: 'hub', result: null },
     log: [],
@@ -363,6 +495,7 @@ export function createRun({ seed, name, gender, originId, rootId, goldenFingerId
       achievements: meta.achievements || {},
       rootsSeen,
       sectsJoined,
+      techniquesSeen,
       runs: meta.runs || 0,
       totalDeaths: meta.totalDeaths || 0,
       achKarmaGranted: meta.achKarmaGranted || 0,
@@ -455,8 +588,12 @@ export function gainLawExp(state, amount, preferredLawId = null) {
     state.counters.laws = Object.values(c.laws || {}).reduce((a, b) => a + Number(b || 0), 0);
     return [`${LAW_BY_ID[lid].name}法则已臻圆满`];
   }
-  c.lawExp = (c.lawExp || 0) + Math.max(1, Math.round(amount));
-  const out = [`${LAW_BY_ID[lid].name}法则感悟 +${Math.round(amount)}`];
+  const era = currentWorldEra(state);
+  const perks = sectPerks(c);
+  const arrayBoost = (lid === 'array' && perks.array) ? (1 + perks.array) : 1;
+  const finalAmount = Math.max(1, Math.round(amount * (era.lawMult || 1) * arrayBoost));
+  c.lawExp = (c.lawExp || 0) + finalAmount;
+  const out = [`${LAW_BY_ID[lid].name}法则感悟 +${finalAmount}`];
   let need = 60 * (curLvl + 1) * (curLvl + 1);
   while (c.lawExp >= need && (c.laws[lid] || 0) < LAW_STAGES.length - 1) {
     c.lawExp -= need;
@@ -500,6 +637,8 @@ export function recomputeDerived(char) {
   const techLifespan = clamp(rawTechLifespan, -50, 200);
   const lawLifespan = Math.min(300, lawBonusSum(char, 'lifespan'));
   const tBonus = titleBonuses(char);
+  const pBonus = petBonuses(char);
+  const sPerks = sectPerks(char);
   const lawHpMult = 1 + lawBonusSum(char, 'hp');
   const lawMpMult = 1 + lawBonusSum(char, 'mp');
 
@@ -511,12 +650,15 @@ export function recomputeDerived(char) {
     + (realm?.lifespan || 0)
     + techLifespan
     + lawLifespan
-    + (tBonus.lifespan || 0);
+    + (tBonus.lifespan || 0)
+    + Math.min(100, pBonus.lifespan || 0)
+    + Math.min(50, sPerks.lifespan || 0);
   const bonusCapMonths = Math.round(baseYears * 0.5 * 12);
   const bonusMinMonths = -Math.round(baseYears * 0.4 * 12);
-  char.bonusLifespan = clamp(char.bonusLifespan || 0, bonusMinMonths, bonusCapMonths);
+  char.bonusLifespan = clamp(char.bonusLifespan || 0, -60000, 120000);
+  const effectiveBonus = clamp(char.bonusLifespan, bonusMinMonths, bonusCapMonths);
   char.lifespanBase = Math.round(baseYears * 12);
-  char.lifespan = Math.max(12 * 30, char.lifespanBase + char.bonusLifespan);
+  char.lifespan = Math.max(12 * 30, char.lifespanBase + effectiveBonus);
 
   char.hp = clamp(char.hp, 0, char.maxHp);
   char.mp = clamp(char.mp, 0, char.maxMp);
@@ -566,6 +708,9 @@ export function breakthroughChance(state) {
   const tBonus = titleBonuses(char);
   const pBonus = petBonuses(char);
   const alignInfo = techAlignmentConflict(char);
+  const era = currentWorldEra(state);
+  const permBreak = (state.buffs?.permBreakBonus || 0)
+    || ((state.meta?.talents || []).includes('t_niming') ? 6 : 0);
   const base = 0.9 - char.realm * 0.058;
   let p = base
     + (root?.breakBonus || 0) / 100
@@ -573,6 +718,8 @@ export function breakthroughChance(state) {
     + (char.attrs.气运 + (pBonus.luck || 0)) * 0.0016
     + lawBonusSum(char, 'breakBonus') / 100
     + (state.buffs?.breakBonus || 0) / 100
+    + permBreak / 100
+    + (era.breakBonus || 0) / 100
     - (alignInfo.breakPenalty || 0) / 100
     - char.demon * 0.0045
     - (char.injuries || 0) * 0.015;
@@ -587,7 +734,17 @@ export function rootSpeed(char) {
 }
 
 export function sectPerks(char) {
-  if (!char.sectId) return {};
+  if (!char?.sectId) return {};
+  if (char.sectId === 'player_sect') {
+    const lvl = clamp(Number(char.playerSectLevel) || 1, 1, 5);
+    return {
+      ...PLAYER_SECT_TEMPLATE.perks,
+      speed: +(0.16 + lvl * 0.04).toFixed(2),
+      atk: +(0.12 + lvl * 0.04).toFixed(2),
+      def: +(0.1 + lvl * 0.03).toFixed(2),
+      stones: 100 * lvl,
+    };
+  }
   return SECT_BY_ID[char.sectId]?.perks || {};
 }
 
@@ -595,6 +752,7 @@ export function monthlyExp(state) {
   const char = state.char;
   const realm = REALMS[char.realm];
   const perks = sectPerks(char);
+  const era = currentWorldEra(state);
   const activeTechSpeed = activeTechniques(char).reduce((acc, t) => acc + (t.speed || 0), 0);
   const collectionSpeed = techCollectionBonus(char);
   const alignInfo = techAlignmentConflict(char);
@@ -610,6 +768,7 @@ export function monthlyExp(state) {
     * caveMult
     * (1 + lawSpd)
     * (1 + (tBonus.speed || 0))
+    * (1 + (era.speed || 0))
     * (1 + buff);
   const demonPenalty = 1 - clamp(char.demon / 260, 0, 0.7);
   return Math.max(1, Math.round(base * speed * realm.monthly * demonPenalty));
@@ -642,12 +801,18 @@ export function advanceMonths(state, months, rng) {
     if (stipend) { char.stones += stipend; notes.push(`宗门月俸 +${stipend} 灵石`); }
     char.contribution += Math.round((char.sectRank || 0) * 2 * months);
   }
+  const era = currentWorldEra(state);
   const pBonus = petBonuses(char);
   const demonResist = clamp((perks.demonResist || 0) + lawBonusSum(char, 'demonResist') + (pBonus.demonResist || 0), 0, 0.85);
-  const demonChance = 0.02 * months * (1 - demonResist);
+  const demonChance = 0.02 * months * (1 - demonResist) * (era.demonMult || 1);
   if (char.demon > 0 && rng && rng.chance(demonChance)) {
     char.demon = Math.min(100, char.demon + 1);
     notes.push('夜半梦魇惊魂，心魔 +1');
+  }
+  if (perks.demon && months >= 6 && rng && rng.chance(0.35 * (1 - demonResist))) {
+    const dGain = Math.max(1, Math.round(perks.demon * (months / 12)));
+    char.demon = clamp(char.demon + dGain, 0, 100);
+    notes.push(`魔道血煞侵蚀神魂，心魔 +${dGain}`);
   }
   const alignInfo = techAlignmentConflict(char);
   if (alignInfo.conflict && months >= 6) {
@@ -657,6 +822,10 @@ export function advanceMonths(state, months, rng) {
     notes.push(`正邪功法同修气机相冲，心魔 +${gain}`);
   }
   if (char.injuries > 0 && months >= 3) char.injuries = Math.max(0, char.injuries - 1);
+  if (state.worldEra && char.age >= state.worldEra.until) {
+    const { era: nextEra } = rollWorldEra(state, rng, state.worldEra.id);
+    notes.push(`【九州天象更迭】进入「${nextEra.name}」纪元（${nextEra.tag}）：${nextEra.desc}`);
+  }
   recomputeDerived(char);
   state.stats.years = Math.floor((char.age - START_AGE_MONTHS) / 12);
   return notes;

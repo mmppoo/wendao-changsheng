@@ -88,7 +88,7 @@ export const NPCS = [
     region: 'beihuang',
     minRealm: 2,
     relationKey: '血煞老祖',
-    likeItems: ['longxue_jing', 'xueyu', 'pozhang_dan', 'xuesha_jing'],
+    likeItems: ['longxue_jing', 'jiuyou_mingjing', 'pozhang_dan', 'xuesha_jing'],
     teachTechId: 'wt_xuehe_sha',
     desc: '盘踞北荒血池千年的魔道巨擘，谈笑间血河倒卷，唯独赏识狠辣果决之辈。',
     chatLines: [

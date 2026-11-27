@@ -352,14 +352,14 @@ export function sceneThemeFor(node, state) {
   if (id === 'story_ascend_1') return SCENE_THEMES.ascend;
   if (id === 'ending') {
     const eid = String(state.flags?.endingId || '');
-    return (PX_ASCEND_ENDINGS.has(eid) || eid.includes('ascend')) ? SCENE_THEMES.ascend : SCENE_THEMES.fall;
+    return (eid !== 'e_ascend_refuse' && (PX_ASCEND_ENDINGS.has(eid) || eid.includes('ascend'))) ? SCENE_THEMES.ascend : SCENE_THEMES.fall;
   }
   if (node.pool === 'sect') return SCENE_THEMES.sect;
   if (node.pool === 'inner') return SCENE_THEMES.breakthrough;
 
   const regId = state.char?.regionId;
   const regBiome = (regId && SCENE_THEMES[regId]) || SCENE_THEMES[REGION_BY_ID[regId]?.theme];
-  if (id === 'hub' || id === 'regionHub' || id === 'regionMap') {
+  if (id === 'hub' || id === 'regionHub' || id === 'regionMap' || id === 'delve') {
     return regBiome || SCENE_THEMES.qingniu;
   }
   if (node.pool === 'wild' || node.pool === 'world' || node.pool === 'branch' || node.pool === 'story') {
@@ -1116,7 +1116,7 @@ export class PixelStage {
 
   setScene(opts) {
     this.opts = { ...this.opts, ...opts };
-    if (this.reduced) this.drawOnce(0);
+    if (this.reduced) this.drawOnce(this.t0);
   }
 
   triggerFx(kind) {
@@ -1125,8 +1125,8 @@ export class PixelStage {
   }
 
   drawOnce(now) {
-    const t = (now - this.t0) / 1000;
-    const fxAge = (now - this.fxStart) / 1000;
+    const t = Math.max(0, (now - this.t0) / 1000);
+    const fxAge = Math.max(0, (now - this.fxStart) / 1000);
     if (this.titleCanvas && !document.getElementById('title-screen')?.hidden) {
       renderPixelScene(this.titleCanvas, { theme: SCENE_THEMES.title, realm: 4, rootId: 'tianling', t });
     }

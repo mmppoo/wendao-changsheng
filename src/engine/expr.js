@@ -53,6 +53,7 @@ function tokenize(src) {
       while (j < src.length && /[A-Za-z0-9_.\u4e00-\u9fa5]/.test(src[j])) j++;
       const word = src.slice(i, j);
       if (word === 'true' || word === 'false') tokens.push({ t: 'bool', v: word === 'true' });
+      else if (word === 'null') tokens.push({ t: 'null', v: null });
       else if (word === 'and') tokens.push({ t: 'op', v: '&&' });
       else if (word === 'or') tokens.push({ t: 'op', v: '||' });
       else if (word === 'not') tokens.push({ t: 'op', v: '!' });
@@ -99,7 +100,7 @@ export function parseExpression(src) {
 
   function parsePrimary() {
     const tk = peek();
-    if (tk.t === 'num' || tk.t === 'str' || tk.t === 'bool') { pos++; return { k: 'lit', v: tk.v }; }
+    if (tk.t === 'num' || tk.t === 'str' || tk.t === 'bool' || tk.t === 'null') { pos++; return { k: 'lit', v: tk.v }; }
     if (tk.t === 'ident') {
       pos++;
       if (peek().t === 'op' && peek().v === '(') {
@@ -193,8 +194,12 @@ export function evaluate(ast, ctx) {
       const a = evaluate(ast.left, ctx);
       const b = evaluate(ast.right, ctx);
       switch (op) {
-        case '==': return (isNumeric(a) && isNumeric(b)) ? Number(a) === Number(b) : String(a) === String(b);
-        case '!=': return (isNumeric(a) && isNumeric(b)) ? Number(a) !== Number(b) : String(a) !== String(b);
+        case '==':
+          if (a == null || b == null) return a == null && b == null;
+          return (isNumeric(a) && isNumeric(b)) ? Number(a) === Number(b) : String(a) === String(b);
+        case '!=':
+          if (a == null || b == null) return !(a == null && b == null);
+          return (isNumeric(a) && isNumeric(b)) ? Number(a) !== Number(b) : String(a) !== String(b);
         case '>': return num(a) > num(b);
         case '>=': return num(a) >= num(b);
         case '<': return num(a) < num(b);
@@ -254,7 +259,7 @@ export function buildContext(state, helpers = {}) {
     },
     getFlag: (n) => state.flags[n] ?? false,
     getCounter: (n) => state.counters[n] ?? 0,
-    hasItem: (n) => state.char.inventory.some((it) => it.id === n || it.name === n),
+    hasItem: (n) => state.char.inventory.some((it) => (it.id === n || it.name === n) && (it.qty ?? 1) > 0),
     hasAchievement: (id) => helpers.hasAchievement ? helpers.hasAchievement(id) : Boolean(state.meta?.achievements?.[id] || state.achievements?.[id]),
   };
 }

@@ -297,13 +297,25 @@ async function main() {
       }
       await client.eval('window.__game.act_openRegion(); window.__render();');
       const regState = await state();
+      await client.eval('window.__game.act_startDelve(); window.__render();');
+      const delveState = await state();
+      await client.eval('window.__game.act_delveExtract(); window.__render();');
       await client.eval('window.__game.act_openNpcHub(); window.__render();');
       const npcState = await state();
-      if (regState.scene !== 'regionHub' || npcState.scene !== 'npcHub') {
-        throw new Error(`subhub error reg=${regState.scene} npc=${npcState.scene}`);
+      if (regState.scene !== 'regionHub' || delveState.scene !== 'delve' || npcState.scene !== 'npcHub') {
+        throw new Error(`subhub error reg=${regState.scene} delve=${delveState.scene} npc=${npcState.scene}`);
       }
+      // 验证 hideIf 节点点击 ch.index 正确性（wrl_lx_clan_4 隐藏前两项后仍可执行第3项）
+      await client.eval(`(() => {
+        const g = window.__game;
+        g.state.flags['落霞暗尾夺玉'] = true;
+        g.openScene('wrl_lx_clan_4');
+        window.__render();
+      })()`);
+      const hideIdx = await client.eval('document.querySelector("#choices .choice")?.dataset?.index');
+      if (Number(hideIdx) !== 2) throw new Error('hideIf ch.index 错位: ' + hideIdx);
       await client.eval('window.__game.act_backHub(); window.__render();');
-      return `仙门大殿(${sectState.choices.length}项) · 九州历练 · 红尘道友(${npcState.choices.length}项)`;
+      return `仙门大殿(${sectState.choices.length}项) · 九州历练 · 五层秘境探幽 · 红尘道友(${npcState.choices.length}项) · hideIf索引=2`;
     });
 
     await check('储物袋直接服丹互动', async () => {
@@ -343,7 +355,7 @@ async function main() {
       return `${s.char.name} 已恢复`;
     });
 
-    await check('剧情分支与 ch.combat 战斗 HUD', async () => {
+    await check('剧情分支与 ch.combat 战术斗法 2.0 HUD（含意图预告）', async () => {
       await client.eval('window.__game.openScene("ev_fox_fire"); window.__render();');
       await finishTyping();
       await click('#choices .choice:nth-child(2)');
@@ -352,8 +364,10 @@ async function main() {
       await client.screenshot(path.join(ART, '04-combat-desktop.jpg'));
       const s = await state();
       const hudVis = await client.eval('!document.getElementById("scene-combat-hud").hidden');
-      if (s.scene !== 'combat' || !hudVis) throw new Error(`未进入战斗 scene=${s.scene}`);
-      return `${s.title} · HUD可见`;
+      const hasIntent = await client.eval('(document.querySelector(".combat-intent")?.textContent || "").includes("意图")');
+      const toastTop = await client.eval('getComputedStyle(document.getElementById("toast-stack")).top');
+      if (s.scene !== 'combat' || !hudVis || !hasIntent) throw new Error(`战斗HUD异常 scene=${s.scene} intent=${hasIntent}`);
+      return `${s.title} · HUD+意图预告可见 · toastTop=${toastTop}`;
     });
 
     await check('天劫九霄雷阵 HUD 渲染', async () => {

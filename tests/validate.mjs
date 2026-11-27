@@ -2,7 +2,7 @@
 import { ALL_EVENTS, STORY_TRIGGERS } from '../src/data/events/index.js';
 import { ACHIEVEMENTS } from '../src/data/achievements.js';
 import { ENDINGS } from '../src/data/endings.js';
-import { ITEM_BY_ID } from '../src/data/items.js';
+import { ITEM_BY_ID, ALCHEMY_RECIPES } from '../src/data/items.js';
 import { ENEMY_BY_ID } from '../src/data/enemies.js';
 import { ROOTS } from '../src/data/roots.js';
 import { SECTS } from '../src/data/sects.js';
@@ -30,8 +30,18 @@ const checkExpr = (src, where) => {
   try { parseExpression(src); } catch (e) { errors.push(`${where} 条件语法错误: ${src} → ${e.message}`); }
 };
 
+const VALID_EFFECT_KEYS = new Set([
+  'exp', 'expPct', 'stones', 'hp', 'hpPct', 'mp', 'mpPct', 'lawExp', 'lawId', 'attrs',
+  'lifespan', 'reputation', 'contribution', 'karma', 'demon', 'pet', 'injury', 'heal',
+  'items', 'removeItems', 'techniques', 'title', 'flag', 'counter', 'breakBonus',
+  'shield', 'escape', 'buff', 'relation', 'sect', 'realmSet', 'layerSet', 'time', 'achievements',
+]);
+
 function checkEffects(effects, where) {
   if (!effects) return;
+  for (const k of Object.keys(effects)) {
+    if (!VALID_EFFECT_KEYS.has(k)) errors.push(`${where} 未知 effect 字段: ${k}`);
+  }
   for (const id of effects.items || []) {
     const key = typeof id === 'string' ? id : id.id;
     if (!ITEM_BY_ID[key]) errors.push(`${where} 物品不存在: ${key}`);
@@ -132,6 +142,12 @@ for (const npc of NPCS) {
 }
 for (const wt of WORLD_TECHNIQUES) {
   if (wt.lawId && !LAW_BY_ID[wt.lawId]) errors.push(`九州功法 ${wt.id} lawId 不存在: ${wt.lawId}`);
+}
+for (const rec of ALCHEMY_RECIPES) {
+  if (!ITEM_BY_ID[rec.outputId]) errors.push(`丹方 ${rec.id} outputId 不存在: ${rec.outputId}`);
+  for (const ing of rec.ingredients || []) {
+    if (!ITEM_BY_ID[ing.id]) errors.push(`丹方 ${rec.id} 药材不存在: ${ing.id}`);
+  }
 }
 
 const totalWeight = ROOTS.reduce((a, r) => a + r.weight, 0);

@@ -45,7 +45,7 @@ export const ORIGINS = [
   {
     id: 'hunter', name: '猎户之子', weight: 10,
     desc: '你七岁能开弓，十二岁独自杀过一头黑熊。',
-    attrs: { 根骨: 9, 气血: 20, 道心: 2 },
+    attrs: { 根骨: 10, 道心: 3 },
     stones: 50, items: ['liegong'], flags: { 山野: true },
     hook: '你信手感，不信道理。',
   },

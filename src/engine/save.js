@@ -1,7 +1,32 @@
-/** 存档：localStorage 三个手动槽 + 自动槽；支持导入导出 JSON。 */
+import { SAVE_VERSION } from './state.js';
+import { realmLabel } from '../data/realms.js';
+
+/** 存档：localStorage 四个手动槽 + 自动槽；支持导入导出 JSON。 */
 const PREFIX = 'wendao.v3.';
 const META_KEY = `${PREFIX}meta`;
 const SLOT_KEY = (n) => `${PREFIX}slot.${n}`;
+
+export function mergeMeta(primary = {}, secondary = {}) {
+  const a = primary || {};
+  const b = secondary || {};
+  const achievements = { ...(b.achievements || {}), ...(a.achievements || {}) };
+  for (const [k, v] of Object.entries(b.achievements || {})) {
+    if (achievements[k] && v) achievements[k] = Math.min(Number(achievements[k]) || v, Number(v) || achievements[k]);
+  }
+  return {
+    cycle: Math.max(a.cycle || 1, b.cycle || 1),
+    karmaPoints: Math.max(a.karmaPoints || 0, b.karmaPoints || 0),
+    talents: Array.from(new Set([...(b.talents || []), ...(a.talents || [])])),
+    unlockedEndings: Array.from(new Set([...(b.unlockedEndings || []), ...(a.unlockedEndings || [])])),
+    achievements,
+    rootsSeen: Array.from(new Set([...(b.rootsSeen || []), ...(a.rootsSeen || [])])),
+    sectsJoined: Array.from(new Set([...(b.sectsJoined || []), ...(a.sectsJoined || [])])),
+    techniquesSeen: Array.from(new Set([...(b.techniquesSeen || []), ...(a.techniquesSeen || [])])),
+    runs: Math.max(a.runs || 0, b.runs || 0),
+    totalDeaths: Math.max(a.totalDeaths || 0, b.totalDeaths || 0),
+    achKarmaGranted: Math.max(a.achKarmaGranted || 0, b.achKarmaGranted || 0),
+  };
+}
 
 function safeStorage() {
   try {
@@ -27,15 +52,22 @@ export class SaveStore {
 
   save(slot, game) {
     if (!this.storage) return false;
-    const payload = {
-      version: 4,
-      savedAt: Date.now(),
-      state: game.serialize(),
-      meta: game.state.meta,
-    };
-    this.storage.setItem(this.key(slot), JSON.stringify(payload));
-    this.storage.setItem(META_KEY, JSON.stringify(game.state.meta));
-    return true;
+    try {
+      const mergedMeta = mergeMeta(game.state.meta, this.meta());
+      game.state.meta = mergedMeta;
+      game.meta = mergedMeta;
+      const payload = {
+        version: SAVE_VERSION,
+        savedAt: Date.now(),
+        state: game.serialize(),
+        meta: mergedMeta,
+      };
+      this.storage.setItem(this.key(slot), JSON.stringify(payload));
+      this.storage.setItem(META_KEY, JSON.stringify(mergedMeta));
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   load(slot) {
@@ -44,7 +76,7 @@ export class SaveStore {
     if (!raw) return null;
     try {
       const data = JSON.parse(raw);
-      if (!data?.state) return null;
+      if (!data?.state?.char) return null;
       return data;
     } catch {
       return null;
@@ -53,7 +85,7 @@ export class SaveStore {
 
   remove(slot) {
     if (!this.storage) return;
-    this.storage.removeItem(this.key(slot));
+    try { this.storage.removeItem(this.key(slot)); } catch { /* ignore */ }
   }
 
   list() {
@@ -74,12 +106,17 @@ export class SaveStore {
   }
 
   saveMeta(meta) {
-    if (!this.storage) return;
-    this.storage.setItem(META_KEY, JSON.stringify(meta));
+    if (!this.storage) return false;
+    try {
+      this.storage.setItem(META_KEY, JSON.stringify(meta));
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   exportToFile(game) {
-    const payload = { version: 4, savedAt: Date.now(), state: game.serialize(), meta: game.state.meta };
+    const payload = { version: SAVE_VERSION, savedAt: Date.now(), state: game.serialize(), meta: game.state.meta };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -97,16 +134,15 @@ export class SaveStore {
 }
 
 function describe(state) {
-  const c = state.char;
-  const realmNames = ['炼气', '筑基', '金丹', '元婴', '化神', '炼虚', '合体', '大乘', '渡劫', '真仙'];
-  const layerText = c.realm === 0 ? `${c.layer + 1}层` : c.realm === 9 ? '' : ['初期', '中期', '后期', '圆满'][Math.min(c.layer, 3)];
+  const c = state.char || {};
   return {
-    name: c.name,
-    realm: `${realmNames[c.realm] || '炼气'}${layerText}`,
-    age: Math.floor(c.age / 12),
+    name: c.name || '无名',
+    realm: realmLabel({ realm: c.realm || 0, layer: c.layer || 0 }),
+    age: Math.floor((c.age || 192) / 12),
     turn: state.turn || 0,
     location: c.location || '人间',
     sectId: c.sectId || null,
+    playerSectName: c.playerSectName || null,
     rootId: c.rootId || null,
     cycle: state.meta?.cycle || 1,
   };

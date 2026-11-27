@@ -1,6 +1,6 @@
 import {
   addItem, removeItem, gainExp, needExp, recomputeDerived, advanceMonths, gainLawExp,
-  maxTechSlots, titleBonuses,
+  maxTechSlots, titleBonuses, currentWorldEra,
 } from './state.js';
 import { ITEM_BY_ID } from '../data/items.js';
 import { SECT_BY_ID } from '../data/sects.js';
@@ -71,7 +71,8 @@ export function applyEffects(state, effects = {}, ctx = {}) {
     if (rep > 0 && c.rootId === 'an') rep = Math.max(1, Math.round(rep * 0.5));
     if (rep > 0 && c.goldenFingerId === 'gf_none') rep = Math.round(rep * 1.25);
     const tRep = titleBonuses(c).repBonus || 0;
-    if (rep > 0 && tRep > 0) rep = Math.round(rep * (1 + tRep));
+    const eraRep = currentWorldEra(state).repMult || 1;
+    if (rep > 0 && (tRep > 0 || eraRep > 1)) rep = Math.round(rep * (1 + tRep) * eraRep);
     c.reputation += rep;
     out.push(`声望 ${rep > 0 ? '+' : ''}${rep}`);
   }
@@ -129,6 +130,9 @@ export function applyEffects(state, effects = {}, ctx = {}) {
     for (const t of effects.techniques) {
       if (!c.techniques.some((x) => x.id === t.id)) {
         c.techniques.push({ ...t });
+        if (state.meta) {
+          state.meta.techniquesSeen = Array.from(new Set([...(state.meta.techniquesSeen || []), t.id]));
+        }
         if (c.equippedTechs.length < cap && !c.equippedTechs.includes(t.id)) {
           c.equippedTechs.push(t.id);
           c._manualUnequip = false;
@@ -183,8 +187,14 @@ export function applyEffects(state, effects = {}, ctx = {}) {
   }
   if (effects.sect) {
     c.sectId = effects.sect;
-    c.sectRank = 0;
+    const r = c.realm || 0;
+    c.sectRank = r >= 6 ? 5 : r >= 4 ? 4 : r === 3 ? 3 : r === 2 ? 2 : r === 1 ? 1 : 0;
     c.contribution = 0;
+    state.sectBoard = null;
+    state.counters = state.counters || {};
+    state.counters.sects_joined = (state.counters.sects_joined || 0) + 1;
+    if (state.meta) state.meta.sectsJoined = Array.from(new Set([...(state.meta.sectsJoined || []), effects.sect]));
+    state.flags[`入宗:${effects.sect}`] = true;
     out.push(`加入${SECT_BY_ID[effects.sect]?.name || effects.sect}`);
   }
   if (effects.realmSet && Number.isInteger(effects.realmSet)) {
@@ -200,8 +210,12 @@ export function applyEffects(state, effects = {}, ctx = {}) {
   if (effects.time) {
     out.push(...advanceMonths(state, effects.time, ctx.rng));
   }
-  if (effects.achievements && ctx.unlockAchievement) {
-    for (const id of effects.achievements) {
+  const achList = [
+    ...(Array.isArray(effects.achievements) ? effects.achievements : []),
+    ...(effects.achievement ? [effects.achievement] : []),
+  ];
+  if (achList.length && ctx.unlockAchievement) {
+    for (const id of achList) {
       const name = ctx.unlockAchievement(id);
       if (name) out.push(`成就解锁：${name}`);
     }

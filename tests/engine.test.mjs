@@ -161,7 +161,7 @@ test('天劫：成功渡劫进入下一境界，失败触发结局', () => {
   assert.ok(c.realm >= 2, 'realm=' + c.realm);
 });
 
-test('天劫失败会触发身死道消结局', () => {
+test('天劫失败会触发渡劫陨落结局（且按境界细分）', () => {
   const g = fresh();
   const c = g.state.char;
   c.realm = 1;
@@ -169,16 +169,30 @@ test('天劫失败会触发身死道消结局', () => {
   c.exp = needExp(c);
   g.resolveBreakthrough(1);
   assert.equal(g.state.scene.id, 'tribulation');
+  // 渡劫入场应满血满蓝（不再33%残血进场）
+  assert.equal(c.hp, c.maxHp);
   g.act_tribulationStage({ params: { p: 0, mode: 'body' } });
+  if (g.state.scene.id === 'tribulation') {
+    g.act_tribulationStage({ params: { p: 0, mode: 'body' } });
+  }
+  if (g.state.scene.id === 'tribulation') {
+    g.act_tribulationStage({ params: { p: 0, mode: 'body' } });
+  }
   assert.equal(g.state.scene.id, 'ending');
-  assert.equal(g.state.flags.endingId, 'e_tribulation_death');
+  assert.ok(['e_tribulation_death', 'e_tribulation_jindan'].includes(g.state.flags.endingId));
 });
 
-test('结局判定：寿元耗尽与魔化', () => {
+test('结局判定：寿元耗尽、凡人一世与魔化', () => {
   const g = fresh();
+  g.state.char.layer = 1;
   g.state.char.age = g.state.char.lifespan;
   g.afterAction();
   assert.equal(g.state.flags.endingId, 'e_old_age');
+
+  const gMortal = fresh();
+  gMortal.state.char.age = gMortal.state.char.lifespan;
+  gMortal.afterAction();
+  assert.equal(gMortal.state.flags.endingId, 'e_mortal');
 
   const g2 = fresh();
   g2.state.char.demon = 100;
@@ -645,4 +659,180 @@ test('v6.0 审计专项回归：功法槽位防叠加、按境礼聘、叛门黑
   assert.ok(g4.state.counters.disciples >= 2);
   g4.state.char.age = g4.state.char.lifespan - 24;
   assert.equal(lifespanAlert(g4.state.char).level, 'critical');
+});
+
+test('v7.0 P0 回归：炼丹真成丹、非致死战败不暴毙、逆命天赋永不清空、expr null 字面量与后置剧情不吞奇遇', async () => {
+  const { recomputeDerived, breakthroughChance, sectPerks, activeTechniques } = await import('../src/engine/state.js');
+  const { mergeMeta } = await import('../src/engine/save.js');
+
+  // 1. 炼丹产出真实丹药（修复 rec.output vs rec.outputId）
+  const gAlch = fresh({ rootId: 'huo' });
+  gAlch.state.char.sectId = 'danxia';
+  gAlch.state.char.attrs.悟性 = 80;
+  gAlch.state.char.inventory.push({ id: 'lingcao', qty: 5 });
+  gAlch.act_openAlchemy();
+  const alchChoices = gAlch.choices();
+  assert.ok(alchChoices[0].label.includes('引气丹') && !alchChoices[0].label.includes('undefined'), alchChoices[0].label);
+  let brewed = false;
+  for (let i = 0; i < 5; i++) {
+    gAlch.act_brewRecipe({ params: { recipeId: 'yinqi_dan' } });
+    if (gAlch.state.char.inventory.some((it) => it.id === 'yinqi_dan')) { brewed = true; break; }
+  }
+  assert.ok(brewed, '炼丹成功后必须向储物袋加入真实丹药');
+
+  // 2. 非致死事件战败（如擂台/水鬼）点击继续不再暴毙！
+  const gLose = fresh();
+  gLose.state.char.hp = 1;
+  gLose.state.char.attrs.根骨 = 0;
+  gLose.openScene('ev_sect_arena');
+  gLose.choose(0); // 进入内门大比战斗
+  assert.equal(gLose.state.scene.id, 'combat');
+  gLose.choose(0); // 被金丹长老秒杀触发 onLose
+  assert.ok(gLose.state.char.hp >= 1, `非致死战败应保留至少1血，当前 hp=${gLose.state.char.hp}`);
+  assert.ok(!gLose.state.flags.finished, '非致死战败不得直接结束游戏');
+  gLose.proceed();
+  assert.ok(!gLose.state.flags.finished, '点击继续后绝不可因0血暴毙！');
+
+  // 3. 逆命天赋(t_niming)突破一次后依然永久生效
+  const gNiming = new Game({ meta: { karmaPoints: 0, talents: ['t_niming'] } });
+  gNiming.newRun({ seed: 42, name: '逆命', gender: '男', originId: 'farmer', rootId: 'shuangling' });
+  assert.equal(gNiming.state.buffs.permBreakBonus, 6);
+  const pBefore = breakthroughChance(gNiming.state);
+  gNiming.state.char.exp = needExp(gNiming.state.char);
+  gNiming.resolveBreakthrough(1);
+  assert.equal(gNiming.state.buffs.permBreakBonus, 6, '突破后 permBreakBonus 绝不能清零');
+  gNiming.state.char.realm = 3;
+  const gPlain = fresh();
+  gPlain.state.char.realm = 3;
+  gPlain.state.char.layer = gNiming.state.char.layer;
+  gPlain.state.char.attrs = { ...gNiming.state.char.attrs };
+  gPlain.state.worldEra = { ...gNiming.state.worldEra };
+  assert.ok(breakthroughChance(gNiming.state) > breakthroughChance(gPlain.state), '逆命天赋在突破后仍应高于无天赋角色');
+  assert.ok(pBefore > 0);
+
+  // 4. expr.js null 字面量修复：无宗门时 char.sectId != null 必须为 false
+  const gNull = fresh();
+  const ctxNull = buildContext(gNull.state, {});
+  assert.equal(evaluate(parseExpression('char.sectId != null'), ctxNull), false);
+  assert.equal(evaluate(parseExpression('char.sectId == null'), ctxNull), true);
+  gNull.state.char.sectId = 'taixuan';
+  assert.equal(evaluate(parseExpression('char.sectId != null'), ctxNull), true);
+
+  // 5. player_sect 拥有完整宗门加成 + 叛离不重新装备原宗功法 + 辞别散修无惩罚 + 10阶法宝达成 craft>=10
+  const gSect = fresh();
+  gSect.state.char.realm = 4;
+  gSect.state.char.stones = 9999999;
+  gSect.act_foundSect();
+  assert.ok(sectPerks(gSect.state.char).speed > 0.15 && sectPerks(gSect.state.char).atk > 0.1);
+  for (let i = 0; i < 10; i++) gSect.act_refine();
+  assert.equal(gSect.state.char.artifactLevel, 10);
+  assert.equal(gSect.state.counters.craft, 10);
+
+  // 散修辞别无惩罚
+  const gSan = fresh();
+  gSan.act_joinSect({ sectId: 'sanxiu' });
+  gSan.act_sectLeave();
+  assert.equal(gSan.state.char.sectId, null);
+  assert.equal(gSan.state.char.betrayCount, 0);
+  assert.equal(gSan.state.char.sectLeaveUntil, 0);
+
+  // 6. 存档 meta 合并绝不抹除新世解锁的成就与结局
+  const merged = mergeMeta(
+    { cycle: 1, karmaPoints: 2, unlockedEndings: ['e_old_age'], achievements: { a_first_qi: 100 } },
+    { cycle: 3, karmaPoints: 9, unlockedEndings: ['e_ascend'], achievements: { a_ascend: 200 }, talents: ['t_niming'] },
+  );
+  assert.equal(merged.cycle, 3);
+  assert.equal(merged.karmaPoints, 9);
+  assert.ok(merged.unlockedEndings.includes('e_old_age') && merged.unlockedEndings.includes('e_ascend'));
+  assert.ok(merged.talents.includes('t_niming'));
+
+  // 7. 叛门后原宗功法不会被 activeTechniques 自动重新装回
+  const gBetray = fresh();
+  gBetray.state.char.sectId = 'taixuan';
+  gBetray.state.char.contribution = 1000;
+  gBetray.act_buySectManual({ params: { manualId: 'tx_lib_1' } });
+  assert.equal(activeTechniques(gBetray.state.char).length, 1);
+  gBetray.act_sectLeave();
+  assert.equal(activeTechniques(gBetray.state.char).length, 0, '叛门卸下原宗功法后不得自动装回');
+
+  // 8. 剧情触发不会在子界面结果未读时强行覆盖
+  const gTrig = fresh();
+  gTrig.state.flags['同名玉牌'] = true;
+  gTrig.state.scene = { id: 'cave', result: { text: '闭关完成', lines: [] } };
+  gTrig.afterAction();
+  assert.equal(gTrig.state.scene.id, 'cave', '结果页展示期间不应被主线剧情覆盖');
+  gTrig.state.scene = { id: 'hub', result: null };
+  gTrig.afterAction();
+  assert.equal(gTrig.state.scene.id, 'story_jade_1', '回到主界无结果时应正常触发主线剧情');
+  recomputeDerived(gTrig.state.char);
+});
+
+test('v7.0 可玩性跃迁：战术斗法2.0（意图/蓄势反击/战符/法则领域）、五层秘境探幽、九州天象、智能闭关与分页选礼', async () => {
+  const { gainLawExp, currentWorldEra, activeDaoGoal } = await import('../src/engine/state.js');
+
+  // 1. 战术斗法2.0：敌手意图预告 + 守势蓄力反击 + 战符 + 法则领域
+  const g = fresh();
+  g.state.char.realm = 2;
+  g.state.char.attrs.根骨 = 40;
+  g.state.char.attrs.神识 = 40;
+  gainLawExp(g.state, 100, 'sword');
+  g.state.char.inventory.push({ id: 'zhangxin_leifu', qty: 2 }, { id: 'dahuan_dan', qty: 1 });
+  g.startCombat('jindan_elder');
+  assert.ok(g.state.combat.intent && g.state.combat.intent.label);
+  // 强制敌手为蓄力重击，玩家守势应触发蓄势反击
+  g.state.combat.intent = { kind: 'heavy', label: '蓄力重击', mult: 1.65 };
+  g.act_combatGuard();
+  assert.equal(g.state.combat.counterReady, true, '面对蓄力重击使用守势应触发蓄势反击');
+  // 展开法则领域
+  const domainChoice = g.choices().find((c) => c.action === 'combatDomain');
+  assert.ok(domainChoice && !domainChoice.disabled, '领悟法则后应可展开法则领域');
+  g.choose(domainChoice.index);
+  if (g.state.combat) {
+    assert.equal(g.state.combat.domainUsed, true);
+    // 祭出掌心五雷符
+    const talismanChoice = g.choices().find((c) => c.action === 'combatTalisman');
+    assert.ok(talismanChoice);
+    g.choose(talismanChoice.index);
+    // 满血状态仅持大还丹点击服丹也不应白白浪费回合（真实消耗大还丹）
+    if (g.state.combat) {
+      g.state.char.hp = g.state.char.maxHp;
+      g.state.char.mp = g.state.char.maxMp;
+      const pillsBefore = g.state.stats.pills;
+      g.act_combatPill();
+      assert.equal(g.state.stats.pills, pillsBefore + 1);
+    }
+  }
+
+  // 2. 五层秘境探幽：深入层数、累积战利与见好就收撤离
+  const gDelve = fresh();
+  gDelve.act_startDelve();
+  assert.equal(gDelve.state.scene.id, 'delve');
+  assert.equal(gDelve.state.delve.floor, 1);
+  gDelve.act_delveStep({ params: { kind: 'stele' } });
+  assert.equal(gDelve.state.delve.floor, 2);
+  assert.ok(gDelve.state.delve.haulStones > 0 && gDelve.state.delve.haulLaw > 0);
+  const stonesBefore = gDelve.state.char.stones;
+  gDelve.act_delveExtract();
+  assert.equal(gDelve.state.delve, null);
+  assert.ok(gDelve.state.char.stones > stonesBefore, '撤离应全额结算暂存灵石');
+
+  // 3. 古籍秘阁品阶筛选与分页可直达天/仙阶功法，NPC 赠礼支持多物自选
+  const gShop = fresh();
+  gShop.state.char.realm = 8;
+  gShop.state.char.stones = 9999999;
+  gShop.act_openTechShop({ params: { tier: 'high', page: 0 } });
+  const highLabels = gShop.choices().map((c) => c.label);
+  assert.ok(highLabels.some((l) => l.includes('【仙') || l.includes('【天')), '筛选天·仙品阶应直接展示高阶孤本');
+
+  gShop.state.char.inventory.push({ id: 'lingcao', qty: 1 }, { id: 'dao_fruit', qty: 1 });
+  gShop.act_openNpc({ params: { npcId: 'npc_su' } });
+  const giftBtns = gShop.choices().filter((c) => c.action === 'npcGift');
+  assert.equal(giftBtns.length, 2, '拥有两件喜好物时应展示两个独立赠礼选项');
+
+  // 4. 智能闭关冲层、九州天象与道途指引
+  const gSmart = fresh();
+  assert.ok(currentWorldEra(gSmart.state).name);
+  assert.ok(activeDaoGoal(gSmart.state).label);
+  gSmart.act_smartCultivate();
+  assert.ok(gSmart.state.char.exp > 0 && gSmart.state.scene.result);
 });
