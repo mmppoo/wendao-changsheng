@@ -110,6 +110,7 @@ export function buildHub(game) {
   const rank = sectRank(c.contribution);
   const realm = REALMS[c.realm];
   const monthCost = 1;
+  const travelMonths = c.rootId === 'kongjian' ? 3 : c.rootId === 'feng' ? 5 : 6;
   const choices = [
     {
       id: 'cultivate', label: '打坐修炼', hint: '半年 · 稳步积累修为',
@@ -124,10 +125,24 @@ export function buildHub(game) {
       action: 'explore',
     },
     {
-      id: 'travel', label: '云游四方', hint: '三月 · 换一处山水，长几分见识',
+      id: 'travel', label: '云游四方', hint: `${travelMonths}月 · 换一处山水，长几分见识`,
       action: 'travel',
     },
   ];
+
+  if (c.rootId === 'xue') {
+    choices.push({
+      id: 'blood_cultivate', label: '燃血修行', hint: '三月 · 血灵根专属，以气血换取巨额修为',
+      action: 'bloodCultivate', require: 'char.hp > char.maxHp * 0.35', requireHint: '气血不足，强行燃血恐伤本源',
+    });
+  }
+
+  if (c.realm >= 1) {
+    choices.push({
+      id: 'secret_realm', label: '探索秘境', hint: '半年 · 深入上古遗迹，机缘与杀劫并存',
+      action: 'secretRealm',
+    });
+  }
 
   if (sect) {
     choices.push({
@@ -138,6 +153,13 @@ export function buildHub(game) {
     choices.push({
       id: 'find_sect', label: '寻访仙门', hint: '一月 · 看看哪座山门愿意为你开',
       action: 'sectRecruit',
+    });
+  }
+
+  if (c.sectId === 'danxia' || state.char.inventory.some((i) => i.id === 'lingcao' && i.qty > 0)) {
+    choices.push({
+      id: 'alchemy', label: '开炉炼丹', hint: '一月 · 耗百年灵草或宗门药材炼制丹药',
+      action: 'alchemy',
     });
   }
 
@@ -152,7 +174,13 @@ export function buildHub(game) {
   if (canBreakthrough(c)) {
     choices.push({
       id: 'breakthrough', label: '冲击境界', hint: '修为已满，可叩关一试',
-      action: 'breakthrough', effect: 'highlight',
+      action: 'breakthrough', effect: 'primary',
+    });
+  }
+  if (c.realm >= 8 && (state.counters.refuse_ascend || 0) >= 1) {
+    choices.push({
+      id: 'revisit_gate', label: '再临天门', hint: '天门虚影再现，决定飞升或留世',
+      action: 'revisitGate', effect: 'primary',
     });
   }
   if (c.realm >= 3 && !state.flags.开宗立派) {

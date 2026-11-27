@@ -1,7 +1,7 @@
 {
   "name": "wendao-changsheng",
-  "version": "1.0.0",
-  "description": "《问道长生》—— ink 风格互动叙事修仙模拟器：灵根抽取、境界突破、随机奇遇、宗门选择、隐藏成就与多结局。",
+  "version": "2.0.0",
+  "description": "《问道长生》v2.0 水墨绘卷重制版——参考 inkle/ink 的互动叙事修仙模拟器，全双端适配、原创水墨插画与灵气动效。",
   "type": "module",
   "private": false,
   "scripts": {

@@ -58,6 +58,7 @@ export function createRun({ seed, name, gender, originId, rootId, meta = {} }) {
   if (root.tags.includes('体修')) char.attrs.根骨 += 5;
 
   const buffs = {};
+  const talentFlags = {};
   for (const tid of meta.talents || []) {
     const t = TALENT_BY_ID[tid];
     if (!t?.apply) continue;
@@ -70,7 +71,7 @@ export function createRun({ seed, name, gender, originId, rootId, meta = {} }) {
       if (!char.techniques.some((x) => x.id === tech.id)) char.techniques.push({ ...tech });
     }
     if (ap.buffs) for (const [k, v] of Object.entries(ap.buffs)) buffs[k] = (buffs[k] || 0) + v;
-    if (ap.flag) Object.assign(char.flags || {}, ap.flag);
+    if (ap.flag) Object.assign(talentFlags, ap.flag);
   }
 
   recomputeDerived(char);
@@ -86,7 +87,7 @@ export function createRun({ seed, name, gender, originId, rootId, meta = {} }) {
     rngState: rng.getState(),
     turn: 0,
     char,
-    flags: { ...(origin.flags || {}) },
+    flags: { ...(origin.flags || {}), ...talentFlags },
     counters: { roots_seen: rootsSeen.length },
     recent: [],
     achievements: {},
@@ -155,9 +156,11 @@ export function recomputeDerived(char) {
   const root = ROOT_BY_ID[char.rootId];
   const realm = REALMS[char.realm];
   const bodyBonus = root?.tags?.includes('体修') ? 1.6 : 1;
+  const equipMp = (char.inventory || []).reduce((acc, it) => acc + (ITEM_BY_ID[it.id]?.equip?.mp || 0), 0);
+  const techLifespan = (char.techniques || []).reduce((acc, t) => acc + (t.lifespan || 0), 0);
   char.maxHp = Math.round((100 + char.attrs.根骨 * 28 + char.realm * 420) * bodyBonus);
-  char.maxMp = Math.round(60 + char.attrs.神识 * 18 + char.realm * 260);
-  char.lifespanBase = Math.round((80 + (root?.lifespan || 0) + (realm?.lifespan || 0)) * 12);
+  char.maxMp = Math.round(60 + char.attrs.神识 * 18 + char.realm * 260 + equipMp);
+  char.lifespanBase = Math.round((80 + (root?.lifespan || 0) + (realm?.lifespan || 0) + techLifespan) * 12);
   if (!char.lifespan || char.lifespan < char.lifespanBase) char.lifespan = char.lifespanBase;
   char.hp = clamp(char.hp, 0, char.maxHp);
   char.mp = clamp(char.mp, 0, char.maxMp);
@@ -234,16 +237,18 @@ export function advanceMonths(state, months, rng) {
   const char = state.char;
   const notes = [];
   char.age += months;
-  const regen = Math.round(char.maxHp * 0.12 * months);
+  const healMult = char.rootId === 'mu' ? 1.5 : 1;
+  const regen = Math.round(char.maxHp * 0.12 * months * healMult);
   char.hp = clamp(char.hp + regen, 0, char.maxHp);
   char.mp = clamp(char.mp + Math.round(char.maxMp * 0.2 * months), 0, char.maxMp);
+  const perks = sectPerks(char);
   if (char.sectId) {
-    const perks = sectPerks(char);
     const stipend = Math.round((perks.stones || 0) * months);
     if (stipend) { char.stones += stipend; notes.push(`宗门月例 +${stipend} 灵石`); }
     char.contribution += Math.round(state.char.sectRank * 2 * months);
   }
-  if (char.demon > 0 && rng && rng.chance(0.02 * months)) {
+  const demonChance = 0.02 * months * (1 - (perks.demonResist || 0));
+  if (char.demon > 0 && rng && rng.chance(demonChance)) {
     char.demon = Math.min(100, char.demon + 1);
     notes.push('夜里又做了那个梦。心魔 +1');
   }

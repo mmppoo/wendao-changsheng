@@ -26,8 +26,9 @@ export function applyEffects(state, effects = {}, ctx = {}) {
     out.push(`灵石 ${effects.stones > 0 ? '+' : ''}${effects.stones}`);
   }
   if (effects.hp) {
-    c.hp = clamp(c.hp + effects.hp, 0, c.maxHp);
-    out.push(`气血 ${effects.hp > 0 ? '+' : ''}${effects.hp}`);
+    const delta = effects.hp > 0 && c.rootId === 'mu' ? Math.round(effects.hp * 1.5) : effects.hp;
+    c.hp = clamp(c.hp + delta, 0, c.maxHp);
+    out.push(`气血 ${delta > 0 ? '+' : ''}${delta}`);
   }
   if (effects.mp) {
     c.mp = clamp(c.mp + effects.mp, 0, c.maxMp);
@@ -45,8 +46,11 @@ export function applyEffects(state, effects = {}, ctx = {}) {
     out.push(`寿元 ${effects.lifespan > 0 ? '+' : ''}${effects.lifespan} 年`);
   }
   if (effects.reputation) {
-    c.reputation += effects.reputation;
-    out.push(`声望 ${effects.reputation > 0 ? '+' : ''}${effects.reputation}`);
+    let rep = effects.reputation;
+    if (rep > 0 && c.rootId === 'taiyang') rep = Math.round(rep * 1.5);
+    if (rep > 0 && c.rootId === 'an') rep = Math.max(1, Math.round(rep * 0.5));
+    c.reputation += rep;
+    out.push(`声望 ${rep > 0 ? '+' : ''}${rep}`);
   }
   if (effects.contribution) {
     c.contribution = Math.max(0, c.contribution + effects.contribution);
@@ -105,6 +109,18 @@ export function applyEffects(state, effects = {}, ctx = {}) {
     for (const [k, v] of Object.entries(effects.counter)) {
       state.counters[k] = (state.counters[k] || 0) + v;
     }
+  }
+  if (effects.breakBonus) {
+    state.buffs.breakBonus = (state.buffs.breakBonus || 0) + effects.breakBonus;
+    out.push(`下次突破成算 +${effects.breakBonus}%`);
+  }
+  if (effects.shield) {
+    state.buffs.shield = (state.buffs.shield || 0) + effects.shield;
+    out.push(`护体金光 +${effects.shield} 层`);
+  }
+  if (effects.escape) {
+    state.buffs.escape = (state.buffs.escape || 0) + effects.escape;
+    out.push(`神行遁符 +${effects.escape} 次`);
   }
   if (effects.buff) {
     if (effects.buff.breakBonus) state.buffs.breakBonus = (state.buffs.breakBonus || 0) + effects.buff.breakBonus;

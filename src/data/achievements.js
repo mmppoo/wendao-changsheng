@@ -14,10 +14,10 @@ export const ACHIEVEMENTS = [
   { id: 'a_dacheng', name: '大乘之巅', desc: '只差一步飞升。', check: 'realm >= 7' },
   { id: 'a_dujie', name: '渡劫之人', desc: '开始数天劫。', check: 'realm >= 8' },
   { id: 'a_xian', name: '飞升上界', desc: '渡过九重天劫，位列仙班。', check: 'realm >= 9', tier: '仙' },
-  { id: 'a_fast_jindan', name: '六十载金丹', desc: '六十岁前结丹。', check: 'realm >= 2 && age < 60 * 12' },
-  { id: 'a_fast_yuanying', name: '百岁元婴', desc: '百岁前凝婴。', check: 'realm >= 3 && age < 100 * 12' },
-  { id: 'a_slow_lianqi', name: '炼气期钉子户', desc: '在炼气期待满一百年。', check: 'realm === 0 && age >= 116 * 12', hidden: true },
-  { id: 'a_old_xian', name: '老而不死', desc: '三千岁后仍在人间修行。', check: 'age >= 3000 * 12' },
+  { id: 'a_fast_jindan', name: '六十载金丹', desc: '六十岁前结丹。', check: 'realm >= 2 && age < 60' },
+  { id: 'a_fast_yuanying', name: '百岁元婴', desc: '百岁前凝婴。', check: 'realm >= 3 && age < 100' },
+  { id: 'a_slow_lianqi', name: '炼气期钉子户', desc: '在炼气期待满一百年。', check: 'realm === 0 && age >= 116', hidden: true },
+  { id: 'a_old_xian', name: '老而不死', desc: '三千岁后仍在人间修行。', check: 'age >= 3000' },
   { id: 'a_no_break_fail', name: '一往无前', desc: '连续十次突破未失手。', check: 'counters.streak_break >= 10' },
   { id: 'a_break_fail_10', name: '天道弃子', desc: '连续十次突破失败。', check: 'counters.streak_fail >= 10', hidden: true },
 
@@ -37,7 +37,7 @@ export const ACHIEVEMENTS = [
   { id: 'a_elder', name: '长老', desc: '坐上长老之位。', check: 'char.sectRank >= 4' },
   { id: 'a_supreme', name: '太上长老', desc: '宗门最高位。', check: 'char.sectRank >= 5' },
   { id: 'a_all_sects', name: '十二山门', desc: '在十二个宗门中都待过。', check: 'meta.sectsJoined.length >= 12', hidden: true },
-  { id: 'a_sanxiu_100', name: '散修百年', desc: '无门无派修行百年。', check: 'char.sectId === null && age >= 116 * 12', hidden: true },
+  { id: 'a_sanxiu_100', name: '散修百年', desc: '无门无派修行百年。', check: 'char.sectId === null && age >= 116', hidden: true },
   { id: 'a_betray', name: '叛门', desc: '离开曾经跪拜过的山门。', check: 'flag("临阵脱逃") || flag("放走周野")', hidden: true },
 
   // —— 战斗 ——
@@ -81,7 +81,7 @@ export const ACHIEVEMENTS = [
 
   // —— 红尘 ——
   { id: 'a_lover', name: '道侣', desc: '与一人结为道侣。', check: 'flag("道侣")' },
-  { id: 'a_lover_death', name: '白发人', desc: '看着道侣先你而去。', check: 'flag("道侣") && age >= 300 * 12', hidden: true },
+  { id: 'a_lover_death', name: '白发人', desc: '看着道侣先你而去。', check: 'flag("道侣") && age >= 300', hidden: true },
   { id: 'a_disciple', name: '收徒', desc: '收下第一个弟子。', check: 'counters.disciples >= 1' },
   { id: 'a_disciple_10', name: '桃李满山', desc: '收徒十人。', check: 'counters.disciples >= 10' },
   { id: 'a_mortal_life', name: '红尘一遭', desc: '在凡人城镇生活满一年。', check: 'flag("红尘一年")', hidden: true },
@@ -111,7 +111,7 @@ export const ACHIEVEMENTS = [
   { id: 'a_die_100', name: '不死不休', desc: '死亡一百次。', check: 'stats.deaths >= 100', hidden: true, tier: '天' },
   { id: 'a_click_100', name: '手不释卷', desc: '做出三百次选择。', check: 'stats.actions >= 300' },
   { id: 'a_idle', name: '山中无甲子', desc: '连续闭关十二次。', check: 'counters.deep_streak >= 12', hidden: true },
-  { id: 'a_poor', name: '一文不名', desc: '身无分文地活过五十年。', check: 'stones === 0 && age >= 66 * 12', hidden: true },
+  { id: 'a_poor', name: '一文不名', desc: '身无分文地活过五十年。', check: 'stones === 0 && age >= 66', hidden: true },
   { id: 'a_gamble', name: '顺手牵羊', desc: '从万宝阁顺走过东西。', check: 'flag("偷过万宝阁")', hidden: true },
   { id: 'a_frog', name: '井底之蛙', desc: '在同一个地方待满十年。', check: 'counters.stay_home >= 10', hidden: true },
   { id: 'a_tea', name: '一盏茶', desc: '在茶摊听完一整段别人的故事。', check: 'flag("听完故事")', hidden: true },
@@ -132,7 +132,7 @@ export const ACHIEVEMENTS = [
   { id: 'a_fish', name: '摸鱼', desc: '在宗门事务中偷懒十次。', check: 'counters.slack >= 10', hidden: true },
   { id: 'a_library', name: '书蠹', desc: '读遍藏经阁三层。', check: 'flag("读遍藏经阁")', hidden: true },
   { id: 'a_teacher', name: '好为人师', desc: '给凡人讲道一百次。', check: 'counters.teach >= 100', hidden: true },
-  { id: 'a_eternal', name: '长生', desc: '活过一万年。', check: 'age >= 10000 * 12', tier: '仙' },
+  { id: 'a_eternal', name: '长生', desc: '活过一万年。', check: 'age >= 10000', tier: '仙' },
 
   // —— 扩容：事件 flag 与轮回累计 ——
   { id: 'a2_sword_grave', name: '剑冢择剑', desc: '在剑冢里挑走了一柄剑。', check: 'flag("剑冢择剑")', hidden: true },

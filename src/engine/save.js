@@ -18,7 +18,7 @@ function safeStorage() {
 export class SaveStore {
   constructor(storage = safeStorage()) {
     this.storage = storage;
-    this.slots = [0, 1, 2, 3];
+    this.slots = [0, 1, 2, 3, 4];
   }
 
   available() { return Boolean(this.storage); }
@@ -99,11 +99,15 @@ export class SaveStore {
 function describe(state) {
   const c = state.char;
   const realmNames = ['炼气', '筑基', '金丹', '元婴', '化神', '炼虚', '合体', '大乘', '渡劫', '真仙'];
+  const layerText = c.realm === 0 ? `${c.layer + 1}层` : c.realm === 9 ? '' : ['初期', '中期', '后期', '圆满'][Math.min(c.layer, 3)];
   return {
     name: c.name,
-    realm: `${realmNames[c.realm] || '炼气'}${c.realm === 0 ? `${c.layer + 1}层` : ''}`,
+    realm: `${realmNames[c.realm] || '炼气'}${layerText}`,
     age: Math.floor(c.age / 12),
     turn: state.turn || 0,
     location: c.location || '人间',
+    sectId: c.sectId || null,
+    rootId: c.rootId || null,
+    cycle: state.meta?.cycle || 1,
   };
 }

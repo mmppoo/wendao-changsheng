@@ -102,7 +102,7 @@ export const INNER_EVENTS = [
   },
   {
     id: 'ev_inner_doubt', title: '道心之问', pool: 'inner', tier: 3, weight: 5, minRealm: 1,
-    require: 'age >= 40 * 12',
+    require: 'age >= 40',
     text: '你忽然问自己：我为什么要长生？\n\n这个问题一出来，灵气就乱了。你坐在蒲团上，出了一身冷汗。',
     choices: [
       {

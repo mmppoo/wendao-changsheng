@@ -3,24 +3,39 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0d0b09" />
 <title>问道长生 · 修仙模拟器</title>
-<meta name="description" content="一款 ink 风格的互动叙事修仙模拟器：抽灵根、闯境界、遇奇遇、入宗门，走向属于你的结局。" />
+<meta name="description" content="一款参考 inkle/ink 架构的中文互动叙事修仙模拟器：水墨绘卷、灵根抽取、境界突破、天劫斗法、秘境奇遇、宗门晋升与多结局轮回。" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2314120f'/%3E%3Ctext x='32' y='44' font-size='36' text-anchor='middle' fill='%23c8a45c' font-family='serif'%3E道%3C/text%3E%3C/svg%3E" />
 <link rel="stylesheet" href="styles/main.css" />
 </head>
 <body>
+  <canvas id="fx-canvas" class="fx-canvas" aria-hidden="true"></canvas>
+  <div id="fx-flash" class="fx-flash" aria-hidden="true"></div>
   <div class="grain" aria-hidden="true"></div>
 
   <!-- 标题 / 启动 -->
   <section id="title-screen" class="screen title-screen">
+    <div class="title-bg" aria-hidden="true">
+      <img src="assets/art/title-hero.webp" alt="" class="title-bg-img" />
+      <div class="title-bg-vignette"></div>
+    </div>
     <div class="title-inner">
-      <p class="eyebrow">交互叙事 · 修仙模拟</p>
+      <div class="title-seal" aria-hidden="true">问<br>道</div>
+      <p class="eyebrow">INK 互动叙事 · 水墨修仙绘卷</p>
       <h1 class="game-title">问道长生</h1>
-      <p class="title-sub">一条命，一条道。走到哪里算哪里。</p>
+      <p class="title-sub">一条命，一条道。抽灵根、渡天劫、历百世因果，走到哪里算哪里。</p>
       <div class="title-actions">
         <button id="btn-continue" class="btn btn-primary" hidden>继续今生</button>
-        <button id="btn-new" class="btn btn-ghost">踏入仙途</button>
+        <button id="btn-new" class="btn btn-primary-outline">踏入仙途</button>
         <button id="btn-gallery" class="btn btn-ghost">命途图鉴</button>
+      </div>
+      <div class="title-highlights" aria-label="游戏特性">
+        <span>21 种灵根</span>
+        <span>13 座仙门</span>
+        <span>290+ 叙事节点</span>
+        <span>24 重结局</span>
+        <span>177 项成就</span>
       </div>
       <p class="title-meta" id="title-meta"></p>
     </div>
@@ -31,12 +46,16 @@
   <section id="create-screen" class="screen create-screen" hidden>
     <div class="create-panel">
       <header class="create-head">
-        <h2>择一出身</h2>
-        <p>出身决定你从哪里出发，灵根决定你能走多远。二者皆不可选，只能认。</p>
+        <div>
+          <p class="create-kicker">入世之始</p>
+          <h2>择一出身</h2>
+          <p>出身决定你从哪里出发，灵根决定你能走多远。二者相合，便成一世命数。</p>
+        </div>
+        <button id="btn-back-title" class="btn btn-ghost btn-sm">返回卷首</button>
       </header>
 
       <div class="field-row">
-        <label class="field">
+        <label class="field field-grow">
           <span>道号</span>
           <input id="input-name" maxlength="8" placeholder="无名" autocomplete="off" />
         </label>
@@ -49,6 +68,7 @@
         </div>
       </div>
 
+      <div class="section-label">选择出身</div>
       <div class="origin-grid" id="origin-grid" role="radiogroup" aria-label="出身"></div>
 
       <div class="talent-block">
@@ -56,73 +76,130 @@
           <h3>轮回天赋</h3>
           <span id="karma-points">轮回点 0</span>
         </div>
-        <p class="talent-sub">每死一次，得一点。点亮的天赋，此后每一世都跟着你。</p>
+        <p class="talent-sub">每历一世可得轮回点。点亮的天赋将永镌神魂，此后每一世皆生效。</p>
         <div class="talent-grid" id="talent-grid"></div>
       </div>
 
       <div class="create-foot">
-        <p class="hint" id="create-hint">选中一个出身，然后抽灵根。</p>
+        <p class="hint" id="create-hint">选中一个出身，然后测灵根。</p>
         <div class="create-actions">
-          <button id="btn-roll" class="btn btn-primary" disabled>抽灵根</button>
-          <button id="btn-back-title" class="btn btn-ghost">返回</button>
+          <button id="btn-roll" class="btn btn-primary" disabled>抽取灵根</button>
         </div>
       </div>
     </div>
   </section>
 
   <!-- 主界面 -->
-  <main id="game-screen" class="screen game-screen" hidden>
+  <main id="game-screen" class="screen game-screen" hidden data-mobile-tab="story">
     <header class="topbar">
       <div class="brand">
-        <span class="brand-mark">道</span>
+        <span class="brand-mark" id="brand-mark">道</span>
         <div class="brand-text">
           <strong>问道长生</strong>
           <span id="top-realm">炼气一层</span>
         </div>
       </div>
       <div class="topbar-actions">
-        <button id="btn-save" class="icon-btn" title="存档">存</button>
-        <button id="btn-load" class="icon-btn" title="读档">读</button>
-        <button id="btn-codex" class="icon-btn" title="图鉴">鉴</button>
+        <button id="btn-speed" class="icon-btn" title="切换文字速度">速</button>
+        <button id="btn-sound" class="icon-btn" title="音效开关">静</button>
+        <button id="btn-save" class="icon-btn" title="存档 (S)">存</button>
+        <button id="btn-load" class="icon-btn" title="读档 (L)">读</button>
+        <button id="btn-codex" class="icon-btn" title="图鉴 (C)">鉴</button>
         <button id="btn-menu" class="icon-btn" title="菜单">≡</button>
       </div>
     </header>
 
+    <!-- 移动端顶部精简修为状态条 -->
+    <div class="mobile-hud" id="mobile-hud" aria-label="角色概览"></div>
+
     <div class="layout">
+      <!-- 左侧：角色道躯与储物袋 -->
       <aside class="rail rail-left" id="char-panel" aria-label="角色属性"></aside>
 
+      <!-- 中央：绘卷与叙事交互舞台 -->
       <section class="story" aria-live="polite">
         <div class="story-scroll" id="story-scroll">
-          <div class="scene-head">
-            <span class="scene-kicker" id="scene-kicker">人间</span>
-            <h2 class="scene-title" id="scene-title">青牛村</h2>
+          <figure class="scene-banner" id="scene-banner">
+            <img id="scene-art" src="assets/art/scene-village.webp" alt="当前场景水墨绘卷" loading="eager" />
+            <div class="scene-banner-grad"></div>
+            <div class="scene-banner-meta">
+              <span class="scene-kicker" id="scene-kicker">人间</span>
+              <span class="scene-banner-loc" id="scene-banner-loc">青牛村</span>
+            </div>
+            <div class="scene-combat-hud" id="scene-combat-hud" hidden></div>
+          </figure>
+
+          <div class="scene-body">
+            <div class="scene-head">
+              <h2 class="scene-title" id="scene-title">青牛村</h2>
+              <div class="delta-strip" id="delta-strip" aria-live="off"></div>
+            </div>
+            <div class="scene-text" id="scene-text"></div>
+            <div class="scene-lines" id="scene-lines"></div>
+            <div class="choices" id="choices" role="group" aria-label="选择"></div>
           </div>
-          <div class="scene-text" id="scene-text"></div>
-          <div class="scene-lines" id="scene-lines"></div>
-          <div class="choices" id="choices" role="group" aria-label="选择"></div>
         </div>
         <footer class="story-foot">
-          <span id="hint-line">按 1–9 选择 · 空格继续</span>
+          <span id="hint-line">按 1–9 选择 · 空格/点击正文跳过打字</span>
           <span id="turn-line"></span>
         </footer>
       </section>
 
+      <!-- 右侧：行止录与储物/道缘 -->
       <aside class="rail rail-right" id="log-panel" aria-label="行止录">
         <div class="rail-head">
           <h3>行止录</h3>
           <span class="rail-sub" id="log-sub">此生</span>
         </div>
+        <div id="right-bag-wrap" class="right-bag-wrap"></div>
         <ol class="log-list" id="log-list"></ol>
       </aside>
     </div>
+
+    <!-- 移动端底部导航栏 -->
+    <nav class="mobile-nav" id="mobile-nav" aria-label="主导航">
+      <button type="button" class="mnav-btn is-active" data-mtab="story">
+        <span class="mnav-glyph">道</span><span>问道</span>
+      </button>
+      <button type="button" class="mnav-btn" data-mtab="char">
+        <span class="mnav-glyph">躯</span><span>道躯</span>
+      </button>
+      <button type="button" class="mnav-btn" data-mtab="bag">
+        <span class="mnav-glyph">囊</span><span>储物</span>
+      </button>
+      <button type="button" class="mnav-btn" data-mtab="log">
+        <span class="mnav-glyph">录</span><span>行止</span>
+      </button>
+      <button type="button" class="mnav-btn" data-mtab="codex">
+        <span class="mnav-glyph">鉴</span><span>图鉴</span>
+      </button>
+    </nav>
   </main>
 
-  <!-- 抽灵根 -->
+  <!-- 抽灵根（八卦五行测灵盘） -->
   <div class="overlay" id="roll-overlay" hidden>
     <div class="roll-box">
-      <p class="roll-kicker">灵根</p>
-      <div class="roll-result" id="roll-result">?</div>
-      <p class="roll-desc" id="roll-desc">天意难测。</p>
+      <p class="roll-kicker">测灵阵 · 五行问道</p>
+      <div class="bagua-stage" id="bagua-stage">
+        <svg class="bagua-wheel" viewBox="0 0 220 220" aria-hidden="true">
+          <circle cx="110" cy="110" r="102" fill="none" stroke="rgba(200,164,92,0.28)" stroke-width="1" stroke-dasharray="4 6" />
+          <circle cx="110" cy="110" r="88" fill="none" stroke="rgba(200,164,92,0.45)" stroke-width="1.2" />
+          <polygon points="110,16 176,44 204,110 176,176 110,204 44,176 16,110 44,44" fill="none" stroke="rgba(200,164,92,0.22)" stroke-width="1" />
+          <circle cx="110" cy="110" r="64" fill="none" stroke="rgba(178,58,42,0.35)" stroke-width="1" stroke-dasharray="2 8" />
+          <g fill="rgba(200,164,92,0.55)" font-family="serif" font-size="11" text-anchor="middle">
+            <text x="110" y="34">乾</text><text x="168" y="56">兑</text>
+            <text x="190" y="114">离</text><text x="168" y="170">震</text>
+            <text x="110" y="194">坤</text><text x="52" y="170">艮</text>
+            <text x="30" y="114">坎</text><text x="52" y="56">巽</text>
+          </g>
+        </svg>
+        <div class="bagua-core">
+          <span class="roll-grade" id="roll-grade">测灵中</span>
+          <div class="roll-result" id="roll-result">?</div>
+        </div>
+      </div>
+      <div class="roll-stats" id="roll-stats"></div>
+      <p class="roll-desc" id="roll-desc">天意难测，灵气正聚。</p>
       <div class="roll-actions" id="roll-actions"></div>
     </div>
   </div>
@@ -132,12 +209,12 @@
     <div class="modal">
       <header class="modal-head">
         <h3 id="save-title">存档</h3>
-        <button class="icon-btn" data-close="save-overlay">×</button>
+        <button class="icon-btn" data-close="save-overlay" aria-label="关闭">×</button>
       </header>
       <div class="slots" id="slot-list"></div>
       <footer class="modal-foot">
-        <button class="btn btn-ghost" id="btn-export">导出存档</button>
-        <label class="btn btn-ghost file-btn">导入存档<input type="file" id="import-file" accept="application/json" hidden /></label>
+        <button class="btn btn-ghost btn-sm" id="btn-export">导出 JSON</button>
+        <label class="btn btn-ghost btn-sm file-btn">导入 JSON<input type="file" id="import-file" accept="application/json" hidden /></label>
       </footer>
     </div>
   </div>
@@ -147,13 +224,15 @@
     <div class="modal modal-wide">
       <header class="modal-head">
         <h3>命途图鉴</h3>
-        <button class="icon-btn" data-close="codex-overlay">×</button>
+        <button class="icon-btn" data-close="codex-overlay" aria-label="关闭">×</button>
       </header>
       <div class="tabs" id="codex-tabs">
         <button class="tab is-active" data-tab="achievements">成就</button>
         <button class="tab" data-tab="endings">结局</button>
         <button class="tab" data-tab="roots">灵根</button>
+        <button class="tab" data-tab="sects">宗门</button>
       </div>
+      <div class="codex-summary" id="codex-summary"></div>
       <div class="codex-body" id="codex-body"></div>
     </div>
   </div>
@@ -163,12 +242,13 @@
     <div class="modal modal-narrow">
       <header class="modal-head">
         <h3>暂歇</h3>
-        <button class="icon-btn" data-close="menu-overlay">×</button>
+        <button class="icon-btn" data-close="menu-overlay" aria-label="关闭">×</button>
       </header>
       <div class="menu-list">
         <button class="menu-item" id="menu-restart">重开一世</button>
+        <button class="menu-item" id="menu-title">返回卷首</button>
         <button class="menu-item" id="menu-help">玩法说明</button>
-        <button class="menu-item" id="menu-about">关于</button>
+        <button class="menu-item" id="menu-about">关于本作</button>
       </div>
       <div class="menu-body" id="menu-body"></div>
     </div>

@@ -66,7 +66,7 @@ export const ENDINGS = [
   },
   {
     id: 'e_hermit_low', name: '归隐', priority: 46, tier: '玄',
-    condition: 'realm >= 2 && char.attrs.道心 >= 60 && age >= 80 * 12',
+    condition: 'realm >= 2 && char.attrs.道心 >= 60 && age >= 80',
     summary: '你在半山腰盖了间屋子，再没下来。',
     text: () => `你在半山腰盖了间屋子，种了两亩地，养了一只不会说话的鹤。
 

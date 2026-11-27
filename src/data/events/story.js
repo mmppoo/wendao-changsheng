@@ -154,11 +154,11 @@ export const STORY_EVENTS = [
     text: '你站在山巅。天上有门，门是虚的，看得见，摸不着。\n\n守门的神将低头看你：「你要进来吗？」\n\n「进去之后呢？」\n「进去之后就再也回不来了。」',
     choices: [
       {
-        label: '进去', hint: '飞升',
-        outcome: { text: '你迈出一步。', effects: {}, ending: 'e_ascend' },
+        label: '进去', hint: '踏入天门，飞升上界',
+        outcome: { text: '你迈出一步，山河在脚下远去。', effects: { realmSet: 9 }, ending: 'e_ascend', dynamicAscend: true },
       },
       {
-        label: '再等等', hint: '留在人间',
+        label: '再等等', hint: '留在人间（三次拒绝可触发隐藏结局）',
         outcome: { text: '你退回山巅。神将没有表情，门慢慢淡了。\n\n你听见山下有人喊你的名字。', effects: { counter: { refuse_ascend: 1 }, attrs: { 道心: 5 } } },
       },
     ],
@@ -168,7 +168,7 @@ export const STORY_EVENTS = [
 export const STORY_TRIGGERS = [
   { id: 'story_jade_1', when: 'flag("同名玉牌") && !flag("story:story_jade_1")' },
   { id: 'story_mother_1', when: 'char.originId === "demon_child" && realm >= 1 && !flag("story:story_mother_1")' },
-  { id: 'story_cave_1', when: 'realm >= 2 && age >= 60 * 12 && !flag("story:story_cave_1")' },
+  { id: 'story_cave_1', when: 'realm >= 2 && age >= 60 && !flag("story:story_cave_1")' },
   { id: 'story_lover_1', when: 'flag("道侣") && realm >= 2 && !flag("story:story_lover_1")' },
   { id: 'story_ascend_1', when: 'realm >= 8 && !flag("story:story_ascend_1")' },
 ];

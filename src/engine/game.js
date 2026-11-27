@@ -170,8 +170,9 @@ export class Game {
       lines.push(ok ? '—— 成。' : '—— 败。');
     }
 
-    if (outcome?.combat) {
-      return this.startCombat(outcome.combat, { lines });
+    const combatSpec = outcome?.combat || ch.combat;
+    if (combatSpec) {
+      return this.startCombat(combatSpec, { lines });
     }
 
     const months = cost.month || ch.months || 0;
@@ -191,8 +192,12 @@ export class Game {
     }
     let effects = outcome.effects || {};
     if (outcome.ending) {
-      s.scene.result = { text: outcome.text || '', lines, ending: outcome.ending, goto: null };
-      this.finishEnding(outcome.ending);
+      if (effects && Object.keys(effects).length) {
+        lines.push(...applyEffects(s, effects, this.effectCtx()));
+      }
+      const endingId = outcome.dynamicAscend ? this.pickNaturalEnding() : outcome.ending;
+      s.scene.result = { text: formatText(outcome.text, s) || '', lines, ending: endingId, goto: null };
+      this.finishEnding(endingId);
       return;
     }
     if (effects && Object.keys(effects).length) {
@@ -304,7 +309,8 @@ export class Game {
     const lines = [];
     lines.push(...advanceMonths(s, 3, this.rng));
     const ev = pickEvent(s, this.rng, this, 'wild');
-    if (ev && this.rng.chance(0.62)) {
+    const chance = s.char.rootId === 'kongjian' ? 0.85 : 0.62;
+    if (ev && this.rng.chance(chance)) {
       this.openEvent(ev);
       this.afterAction();
       this.emit();
@@ -324,13 +330,15 @@ export class Game {
 
   act_travel(ch) {
     const s = this.state;
-    const lines = advanceMonths(s, 6, this.rng);
+    const months = s.char.rootId === 'kongjian' ? 3 : s.char.rootId === 'feng' ? 5 : 6;
+    const lines = advanceMonths(s, months, this.rng);
     const places = ['青牛村', '落霞城', '北荒边缘', '南疆雨林', '东海渡口', '寒山脚下', '乱葬岗', '万宝坊市'];
     const next = this.rng.pick(places.filter((p) => p !== s.char.location));
     s.char.location = next;
     lines.push(`你到了${next}。`);
     const ev = pickEvent(s, this.rng, this, 'world');
-    if (ev && this.rng.chance(0.55)) {
+    const chance = s.char.rootId === 'kongjian' ? 0.8 : 0.55;
+    if (ev && this.rng.chance(chance)) {
       this.openEvent(ev);
       this.afterAction();
       this.emit();
@@ -339,6 +347,118 @@ export class Game {
     s.scene.result = { text: '路上没有遇到什么大事。这在这里算好事。', lines };
     this.afterAction();
     this.emit();
+  }
+
+  act_bloodCultivate() {
+    const s = this.state;
+    const c = s.char;
+    const hpCost = Math.max(10, Math.round(c.maxHp * 0.22));
+    c.hp = Math.max(1, c.hp - hpCost);
+    const gain = Math.round(monthlyExp(s) * 5.4);
+    const got = gainExp(s, gain);
+    c.demon = clamp(c.demon + 3, 0, 100);
+    const lines = [`燃血三载一瞬，气血 -${hpCost}，修为 +${got}，心魔 +3。`, ...advanceMonths(s, 3, this.rng)];
+    s.scene.result = { text: '精血在经脉中倒流如沸，丹田炽热欲裂。你以肉身作薪，换来一日千里的进境。', lines, fx: 'combat_hit' };
+    this.afterAction();
+    this.emit();
+  }
+
+  act_alchemy() {
+    const s = this.state;
+    const c = s.char;
+    const lines = advanceMonths(s, 1, this.rng);
+    const usedHerb = removeItem(s, 'lingcao', 1);
+    if (!usedHerb && c.sectId !== 'danxia') {
+      s.scene.result = { text: '丹炉已温，却少了灵草入药。你只好熄了火。', lines };
+      this.emit();
+      return;
+    }
+    const baseRate = 0.58 + c.attrs.悟性 * 0.008 + (c.rootId === 'huo' ? 0.15 : 0) + (c.sectId === 'danxia' ? 0.2 : 0);
+    const ok = this.rng.chance(clamp(baseRate, 0.2, 0.96));
+    if (ok) {
+      s.counters.alchemy = (s.counters.alchemy || 0) + 1;
+      const pool = c.realm >= 1 ? ['huiling_dan', 'liaoshang_dan', 'zhuji_dan'] : ['yinqi_dan', 'huiling_dan', 'liaoshang_dan'];
+      const pillId = c.realm >= 2 && this.rng.chance(0.25) ? 'pozhang_dan' : this.rng.pick(pool);
+      addItem(s, pillId, 1);
+      const pillName = ITEM_BY_ID[pillId]?.name || pillId;
+      lines.push(`丹成开炉：获得 ${pillName} ×1（累计炼丹 ${s.counters.alchemy} 次）。`);
+      s.scene.result = { text: '炉盖掀开时，一缕青烟笔直冲向梁顶。丹丸滚落玉盘，温润如珠，药香散满静室。', lines, fx: 'alchemy' };
+    } else {
+      s.counters.alchemy_fail = (s.counters.alchemy_fail || 0) + 1;
+      const dmg = Math.round(c.maxHp * 0.08);
+      c.hp = Math.max(1, c.hp - dmg);
+      lines.push(`火候失衡，炸炉了！气血 -${dmg}。`);
+      s.scene.result = { text: '一声闷响，丹炉盖子飞出去半丈，满室焦苦。你抹了一把脸上的炉灰，叹了口气。', lines, fx: 'combat_hit' };
+    }
+    this.afterAction();
+    this.emit();
+  }
+
+  act_secretRealm() {
+    const s = this.state;
+    const lines = advanceMonths(s, 6, this.rng);
+    const entries = ['ink_kunlun_1', 'ink_guixu_1', 'ink_jianzhong_1'].filter((id) => this.registry.has(id) && !s.flags[`ev:${id}`]);
+    if (entries.length) {
+      const nextId = this.rng.pick(entries);
+      this.openScene(nextId);
+      this.afterAction();
+      this.emit();
+      return;
+    }
+    // 已走完三处大型秘境后，从高阶野外池抽取高危奇遇
+    const ev = pickEvent(s, this.rng, this, 'wild');
+    if (ev) {
+      this.openEvent(ev);
+      this.afterAction();
+      this.emit();
+      return;
+    }
+    s.scene.result = { text: '你循着古图深入断崖，只见阵纹早已熄灭。看来此地机缘已被前人取尽。', lines };
+    this.afterAction();
+    this.emit();
+  }
+
+  act_revisitGate() {
+    const s = this.state;
+    if ((s.counters.refuse_ascend || 0) >= 3) {
+      this.finishEnding('e_ascend_refuse');
+      return;
+    }
+    this.openScene('story_ascend_1');
+    this.emit();
+  }
+
+  useInventoryItem(id) {
+    const s = this.state;
+    if (!s || s.flags.finished) return { error: '此生已尽' };
+    if (s.scene.id === 'combat' || s.scene.id === 'tribulation' || s.scene.id === 'ending') {
+      return { error: '此刻分身乏术，无法开启储物袋' };
+    }
+    const def = ITEM_BY_ID[id];
+    if (!def || !hasItem(s, id)) return { error: '储物袋里没有此物' };
+    if (def.technique) {
+      if (s.char.techniques.some((t) => t.id === id)) return { error: `已参悟过${def.name}` };
+      removeItem(s, id, 1);
+      s.char.techniques.push({ id, name: def.name, ...def.technique });
+      const lines = [`习得功法 ${def.name}`];
+      if (def.technique.attrs) lines.push(...applyEffects(s, { attrs: def.technique.attrs }, this.effectCtx()));
+      recomputeDerived(s.char);
+      this.pushLog(`研读${def.name}`);
+      this.checkAchievements();
+      this.emit();
+      return { ok: true, fx: 'breakthrough', lines };
+    }
+    if (def.use) {
+      removeItem(s, id, 1);
+      if (def.type === '丹药') s.stats.pills = (s.stats.pills || 0) + 1;
+      const lines = applyEffects(s, def.use, this.effectCtx());
+      recomputeDerived(s.char);
+      this.pushLog(`使用${def.name}`);
+      this.checkAchievements();
+      this.emit();
+      return { ok: true, fx: 'heal', lines: lines.length ? lines : [`已使用 ${def.name}`] };
+    }
+    return { error: `${def.name}（${def.type}）随身佩戴即可生效，无需服用` };
   }
 
   act_sectTask(ch) {
@@ -520,9 +640,18 @@ export class Game {
         return this.startTribulation(prefix);
       }
       recomputeDerived(c);
+      const extraLines = [`突破成功：${realmLabel(c)}`];
+      if (c.rootId === 'xingchen') {
+        const keys = ['悟性', '根骨', '神识', '道心'];
+        const pick = this.rng.pick(keys);
+        c.attrs[pick] += 2;
+        recomputeDerived(c);
+        extraLines.push(`星辰窍穴共鸣：${pick} +2`);
+      }
       s.scene.result = {
         text: `${prefix}\n\n冰面裂了。灵气涌进来，像春天化雪。\n\n你睁开眼，世界比之前清楚了一点——这就是${major ? '境界' : '一层'}的分量。`,
-        lines: [`突破成功：${realmLabel(c)}`],
+        lines: extraLines,
+        fx: 'breakthrough',
       };
     } else {
       s.stats.failures++;
@@ -535,6 +664,7 @@ export class Game {
       s.scene.result = {
         text: `${prefix}\n\n冰没有裂。你被弹了回来，喉咙里一股腥甜。\n\n修为散了 ${loss}，心魔又重了几分。\n\n但你还活着。活着就还有下一次。`,
         lines: ['突破失败：修为 -35%，气血受损，心魔上升'],
+        fx: 'combat_hit',
       };
     }
     this.afterAction();
@@ -570,14 +700,16 @@ export class Game {
     const s = this.state;
     const t = s.tribulation;
     const mode = ch.params.mode;
-    if (mode === 'pill' && hasItem(s, 'tianjie_dan')) removeItem(s, 'tianjie_dan');
+    if (mode === 'pill' && hasItem(s, 'tianjie_dan')) { removeItem(s, 'tianjie_dan'); s.stats.pills = (s.stats.pills || 0) + 1; }
+    const rootDmgMult = s.char.rootId === 'lei' ? 0.7 : s.char.rootId === 'hundun' ? 1.35 : 1;
     const ok = this.rng.chance(ch.params.p);
     if (!ok) {
-      s.char.hp = Math.max(0, s.char.hp - Math.round(s.char.maxHp * 0.45));
+      s.char.hp = Math.max(0, s.char.hp - Math.round(s.char.maxHp * 0.45 * rootDmgMult));
       s.char.injuries = (s.char.injuries || 0) + 2;
       s.char.demon = clamp(s.char.demon + 6, 0, 100);
       s.char.lifespan -= 120; // 十年
       t.logs.push(`第${t.stage}重雷没有散。你被劈进土里，半边身子是焦的。`);
+      s.scene.fx = 'tribulation_hit';
       if (s.char.hp <= 0) {
         s.flags['渡劫失败'] = true;
         return this.finishEnding('e_tribulation_death');
@@ -585,25 +717,39 @@ export class Game {
       t.stage++;
       if (t.stage > t.total) {
         s.tribulation = null;
-        s.scene = { id: 'hub', result: { text: '雷散了。你活着，但这一劫不算渡完。\n\n境界停在原处，寿元短了十年。', lines: ['渡劫未成：气血大损，寿元 -10 年'] } };
+        s.scene = { id: 'hub', result: { text: '雷散了。你活着，但这一劫不算渡完。\n\n境界停在原处，寿元短了十年。', lines: ['渡劫未成：气血大损，寿元 -10 年'], fx: 'tribulation_hit' } };
         this.emit();
         return;
       }
       this.emit();
       return;
     }
-    const dmg = mode === 'body' ? Math.round(s.char.maxHp * 0.3) : Math.round(s.char.maxHp * 0.12);
+    const baseDmg = mode === 'body' ? 0.3 : 0.12;
+    const dmg = Math.round(s.char.maxHp * baseDmg * rootDmgMult);
     s.char.hp = Math.max(1, s.char.hp - dmg);
     s.char.mp = Math.max(0, s.char.mp - Math.round(s.char.maxMp * 0.25));
     if (mode === 'artifact') s.char.injuries = (s.char.injuries || 0) + 1;
-    t.logs.push(`第${t.stage}重雷散了。你吐了一口血，血是黑的。`);
+    t.logs.push(`第${t.stage}重雷散了。${s.char.rootId === 'lei' ? '紫雷入体，反被你的雷灵根化去三分。' : '你吐了一口血，血是黑的。'}`);
+    s.scene.fx = 'tribulation_pass';
     t.stage++;
     if (t.stage > t.total) {
       s.tribulation = null;
-      s.char.attrs.道心 += 5;
-      s.scene = { id: 'hub', result: null };
+      s.char.attrs.道心 += s.char.rootId === 'hundun' ? 10 : 5;
+      if (s.char.rootId === 'hundun') {
+        s.char.attrs.根骨 += 2;
+        s.char.attrs.悟性 += 2;
+      }
+      recomputeDerived(s.char);
+      s.scene = {
+        id: 'hub',
+        result: {
+          text: `劫云散尽，霞光漫天。你立于焦土之上，周身气机焕然一新——你已真正踏入${REALMS[s.char.realm].name}之境。`,
+          lines: [`渡劫圆满：踏入 ${realmLabel(s.char)}，道心 +${s.char.rootId === 'hundun' ? 10 : 5}`],
+          fx: 'breakthrough',
+        },
+      };
       s.flags['渡过天劫'] = (s.flags['渡过天劫'] || 0) + 1;
-      this.pushLog('天劫散尽');
+      this.pushLog(`渡劫圆满·${REALMS[s.char.realm].name}`);
       this.checkAchievements();
       this.emit();
       return;
@@ -672,7 +818,10 @@ export class Game {
   playerAtk() {
     const c = this.state.char;
     const best = c.inventory.reduce((max, it) => Math.max(max, ITEM_BY_ID[it.id]?.equip?.atk || 0), 0);
-    return 9 + c.attrs.根骨 * 1.4 + c.realm * 12 + best;
+    const sectAtk = SECT_BY_ID[c.sectId]?.perks?.atk || 0;
+    const techAtk = (c.techniques || []).reduce((acc, t) => acc + (t.atk || 0), 0);
+    const rootAtk = c.rootId === 'jin' ? 0.2 : 0;
+    return Math.round((9 + c.attrs.根骨 * 1.4 + c.realm * 12 + best) * (1 + sectAtk + techAtk + rootAtk));
   }
 
   act_combatAttack() { return this.combatRound('attack'); }
@@ -682,8 +831,10 @@ export class Game {
   act_combatPill() {
     const s = this.state;
     let used = '';
-    if (hasItem(s, 'liaoshang_dan')) { removeItem(s, 'liaoshang_dan'); s.char.hp = Math.min(s.char.maxHp, s.char.hp + 60); used = '疗伤丹'; }
+    const healMult = s.char.rootId === 'mu' ? 1.5 : 1;
+    if (hasItem(s, 'liaoshang_dan')) { removeItem(s, 'liaoshang_dan'); s.char.hp = Math.min(s.char.maxHp, s.char.hp + Math.round(60 * healMult)); used = '疗伤丹'; }
     else if (hasItem(s, 'huiling_dan')) { removeItem(s, 'huiling_dan'); s.char.mp = Math.min(s.char.maxMp, s.char.mp + 40); used = '回灵丹'; }
+    if (used) s.stats.pills = (s.stats.pills || 0) + 1;
     s.combat.log.push(`你吞下一枚${used}。`);
     return this.combatRound('item');
   }
@@ -697,9 +848,12 @@ export class Game {
     const log = cb.log;
 
     if (mode === 'flee') {
-      const chance = c.rootId === 'feng' ? 1 : 0.45 + c.attrs.气运 * 0.01;
+      const hasTalisman = (s.buffs.escape || 0) > 0 || hasItem(s, 'shenxing_fu');
+      const chance = (c.rootId === 'feng' || hasTalisman) ? 1 : 0.45 + c.attrs.气运 * 0.01;
       if (this.rng.chance(chance)) {
-        log.push('你转身就跑，跑得比来时快。');
+        if ((s.buffs.escape || 0) > 0) s.buffs.escape--;
+        else if (c.rootId !== 'feng' && hasItem(s, 'shenxing_fu')) removeItem(s, 'shenxing_fu', 1);
+        log.push(hasTalisman ? '神行符化作青风托身，你瞬息千里。' : '你转身就跑，跑得比来时快。');
         s.stats.escapes = (s.stats.escapes || 0) + 1;
         s.combat = null;
         s.scene = { id: 'hub', result: { text: '你逃了。活着比面子重要。', lines: [] } };
@@ -709,17 +863,22 @@ export class Game {
       log.push('你转身要跑，脚下却被什么东西绊住了。');
     }
 
+    const demonicIds = new Set(['rogue', 'ghost', 'blood_cult', 'demon_general', 'ghost_king', 'demon_king']);
+    const sunMult = c.rootId === 'taiyang' && demonicIds.has(e.id) ? 1.4 : 1;
+
     if (mode === 'attack') {
       const crit = this.rng.chance(0.08 + c.attrs.气运 * 0.004);
-      let dmg = Math.max(1, Math.round(this.playerAtk() * (crit ? 1.8 : 1) - e.def * 0.5));
+      let dmg = Math.max(1, Math.round(this.playerAtk() * sunMult * (crit ? 1.8 : 1) - e.def * 0.5));
       cb.hp -= dmg;
+      s.scene.fx = 'combat_slash';
       log.push(`${crit ? '剑光一闪，正中要害！' : '你一剑劈出。'}造成 ${dmg} 伤害。`);
     } else if (mode === 'spell') {
       const cost = Math.round(c.maxMp * 0.12);
       if (c.mp >= cost) {
         c.mp -= cost;
-        const dmg = Math.max(1, Math.round((12 + c.attrs.神识 * 1.8 + c.realm * 14) - e.def * 0.3));
+        const dmg = Math.max(1, Math.round(((12 + c.attrs.神识 * 1.8 + c.realm * 14) * sunMult) - e.def * 0.3));
         cb.hp -= dmg;
+        s.scene.fx = 'combat_spell';
         log.push(`灵力化作一道光。造成 ${dmg} 伤害。`);
       } else {
         log.push('灵力不济，法术散了。');
@@ -728,12 +887,14 @@ export class Game {
       c.mp = Math.min(c.maxMp, c.mp + Math.round(c.maxMp * 0.1));
       log.push('你收剑守势，灵力回了一点。');
     } else if (mode === 'item') {
+      s.scene.fx = 'heal';
       log.push('你握紧了手里的东西。');
     }
 
     if (cb.hp <= 0) {
       s.stats.kills++;
       if (e.id === 'demon_king') s.flags['斩妖王'] = true;
+      if (e.id === 'demon_general' || e.id === 'demon_king') s.counters.demons_slain = (s.counters.demons_slain || 0) + 1;
       if (e.id === 'cultivator' && !c.inventory.some((it) => ITEM_BY_ID[it.id]?.equip)) s.flags['空手胜筑基'] = true;
       const exp = Math.round(e.exp * (1 + c.attrs.气运 * 0.01));
       const stones = e.stones;
@@ -754,11 +915,21 @@ export class Game {
     }
 
     // 敌人反击
-    const edmg = Math.max(1, Math.round(e.atk * (mode === 'guard' ? 0.45 : 1) - c.attrs.根骨 * 0.25));
+    const defMult = c.rootId === 'tu' ? 0.8 : 1;
+    const edmg = Math.max(1, Math.round((e.atk * (mode === 'guard' ? 0.45 : 1) - c.attrs.根骨 * 0.25) * defMult));
     c.hp -= edmg;
     log.push(`${e.name}反手一击，你受了 ${edmg} 点伤。`);
     cb.turn++;
     if (c.hp <= 0) {
+      if ((s.buffs.shield || 0) > 0 || hasItem(s, 'huxin_fu')) {
+        if ((s.buffs.shield || 0) > 0) s.buffs.shield--;
+        else removeItem(s, 'huxin_fu', 1);
+        c.hp = Math.max(1, Math.round(c.maxHp * 0.15));
+        log.push('怀中护心符轰然碎裂，一道金光替你挡下必杀一击！');
+        s.scene.fx = 'heal';
+        this.emit();
+        return;
+      }
       const onLose = cb.onLose;
       s.combat = null;
       s.scene = { id: 'hub', result: null };
@@ -810,7 +981,7 @@ export class Game {
 
   act_reincarnate() {
     const s = this.state;
-    s.meta.runs = (s.meta.runs || 0) + 1;
+    s.meta.cycle = (s.meta.cycle || 1) + 1;
     this.state = null;
     this.emit();
     return { reincarnate: true, meta: s.meta };

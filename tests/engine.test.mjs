@@ -312,3 +312,88 @@ test("结局优先级：宗门/道侣变体优先于普通飞升", async () => {
   g.state.char.demon = 60;
   assert.equal(pick(), 'e_ascend_demon');
 });
+
+test('回归：事件选项 ch.combat 正确进入战斗', () => {
+  const g = fresh();
+  g.openScene('ev_fox_fire');
+  const swordIdx = g.choices().findIndex((c) => c.label.includes('拔剑'));
+  assert.ok(swordIdx >= 0);
+  g.choose(swordIdx);
+  assert.equal(g.state.scene.id, 'combat');
+  assert.equal(g.state.combat.enemy.id, 'wolf');
+});
+
+test('回归：表达式 sect()/root()/origin/rel() 与年龄(岁)判定', () => {
+  const g = fresh({ originId: 'scholar', rootId: 'kongjian' });
+  g.state.char.sectId = 'taixuan';
+  g.state.char.relations.道侣 = 38;
+  g.state.char.realm = 2;
+  g.state.char.age = 50 * 12;
+  const ctx = buildContext(g.state, {});
+  assert.equal(evaluate(parseExpression('sect() == "taixuan"'), ctx), true);
+  assert.equal(evaluate(parseExpression('root() == "kongjian"'), ctx), true);
+  assert.equal(evaluate(parseExpression('origin == "scholar"'), ctx), true);
+  assert.equal(evaluate(parseExpression('rel("道侣") >= 35'), ctx), true);
+  assert.equal(evaluate(parseExpression('realm >= 2 && age < 60'), ctx), true);
+});
+
+test('储物袋交互：可直接使用丹药与研读功法', () => {
+  const g = fresh();
+  g.state.char.inventory.push({ id: 'yinqi_dan', qty: 1 }, { id: 'jiuzhuan_gong', qty: 1 });
+  const r1 = g.useInventoryItem('yinqi_dan');
+  assert.ok(r1.ok);
+  assert.ok(g.state.char.exp > 0);
+  assert.equal(g.state.stats.pills, 1);
+  const r2 = g.useInventoryItem('jiuzhuan_gong');
+  assert.ok(r2.ok);
+  assert.ok(g.state.char.techniques.some((t) => t.id === 'jiuzhuan_gong'));
+});
+
+test('战斗护心符可抵挡致命一击', () => {
+  const g = fresh();
+  g.state.char.inventory.push({ id: 'huxin_fu', qty: 1 });
+  g.state.char.attrs.根骨 = 0;
+  g.state.char.hp = 1;
+  g.startCombat('old_monster');
+  g.choose(0);
+  assert.equal(g.state.scene.id, 'combat');
+  assert.ok(g.state.char.hp > 0);
+  assert.ok(!g.state.char.inventory.some((i) => i.id === 'huxin_fu'));
+});
+
+test('灵根特性与开炉炼丹、动态飞升、轮回世数', () => {
+  const g = fresh({ rootId: 'kongjian' });
+  const ageBefore = g.state.char.age;
+  g.act_travel();
+  assert.equal(g.state.char.age - ageBefore, 3); // 空间灵根云游耗时减半
+
+  g.state.char.inventory.push({ id: 'lingcao', qty: 1 });
+  g.state.char.sectId = 'danxia';
+  g.act_alchemy();
+  assert.ok(g.state.counters.alchemy >= 1 || g.state.counters.alchemy_fail >= 1);
+
+  // 动态飞升：太玄剑宗触发一剑破天
+  const g2 = fresh();
+  g2.state.char.sectId = 'taixuan';
+  g2.state.char.realm = 8;
+  g2.openScene('story_ascend_1');
+  g2.choose(0);
+  assert.equal(g2.state.flags.endingId, 'e_sword_ascend');
+  const runsBefore = g2.state.meta.runs;
+  const r = g2.act_reincarnate();
+  assert.equal(r.meta.cycle, 2);
+  assert.equal(r.meta.runs, runsBefore);
+});
+
+test('ink 织网扩展：昆仑残墟秘境与苏晚晴道侣链', () => {
+  const g = fresh();
+  g.state.char.attrs.神识 = 20;
+  g.openScene('ink_kunlun_1');
+  g.choose(0);
+  g.proceed();
+  assert.equal(g.state.scene.id, 'ink_kunlun_2');
+  assert.equal(g.state.flags['昆仑解铭'], true);
+  g.choose(0);
+  g.proceed();
+  assert.equal(g.state.scene.id, 'ink_kunlun_3');
+});

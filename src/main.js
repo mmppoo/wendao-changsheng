@@ -1,17 +1,27 @@
 import { Game } from './engine/game.js';
 import { SaveStore } from './engine/save.js';
-import { ROOTS, ROOT_BY_ID, GRADE_ORDER } from './data/roots.js';
+import { ROOTS, ROOT_BY_ID, GRADE_ORDER, ROOT_WEIGHT_TOTAL } from './data/roots.js';
 import { ORIGINS } from './data/origins.js';
 import { REALMS, realmLabel } from './data/realms.js';
-import { SECT_BY_ID, sectRank } from './data/sects.js';
+import { SECTS, SECT_BY_ID, sectRank } from './data/sects.js';
 import { ACHIEVEMENTS } from './data/achievements.js';
 import { ENDINGS } from './data/endings.js';
 import { ITEM_BY_ID } from './data/items.js';
 import { TALENTS } from './data/talents.js';
+import { SpiritCanvas, SoundFX, sceneArtFor, triggerScreenFx } from './ui/fx.js';
 
 const $ = (id) => document.getElementById(id);
 const store = new SaveStore();
 const game = new Game({ meta: store.meta() || {} });
+const fxCanvas = new SpiritCanvas($('fx-canvas'));
+const sfx = new SoundFX();
+
+const SPEED_MODES = [
+  { id: 'normal', label: '墨', title: '文字速度：从容（点此切换）', ms: 16, div: 220 },
+  { id: 'fast', label: '快', title: '文字速度：疾书（点此切换）', ms: 10, div: 75 },
+  { id: 'instant', label: '瞬', title: '文字速度：瞬显（点此切换）', ms: 0, div: 1 },
+];
+
 const ui = {
   originId: null,
   gender: '女',
@@ -20,7 +30,17 @@ const ui = {
   typing: null,
   codexTab: 'achievements',
   saveMode: 'save',
+  mobileTab: 'story',
+  lastArtSrc: '',
+  lastAchCount: null,
+  lastSnapshot: null,
+  speedIdx: 0,
 };
+
+try {
+  const savedSpeed = Number(localStorage.getItem('wendao.v3.speed') || 0);
+  if (savedSpeed >= 0 && savedSpeed < SPEED_MODES.length) ui.speedIdx = savedSpeed;
+} catch { /* ignore */ }
 
 /* ---------------------------------- 启动 ---------------------------------- */
 
@@ -28,12 +48,30 @@ function boot() {
   seedTitleMeta();
   initCreate();
   wireTopbar();
+  wireMobileNav();
   wireOverlays();
   wireKeyboard();
   exposeDebug();
+  syncPreferenceButtons();
   window.addEventListener('beforeunload', () => {
     if (game.state && !game.state.flags.finished) store.save(0, game);
   });
+}
+
+function syncPreferenceButtons() {
+  const sp = SPEED_MODES[ui.speedIdx];
+  const btnSpeed = $('btn-speed');
+  if (btnSpeed) {
+    btnSpeed.textContent = sp.label;
+    btnSpeed.title = sp.title;
+    btnSpeed.classList.toggle('is-on', ui.speedIdx > 0);
+  }
+  const btnSound = $('btn-sound');
+  if (btnSound) {
+    btnSound.textContent = sfx.enabled ? '声' : '静';
+    btnSound.title = sfx.enabled ? '音效：已开启（点此静音）' : '音效：已静音（点此开启）';
+    btnSound.classList.toggle('is-on', sfx.enabled);
+  }
 }
 
 function seedTitleMeta() {
@@ -41,11 +79,13 @@ function seedTitleMeta() {
   const auto = store.load(0);
   if (auto) {
     $('btn-continue').hidden = false;
-    $('btn-continue').textContent = `继续 · ${auto.state.char.name}`;
+    $('btn-continue').textContent = `继续今生 · ${auto.state.char.name}`;
+  } else {
+    $('btn-continue').hidden = true;
   }
   const counts = meta
-    ? `轮回 ${meta.cycle || 1} 世 · 结局 ${(meta.unlockedEndings || []).length}/${ENDINGS.length} · 成就 ${Object.keys(meta.achievements || {}).length}/${ACHIEVEMENTS.length}`
-    : '第一次来？先抽一根灵根。';
+    ? `第 ${meta.cycle || 1} 世轮回 · 结局 ${(meta.unlockedEndings || []).length}/${ENDINGS.length} · 成就 ${Object.keys(meta.achievements || {}).length}/${ACHIEVEMENTS.length}`
+    : '初次踏入仙途？选一出身，开阵测灵根。';
   $('title-meta').textContent = counts;
 }
 
@@ -53,6 +93,7 @@ function showScreen(which) {
   $('title-screen').hidden = which !== 'title';
   $('create-screen').hidden = which !== 'create';
   $('game-screen').hidden = which !== 'game';
+  if (which === 'title') fxCanvas.setMood('gold');
   window.scrollTo(0, 0);
 }
 
@@ -69,12 +110,13 @@ function initCreate() {
     btn.setAttribute('role', 'radio');
     btn.setAttribute('aria-checked', 'false');
     btn.innerHTML = `<h4>${o.name}</h4><p>${o.desc}</p><span class="origin-hook">${o.hook}</span>`;
-    btn.addEventListener('click', () => selectOrigin(o.id));
+    btn.addEventListener('click', () => { sfx.play('click'); selectOrigin(o.id); });
     grid.appendChild(btn);
   });
 
   document.querySelectorAll('.seg').forEach((seg) => {
     seg.addEventListener('click', () => {
+      sfx.play('click');
       document.querySelectorAll('.seg').forEach((s) => s.classList.remove('is-active'));
       seg.classList.add('is-active');
       ui.gender = seg.dataset.gender;
@@ -88,10 +130,10 @@ function initCreate() {
     if (!btn) return;
     buyTalent(btn.dataset.talent);
   });
-  $('btn-back-title').addEventListener('click', () => showScreen('title'));
-  $('btn-new').addEventListener('click', () => showScreen('create'));
-  $('btn-continue').addEventListener('click', () => continueGame());
-  $('btn-gallery').addEventListener('click', () => openCodex());
+  $('btn-back-title').addEventListener('click', () => { seedTitleMeta(); showScreen('title'); });
+  $('btn-new').addEventListener('click', () => { sfx.play('click'); renderTalents(); showScreen('create'); });
+  $('btn-continue').addEventListener('click', () => { sfx.play('chime'); continueGame(); });
+  $('btn-gallery').addEventListener('click', () => { sfx.play('click'); openCodex(); });
 
   $('roll-actions').addEventListener('click', (e) => {
     const btn = e.target.closest('button');
@@ -127,7 +169,8 @@ function buyTalent(id) {
   store.saveMeta(meta);
   game.meta = meta;
   renderTalents();
-  toast(`天赋「${t.name}」点亮`, 'gold');
+  sfx.play('chime');
+  toast(`轮回天赋「${t.name}」已点亮`, 'gold');
 }
 
 function selectOrigin(id) {
@@ -149,8 +192,13 @@ function openRoll() {
   $('roll-overlay').hidden = false;
   $('roll-result').textContent = '……';
   $('roll-result').classList.add('spinning');
-  $('roll-desc').textContent = '天意难测。';
+  $('roll-result').classList.remove('revealed');
+  $('roll-grade').textContent = '测灵中';
+  $('roll-stats').innerHTML = '';
+  $('roll-desc').textContent = '八卦运转，五行聚气……';
   $('roll-actions').innerHTML = '';
+  $('bagua-stage').classList.add('is-spinning');
+  sfx.play('click');
   spinRoll();
 }
 
@@ -165,20 +213,43 @@ function spinRoll() {
       clearInterval(timer);
       settleRoll();
     }
-  }, 70);
+  }, 65);
 }
 
 function settleRoll() {
   const root = weightedRoot();
   ui.rolledRoot = root;
   const el = $('roll-result');
+  const col = gradeColor(root.grade);
+  $('bagua-stage').classList.remove('is-spinning');
   el.classList.remove('spinning');
+  el.classList.add('revealed');
   el.textContent = root.name;
-  el.style.color = gradeColor(root.grade);
-  $('roll-desc').innerHTML = `${root.desc}<br><span style="color:var(--gold-dim)">${root.quirk}</span>`;
+  el.style.color = col;
+  $('roll-grade').textContent = `${root.grade}品灵根`;
+  $('roll-grade').style.color = col;
+  $('roll-grade').style.borderColor = col;
+
+  const pct = ((root.weight / ROOT_WEIGHT_TOTAL) * 100).toFixed(root.weight < 1 ? 2 : 1);
+  $('roll-stats').innerHTML = `
+    <span class="roll-stat">修炼 ×${root.speed}</span>
+    <span class="roll-stat">突破 ${root.breakBonus >= 0 ? '+' : ''}${root.breakBonus}%</span>
+    <span class="roll-stat">寿元 ${root.lifespan >= 0 ? '+' : ''}${root.lifespan}年</span>
+    <span class="roll-stat">天命 ${pct}%</span>
+  `;
+  $('roll-desc').innerHTML = `${root.desc}<br><span style="color:var(--gold)">${root.quirk}</span>`;
+
+  fxCanvas.burst('root_reveal', col);
+  if (GRADE_ORDER[root.grade] >= 3) {
+    triggerScreenFx('root_reveal');
+    sfx.play('root_reveal');
+  } else {
+    sfx.play('chime');
+  }
+
   const canReroll = !ui.rerollUsed;
   $('roll-actions').innerHTML = `
-    <button class="btn btn-primary" data-act="accept">就是它</button>
+    <button class="btn btn-primary" data-act="accept">就是它，踏入仙途</button>
     <button class="btn btn-ghost" data-act="reroll" ${canReroll ? '' : 'disabled'}>再问一次天意</button>
   `;
 }
@@ -187,6 +258,12 @@ function rerollRoot() {
   if (ui.rerollUsed) return;
   ui.rerollUsed = true;
   $('roll-actions').innerHTML = '';
+  $('roll-result').classList.add('spinning');
+  $('roll-result').classList.remove('revealed');
+  $('roll-grade').textContent = '重测中';
+  $('roll-stats').innerHTML = '';
+  $('bagua-stage').classList.add('is-spinning');
+  sfx.play('click');
   spinRoll();
 }
 
@@ -201,7 +278,7 @@ function weightedRoot() {
 }
 
 function gradeColor(grade) {
-  return { 凡: '#8d8272', 黄: '#bfb4a0', 玄: '#7f9e7a', 地: '#8fb0c9', 天: '#c8a45c', 仙: '#c85a45' }[grade] || '#c8a45c';
+  return { 凡: '#a09585', 黄: '#d4c39e', 玄: '#8ab585', 地: '#84b4cf', 天: '#e0b762', 仙: '#e06c55' }[grade] || '#cfa95e';
 }
 
 function acceptRoot() {
@@ -214,9 +291,12 @@ function acceptRoot() {
 function startRun(opts) {
   const seed = (Math.random() * 0xffffffff) >>> 0;
   game.newRun({ ...opts, seed, meta: store.meta() || game.meta });
+  ui.lastSnapshot = snapshotChar();
+  ui.lastAchCount = Object.keys(game.state.meta.achievements || {}).length;
+  setMobileTab('story');
   showScreen('game');
   renderAll();
-  toast(`灵根：${ROOT_BY_ID[opts.rootId].name}`, 'gold');
+  toast(`灵根觉醒：${ROOT_BY_ID[opts.rootId].name}`, 'gold');
   store.save(0, game);
 }
 
@@ -224,22 +304,135 @@ function continueGame() {
   const data = store.load(0);
   if (!data) return;
   game.setState(data.state);
+  ui.lastSnapshot = snapshotChar();
+  ui.lastAchCount = Object.keys(game.state.meta.achievements || {}).length;
+  setMobileTab('story');
   showScreen('game');
   renderAll();
   if (game.state.scene.id === 'hub') toast('接着上次的时辰。');
 }
 
+function snapshotChar() {
+  const c = game.state?.char;
+  if (!c) return null;
+  return {
+    exp: Math.floor(c.exp),
+    hp: Math.round(c.hp),
+    mp: Math.round(c.mp),
+    stones: c.stones,
+    demon: Math.round(c.demon),
+    realm: c.realm,
+    layer: c.layer,
+    reputation: c.reputation,
+    lifespan: Math.floor(c.lifespan / 12),
+  };
+}
+
+function computeDeltas(prev, curr) {
+  if (!prev || !curr) return [];
+  const out = [];
+  if (curr.realm > prev.realm || curr.layer > prev.layer) out.push({ text: '境界突破!', kind: '' });
+  const dexp = curr.exp - prev.exp;
+  if (dexp > 0) out.push({ text: `修为 +${dexp}`, kind: '' });
+  const dstones = curr.stones - prev.stones;
+  if (dstones !== 0) out.push({ text: `灵石 ${dstones > 0 ? '+' : ''}${dstones}`, kind: dstones > 0 ? '' : 'neg' });
+  const dhp = curr.hp - prev.hp;
+  if (Math.abs(dhp) >= 5 && curr.realm === prev.realm) out.push({ text: `气血 ${dhp > 0 ? '+' : ''}${dhp}`, kind: dhp > 0 ? 'jade' : 'neg' });
+  const ddemon = curr.demon - prev.demon;
+  if (ddemon !== 0) out.push({ text: `心魔 ${ddemon > 0 ? '+' : ''}${ddemon}`, kind: ddemon > 0 ? 'neg' : 'jade' });
+  const drep = curr.reputation - prev.reputation;
+  if (drep !== 0) out.push({ text: `声望 ${drep > 0 ? '+' : ''}${drep}`, kind: drep > 0 ? 'jade' : 'neg' });
+  const dlife = curr.lifespan - prev.lifespan;
+  if (dlife !== 0 && curr.realm === prev.realm) out.push({ text: `寿元 ${dlife > 0 ? '+' : ''}${dlife}年`, kind: dlife > 0 ? 'jade' : 'neg' });
+  return out.slice(0, 4);
+}
+
 /* ---------------------------------- 渲染 ---------------------------------- */
 
-function renderAll() {
+function renderAll(deltas = []) {
   if (!game.state) return;
+  renderMobileHud();
   renderCharPanel();
-  renderStory();
-  renderLog();
-  $('top-realm').textContent = realmLabel(game.state.char);
-  $('turn-line').textContent = `第 ${game.state.turn} 回合`;
+  renderSceneBanner();
+  renderStory(deltas);
+  renderRightPanel();
+  const c = game.state.char;
+  $('top-realm').textContent = `${c.name} · ${realmLabel(c)}`;
+  $('brand-mark').textContent = REALMS[c.realm]?.name?.[0] || '道';
+  $('turn-line').textContent = `第 ${game.state.turn} 回合 · ${Math.floor(c.age / 12)}岁`;
+}
+
+function renderMobileHud() {
+  const c = game.state.char;
+  const realm = REALMS[c.realm];
+  const expNeed = Number.isFinite(realm.exp) ? Math.round(realm.exp * Math.pow(realm.growth, c.layer)) : Infinity;
+  const expPct = expNeed === Infinity ? 100 : Math.min(100, Math.floor((c.exp / expNeed) * 100));
+  const remain = Math.max(0, Math.floor((c.lifespan - c.age) / 12));
+  $('mobile-hud').innerHTML = `
+    <div class="mhud-row">
+      <div class="mhud-pills">
+        <span class="c-hp">血 <b>${Math.round(c.hp)}/${c.maxHp}</b></span>
+        <span class="c-mp">灵 <b>${Math.round(c.mp)}/${c.maxMp}</b></span>
+        <span class="c-gold">石 <b>${c.stones}</b></span>
+        <span>余寿 <b>${remain}年</b></span>
+        ${c.demon > 0 ? `<span class="c-demon">魔 <b>${Math.round(c.demon)}</b></span>` : ''}
+      </div>
+    </div>
+    <div class="mhud-exp">
+      <div class="bar exp"><i style="width:${expPct}%"></i></div>
+    </div>
+  `;
+}
+
+function renderSceneBanner() {
   const node = game.currentNode();
+  const art = sceneArtFor(node, game.state);
+  const img = $('scene-art');
+  if (art.src !== ui.lastArtSrc) {
+    ui.lastArtSrc = art.src;
+    img.classList.add('is-switching');
+    setTimeout(() => {
+      img.src = art.src;
+      img.onload = () => img.classList.remove('is-switching');
+      setTimeout(() => img.classList.remove('is-switching'), 180);
+    }, 90);
+  }
+  fxCanvas.setMood(art.mood);
   $('scene-kicker').textContent = kickerFor(node);
+  $('scene-banner-loc').textContent = `${game.state.char.location} · ${art.caption}`;
+
+  const hud = $('scene-combat-hud');
+  if (game.state.scene.id === 'combat' && game.state.combat) {
+    const cb = game.state.combat;
+    const pct = Math.max(0, Math.min(100, Math.round((cb.hp / cb.maxHp) * 100)));
+    hud.hidden = false;
+    hud.innerHTML = `
+      <div class="combat-hud-row">
+        <b>敌手 · ${escapeHtml(cb.enemy.name)}</b>
+        <span>气血 ${Math.max(0, Math.round(cb.hp))} / ${cb.maxHp} · 第 ${cb.turn} 合</span>
+      </div>
+      <div class="bar hp"><i style="width:${pct}%"></i></div>
+    `;
+  } else if (game.state.scene.id === 'tribulation' && game.state.tribulation) {
+    const t = game.state.tribulation;
+    hud.hidden = false;
+    hud.innerHTML = `
+      <div class="combat-hud-row">
+        <b>九霄雷阵 · ${REALMS[game.state.char.realm]?.name || ''}之劫</b>
+        <span>第 ${t.stage} / ${t.total} 重天雷</span>
+      </div>
+      <div class="trib-steps">
+        ${[1, 2, 3].map((n) => `
+          <div class="trib-orb ${n < t.stage ? 'is-done' : n === t.stage ? 'is-now' : ''}">
+            ${n < t.stage ? `第${n}重 · 已渡` : n === t.stage ? `第${n}重 · 聚雷` : `第${n}重`}
+          </div>
+        `).join('')}
+      </div>
+    `;
+  } else {
+    hud.hidden = true;
+    hud.innerHTML = '';
+  }
 }
 
 function kickerFor(node) {
@@ -248,9 +441,32 @@ function kickerFor(node) {
   if (node.id === 'combat') return '斗法';
   if (node.id === 'tribulation') return '天劫';
   if (node.id === 'breakthrough') return '叩关';
-  if (node.id === 'market') return '坊市';
-  if (node.id === 'ending') return '此生';
-  return node.pool === 'sect' ? '宗门' : node.pool === 'inner' ? '内景' : node.pool === 'story' ? '因果' : '奇遇';
+  if (node.id === 'market' || node.id === 'sell') return '坊市';
+  if (node.id === 'recruit') return '仙门';
+  if (node.id === 'ending') return '此生终章';
+  return node.pool === 'sect' ? '宗门' : node.pool === 'inner' ? '内景' : node.pool === 'story' ? '宿命因果' : '机缘奇遇';
+}
+
+function renderBagMarkup() {
+  const c = game.state.char;
+  if (!c.inventory.length) {
+    return '<p class="empty-tip">储物袋空空如也。去坊市置办些丹药，或外出历练寻些机缘吧。</p>';
+  }
+  return `<div class="bag-list">${c.inventory.map((it) => {
+    const def = ITEM_BY_ID[it.id];
+    const usable = Boolean(def?.use || def?.technique);
+    const btnText = def?.technique ? '参悟' : def?.type === '符箓' ? '激活' : '服用';
+    return `
+      <div class="bag-item">
+        <div class="bag-item-meta">
+          <b>${escapeHtml(def?.name || it.id)}${it.qty > 1 ? ` ×${it.qty}` : ''}</b>
+          <span>${escapeHtml(def?.desc || '')}</span>
+        </div>
+        ${usable
+          ? `<button type="button" class="bag-use-btn" data-use-item="${it.id}">${btnText}</button>`
+          : `<span class="bag-badge">${escapeHtml(def?.type || '物品')}</span>`}
+      </div>`;
+  }).join('')}</div>`;
 }
 
 function renderCharPanel() {
@@ -267,16 +483,27 @@ function renderCharPanel() {
     .map(([k, v]) => `<div class="attr"><span>${k}</span><b>${Math.round(v)}</b></div>`)
     .join('');
 
-  const titles = (c.titles || []).slice(-4).map((t) => `<span class="tag gold">${t}</span>`).join('');
-  const inv = c.inventory
-    .slice(0, 6)
-    .map((it) => `<span class="tag" title="${ITEM_BY_ID[it.id]?.desc || ''}">${ITEM_BY_ID[it.id]?.name || it.id}${it.qty > 1 ? `×${it.qty}` : ''}</span>`)
+  const titles = (c.titles || []).slice(-6).map((t) => `<span class="tag gold">${escapeHtml(t)}</span>`).join('');
+  const techs = (c.techniques || []).map((t) => `<span class="tag jade">${escapeHtml(t.name)}</span>`).join('');
+  const buffs = [];
+  if (game.state.buffs?.breakBonus) buffs.push(`<span class="tag gold">破境 +${Math.round(game.state.buffs.breakBonus)}%</span>`);
+  if (game.state.buffs?.shield) buffs.push(`<span class="tag jade">护心金光 ×${game.state.buffs.shield}</span>`);
+  if (game.state.buffs?.escape) buffs.push(`<span class="tag jade">神行遁符 ×${game.state.buffs.escape}</span>`);
+
+  const rels = Object.entries(c.relations || {})
+    .filter(([, v]) => v !== 0)
+    .map(([k, v]) => `<div class="stat-line"><span>${escapeHtml(k)}</span><b>${v > 0 ? `+${v}` : v}</b></div>`)
     .join('');
 
   $('char-panel').innerHTML = `
-    <div class="rail-head"><h3>此人</h3><span class="rail-sub">${c.gender} · ${c.originId ? originName(c.originId) : ''}</span></div>
-    <h2 class="char-name">${escapeHtml(c.name)}</h2>
-    <div class="char-sub">${realmLabel(c)}<span class="dot">·</span>${root?.name || '凡体'}<span class="dot">·</span>${sect ? `${sect.name}·${rank.name}` : '散修'}</div>
+    <div class="rail-head"><h3>道躯</h3><span class="rail-sub">${c.gender} · ${c.originId ? originName(c.originId) : ''} · 第${game.state.meta.cycle || 1}世</span></div>
+    <div class="char-header">
+      <div class="realm-emblem" style="border-color:${gradeColor(root?.grade)}">${realm.name}</div>
+      <div>
+        <h2 class="char-name">${escapeHtml(c.name)}</h2>
+        <div class="char-sub">${realmLabel(c)}<span class="dot">·</span><span style="color:${gradeColor(root?.grade)}">${root?.name || '凡体'}</span><span class="dot">·</span>${sect ? `${sect.name}·${rank.name}` : '散修'}</div>
+      </div>
+    </div>
 
     <div class="meter">
       <div class="meter-top"><span>修为</span><b>${Math.floor(c.exp)} / ${expNeed === Infinity ? '∞' : expNeed}</b></div>
@@ -292,7 +519,7 @@ function renderCharPanel() {
     </div>
     ${c.demon > 0 ? `
     <div class="meter">
-      <div class="meter-top"><span>心魔</span><b>${Math.round(c.demon)}</b></div>
+      <div class="meter-top"><span>心魔</span><b>${Math.round(c.demon)} / 100</b></div>
       <div class="bar demon"><i style="width:${c.demon}%"></i></div>
     </div>` : ''}
     <div class="meter">
@@ -301,51 +528,84 @@ function renderCharPanel() {
     </div>
 
     <div class="panel-block">
-      <h4>根骨</h4>
+      <h4>根骨六维</h4>
       <div class="attr-grid">${attrs}</div>
     </div>
 
     <div class="panel-block">
-      <h4>身家</h4>
+      <h4>身家因果</h4>
       <div class="stat-line"><span>灵石</span><b>${c.stones}</b></div>
       <div class="stat-line"><span>声望</span><b>${c.reputation}</b></div>
       <div class="stat-line"><span>业力</span><b>${c.karma}</b></div>
-      ${sect ? `<div class="stat-line"><span>贡献</span><b>${c.contribution}</b></div>` : ''}
-      ${c.injuries ? `<div class="stat-line"><span>伤势</span><b>${c.injuries}</b></div>` : ''}
+      ${sect ? `<div class="stat-line"><span>宗门贡献</span><b>${c.contribution}</b></div>` : ''}
+      ${c.injuries ? `<div class="stat-line"><span>伤势</span><b style="color:#e08878">${c.injuries}</b></div>` : ''}
     </div>
 
-    ${titles ? `<div class="panel-block"><h4>称号</h4><div class="tag-row">${titles}</div></div>` : ''}
-    ${inv ? `<div class="panel-block"><h4>随身</h4><div class="tag-row">${inv}</div></div>` : ''}
+    ${buffs.length ? `<div class="panel-block"><h4>护持</h4><div class="tag-row">${buffs.join('')}</div></div>` : ''}
+    ${techs ? `<div class="panel-block"><h4>功法</h4><div class="tag-row">${techs}</div></div>` : ''}
+    ${rels ? `<div class="panel-block"><h4>红尘羁绊</h4>${rels}</div>` : ''}
+    ${titles ? `<div class="panel-block"><h4>名号</h4><div class="tag-row">${titles}</div></div>` : ''}
   `;
+}
+
+function renderRightPanel() {
+  const c = game.state.char;
+  const bagWrap = $('right-bag-wrap');
+  bagWrap.innerHTML = `
+    <div class="rail-head" style="margin-bottom:0.6rem">
+      <h3>储物袋</h3>
+      <span class="rail-sub">${c.inventory.length} 种</span>
+    </div>
+    ${renderBagMarkup()}
+  `;
+
+  const list = $('log-list');
+  const entries = game.state.log.slice(-24).reverse();
+  if (!entries.length) {
+    list.innerHTML = `<li><b>踏入仙途 · 初抵${escapeHtml(c.location)}</b><time>${ageLabel(c.age)}</time></li>`;
+  } else {
+    list.innerHTML = entries
+      .map((l) => `<li><b>${escapeHtml(l.t)}</b><time>${ageLabel(l.at)}</time></li>`)
+      .join('');
+  }
+  $('log-sub').textContent = `${Math.floor(c.age / 12)}岁`;
 }
 
 function originName(id) {
   return ORIGINS.find((o) => o.id === id)?.name || '';
 }
 
-function renderStory() {
+function renderStory(deltas = []) {
   const text = game.currentText();
   const node = game.currentNode();
   $('scene-title').textContent = node?.title || '';
-  const el = $('scene-text');
-  el.dataset.full = text;
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    el.textContent = text;
-    renderChoices();
-    return;
-  }
-  typewrite(el, text, () => renderChoices());
+  $('delta-strip').innerHTML = deltas
+    .map((d) => `<span class="delta-pill ${d.kind}">${escapeHtml(d.text)}</span>`)
+    .join('');
+
   $('scene-lines').innerHTML = (game.state.scene.result?.lines || [])
     .filter(Boolean)
     .map((l) => `<span>${escapeHtml(l)}</span>`)
     .join('');
+
+  const el = $('scene-text');
+  el.dataset.full = text;
+  const sp = SPEED_MODES[ui.speedIdx];
+  if (sp.ms === 0 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    clearInterval(ui.typing);
+    ui.typing = null;
+    el.textContent = text;
+    renderChoices();
+    return;
+  }
+  typewrite(el, text, sp, () => renderChoices());
 }
 
-function typewrite(el, text, done) {
+function typewrite(el, text, sp, done) {
   clearInterval(ui.typing);
   el.textContent = '';
   let i = 0;
-  const step = Math.max(1, Math.round(text.length / 220));
+  const step = Math.max(1, Math.round(text.length / sp.div));
   ui.typing = setInterval(() => {
     i += step;
     el.textContent = text.slice(0, i);
@@ -355,7 +615,7 @@ function typewrite(el, text, done) {
       el.textContent = text;
       done?.();
     }
-  }, 16);
+  }, sp.ms);
   el.onclick = () => {
     if (ui.typing) {
       clearInterval(ui.typing);
@@ -373,35 +633,25 @@ function renderChoices() {
   list.forEach((ch, i) => {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'choice' + (ch.effect === 'primary' ? ' is-primary' : '');
+    btn.className = 'choice' + (ch.effect === 'primary' || ch.effect === 'highlight' ? ' is-primary' : '');
     btn.disabled = Boolean(ch.disabled);
     btn.dataset.index = String(i);
-    btn.style.animationDelay = `${Math.min(i * 40, 240)}ms`;
+    btn.style.animationDelay = `${Math.min(i * 35, 210)}ms`;
     const reason = ch.disabled && ch.reason ? ` <span class="reason">（${escapeHtml(ch.reason)}）</span>` : '';
     btn.innerHTML = `
       <span class="num">${i + 1}</span>
-      <span>
+      <span class="choice-main">
         <span class="label">${escapeHtml(ch.label)}</span>
         ${ch.hint ? `<span class="hint">${escapeHtml(ch.hint)}${reason}</span>` : reason ? `<span class="hint">${reason}</span>` : ''}
-      </span>`;
+      </span>
+      <span class="arrow" aria-hidden="true">›</span>`;
     btn.addEventListener('click', () => pick(i));
     wrap.appendChild(btn);
   });
-  const primary = wrap.querySelector('.choice.is-primary:not(:disabled)') || wrap.querySelector('.choice:not(:disabled)');
-  primary?.focus({ preventScroll: true });
-}
-
-function renderLog() {
-  const list = $('log-list');
-  const entries = game.state.log.slice(-14).reverse();
-  list.innerHTML = entries
-    .map((l) => `<li><b>${escapeHtml(l.t)}</b><time>${ageLabel(l.at)}</time></li>`)
-    .join('');
-  $('log-sub').textContent = `${Math.floor(game.state.char.age / 12)}岁`;
 }
 
 function ageLabel(months) {
-  return `${Math.floor(months / 12)}岁 · ${months % 12 + 1}月`;
+  return `${Math.floor(months / 12)}岁 · ${(months % 12) + 1}月`;
 }
 
 function pick(index) {
@@ -411,22 +661,43 @@ function pick(index) {
     ui.typing = null;
     el.textContent = el.dataset.full || el.textContent;
   }
+  const prev = snapshotChar();
   const res = game.choose(index);
-  handleResult(res);
+  handleResult(res, prev);
 }
 
-function handleResult(res) {
+function handleResult(res, prev = null) {
   if (res?.error) { toast(res.error); return; }
   if (res?.reincarnate) { startReincarnation(res.meta); return; }
+
+  const curr = snapshotChar();
+  const deltas = computeDeltas(prev || ui.lastSnapshot, curr);
+  ui.lastSnapshot = curr;
+
+  const fx = game.state.scene.result?.fx || game.state.scene.fx || null;
+  if (game.state.scene.fx) delete game.state.scene.fx;
+  if (fx) {
+    triggerScreenFx(fx);
+    fxCanvas.burst(fx);
+    sfx.play(fx);
+  } else if (curr && prev && (curr.realm > prev.realm || curr.layer > prev.layer)) {
+    triggerScreenFx('breakthrough');
+    fxCanvas.burst('breakthrough');
+    sfx.play('breakthrough');
+  } else {
+    sfx.play('click');
+  }
+
   store.save(0, game);
-  renderAll();
+  renderAll(deltas);
   announceNewAchievements();
   scrollStory();
 }
 
 function scrollStory() {
   const sc = $('story-scroll');
-  sc.scrollTop = 0;
+  if (sc) sc.scrollTop = 0;
+  if (window.innerWidth < 1100) window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function announceNewAchievements() {
@@ -435,7 +706,10 @@ function announceNewAchievements() {
   if (ui.lastAchCount == null) { ui.lastAchCount = now; return; }
   if (now > ui.lastAchCount) {
     const newest = ACHIEVEMENTS.filter((a) => meta[a.id]).slice(-1)[0];
-    if (newest) toast(`成就 · ${newest.name}`, 'gold');
+    if (newest) {
+      toast(`成就解锁 · ${newest.name}`, 'gold');
+      sfx.play('chime');
+    }
     ui.lastAchCount = now;
   }
 }
@@ -446,22 +720,83 @@ function startReincarnation(meta) {
   ui.rolledRoot = null;
   ui.originId = null;
   ui.rerollUsed = false;
+  ui.lastSnapshot = null;
   $('btn-roll').disabled = true;
   document.querySelectorAll('.origin-card').forEach((c) => c.classList.remove('is-active'));
-  $('create-hint').textContent = `轮回点 ${meta.karmaPoints || 0}。选一个出身，重新开始。`;
+  $('create-hint').textContent = `第 ${meta.cycle || 1} 世 · 轮回点 ${meta.karmaPoints || 0}。择一出身，再问仙途。`;
   renderTalents();
   seedTitleMeta();
   showScreen('create');
+  sfx.play('breakthrough');
   toast('喝下孟婆汤。前尘尽忘，唯有道心还在。', 'gold');
+}
+
+/* ---------------------------------- 移动端导航 / 储物使用 ---------------------------------- */
+
+function setMobileTab(tab) {
+  if (tab === 'codex') {
+    openCodex();
+    return;
+  }
+  ui.mobileTab = tab;
+  $('game-screen').dataset.mobileTab = tab;
+  document.querySelectorAll('#mobile-nav .mnav-btn').forEach((b) => {
+    b.classList.toggle('is-active', b.dataset.mtab === tab);
+  });
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+function wireMobileNav() {
+  $('mobile-nav').addEventListener('click', (e) => {
+    const btn = e.target.closest('.mnav-btn');
+    if (!btn) return;
+    sfx.play('click');
+    setMobileTab(btn.dataset.mtab);
+  });
+
+  // 储物袋物品点击使用（桌面右栏 & 移动储物页共用）
+  $('right-bag-wrap').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-use-item]');
+    if (!btn || !game.state) return;
+    const prev = snapshotChar();
+    const res = game.useInventoryItem(btn.dataset.useItem);
+    if (res?.error) {
+      toast(res.error);
+      return;
+    }
+    const curr = snapshotChar();
+    const deltas = computeDeltas(prev, curr);
+    ui.lastSnapshot = curr;
+    if (res.fx) {
+      triggerScreenFx(res.fx);
+      fxCanvas.burst(res.fx);
+      sfx.play(res.fx);
+    }
+    store.save(0, game);
+    renderAll(deltas);
+    announceNewAchievements();
+    toast(res.lines?.join(' · ') || '已使用', 'gold');
+  });
 }
 
 /* ---------------------------------- 顶栏 / 弹层 ---------------------------------- */
 
 function wireTopbar() {
+  $('btn-speed').addEventListener('click', () => {
+    ui.speedIdx = (ui.speedIdx + 1) % SPEED_MODES.length;
+    try { localStorage.setItem('wendao.v3.speed', String(ui.speedIdx)); } catch { /* ignore */ }
+    syncPreferenceButtons();
+    toast(SPEED_MODES[ui.speedIdx].title.split('（')[0]);
+  });
+  $('btn-sound').addEventListener('click', () => {
+    const on = sfx.toggle();
+    syncPreferenceButtons();
+    toast(on ? '仙音已启' : '已归静默');
+  });
   $('btn-save').addEventListener('click', () => openSave('save'));
   $('btn-load').addEventListener('click', () => openSave('load'));
   $('btn-codex').addEventListener('click', () => openCodex());
-  $('btn-menu').addEventListener('click', () => { $('menu-overlay').hidden = false; });
+  $('btn-menu').addEventListener('click', () => { $('menu-body').innerHTML = ''; $('menu-overlay').hidden = false; });
 }
 
 function wireOverlays() {
@@ -479,19 +814,24 @@ function wireOverlays() {
     if (btn.dataset.act === 'save') {
       store.save(slot, game);
       renderSlots();
-      toast(`已存入${slot === 0 ? '自动' : `第${slot}号`}存档`);
+      sfx.play('chime');
+      toast(`已存入${slot === 0 ? '自动' : `第 ${slot} 号`}存档`, 'gold');
     } else if (btn.dataset.act === 'load') {
       const data = store.load(slot);
       if (!data) return;
       game.setState(data.state);
       $('save-overlay').hidden = true;
       showScreen('game');
-      ui.lastAchCount = null;
+      setMobileTab('story');
+      ui.lastAchCount = Object.keys(game.state.meta.achievements || {}).length;
+      ui.lastSnapshot = snapshotChar();
       renderAll();
-      toast('回来了。');
+      sfx.play('chime');
+      toast('光阴倒转，回到彼时。', 'gold');
     } else if (btn.dataset.act === 'del') {
       store.remove(slot);
       renderSlots();
+      toast('存档已抹去');
     }
   });
 
@@ -504,10 +844,13 @@ function wireOverlays() {
       game.setState(data.state);
       $('save-overlay').hidden = true;
       showScreen('game');
+      setMobileTab('story');
+      ui.lastSnapshot = snapshotChar();
       renderAll();
-      toast('存档已载入。');
-    } catch (err) {
-      toast('这个文件读不出来。');
+      sfx.play('chime');
+      toast('存档已载入。', 'gold');
+    } catch {
+      toast('这个文件读不出来，请确认是有效的 JSON 存档。');
     }
     e.target.value = '';
   });
@@ -515,7 +858,8 @@ function wireOverlays() {
   $('codex-tabs').addEventListener('click', (e) => {
     const tab = e.target.closest('.tab');
     if (!tab) return;
-    document.querySelectorAll('.tab').forEach((t) => t.classList.remove('is-active'));
+    sfx.play('click');
+    document.querySelectorAll('#codex-tabs .tab').forEach((t) => t.classList.remove('is-active'));
     tab.classList.add('is-active');
     ui.codexTab = tab.dataset.tab;
     renderCodex();
@@ -523,31 +867,39 @@ function wireOverlays() {
 
   $('menu-restart').addEventListener('click', () => {
     $('menu-overlay').hidden = true;
-    if (confirm('重开一世？当前进度会自动存进存档。')) {
+    if (confirm('重开一世？当前进度会自动存入自动存档槽。')) {
       if (game.state) store.save(0, game);
       game.state = null;
       ui.lastAchCount = null;
+      ui.lastSnapshot = null;
+      renderTalents();
       showScreen('create');
     }
   });
+  $('menu-title').addEventListener('click', () => {
+    $('menu-overlay').hidden = true;
+    if (game.state && !game.state.flags.finished) store.save(0, game);
+    seedTitleMeta();
+    showScreen('title');
+  });
   $('menu-help').addEventListener('click', () => {
     $('menu-body').innerHTML = `
-      <h4>怎么玩</h4>
-      <p>每回合选一个行动，时间会往前走。修为满了可以「冲击境界」；大境界的关口会引来天劫。</p>
-      <h4>按键</h4>
-      <p>数字键 1–9 选择；空格/回车继续；Esc 关闭弹层。</p>
-      <h4>存档</h4>
-      <p>每次选择后自动存入「自动」槽，另有三个手动槽，可导出为 JSON 文件。</p>
-      <h4>结局</h4>
-      <p>死亡、寿元耗尽、飞升、堕魔都会抵达结局。结局会记进图鉴，并给下辈子一点轮回点。</p>
+      <h4>修仙与突破</h4>
+      <p>每回合选择行动推进光阴。修为满后点击高亮的「冲击境界」叩关；大境界关口将引动三重天劫。</p>
+      <h4>储物与丹药</h4>
+      <p>桌面右侧或手机底部「储物」页可直接服用丹药、激活护心符/神行符或研读古经功法。</p>
+      <h4>快捷操作</h4>
+      <p>桌面支持数字键 1–9 选择、空格/回车跳过打字或继续、S 存档、L 读档、C 图鉴、Esc 关闭弹窗；手机底部五栏一键切换。</p>
+      <h4>存档与轮回</h4>
+      <p>每回合自动保存，另有 4 个手动槽与 JSON 导入/导出。所有随机数状态一并序列化，读档后卦象一致。</p>
     `;
   });
   $('menu-about').addEventListener('click', () => {
     $('menu-body').innerHTML = `
-      <h4>关于</h4>
-      <p>《问道长生》是一个单文件优先的互动叙事实验，叙事结构参考 inkle 的 ink：knot、choice、divert、变量与 weave。</p>
-      <p>所有随机都走可序列化的种子随机源，所以读档会回到同一个卦象。</p>
-      <p>文本、代码与数值均为虚构。</p>
+      <h4>关于《问道长生》</h4>
+      <p>参考 inkle/ink 节点叙事（knot / stitch / choice / divert / weave）构建的水墨修仙模拟器。</p>
+      <p>内置 290+ 叙事节点、21 种灵根、13 座仙门、24 重结局、177 项成就（含 63 项隐藏）与 12 项跨世轮回天赋。</p>
+      <p>纯静态前端运行，零后端依赖，适配手机与电脑双端游玩。</p>
     `;
   });
 }
@@ -555,7 +907,7 @@ function wireOverlays() {
 function openSave(mode) {
   if (!game.state && mode === 'save') return;
   ui.saveMode = mode;
-  $('save-title').textContent = mode === 'save' ? '存档' : '读档';
+  $('save-title').textContent = mode === 'save' ? '玉简存档' : '光阴读档';
   $('save-overlay').hidden = false;
   renderSlots();
 }
@@ -564,14 +916,16 @@ function renderSlots() {
   const list = store.list();
   $('slot-list').innerHTML = list
     .map((s) => {
-      const name = s.slot === 0 ? '自动存档' : `第 ${s.slot} 号`;
+      const name = s.slot === 0 ? '自动存档' : `第 ${s.slot} 号玉简`;
+      const rootName = s.info?.rootId ? (ROOT_BY_ID[s.info.rootId]?.name || '') : '';
+      const sectName = s.info?.sectId ? (SECT_BY_ID[s.info.sectId]?.name || '散修') : '散修';
       const info = s.info
-        ? `${escapeHtml(s.info.name)} · ${s.info.realm} · ${s.info.age}岁 · 第${s.info.turn}回合`
-        : '空';
+        ? `${escapeHtml(s.info.name)} · ${s.info.realm}${rootName ? ` · ${rootName}` : ''} · ${sectName} · ${s.info.age}岁 · 第${s.info.turn}回合`
+        : '空玉简';
       const date = s.savedAt ? new Date(s.savedAt).toLocaleString('zh-CN') : '';
       const loadBtn = !s.empty ? `<button class="mini" data-act="load" data-slot="${s.slot}">读取</button>` : '';
       const saveBtn = ui.saveMode === 'save' ? `<button class="mini" data-act="save" data-slot="${s.slot}">存入</button>` : '';
-      const delBtn = !s.empty ? `<button class="mini" data-act="del" data-slot="${s.slot}">删除</button>` : '';
+      const delBtn = !s.empty ? `<button class="mini" data-act="del" data-slot="${s.slot}">抹除</button>` : '';
       return `
         <div class="slot">
           <div class="slot-info"><b>${name}</b><span>${info}${date ? ` · ${date}` : ''}</span></div>
@@ -588,31 +942,55 @@ function openCodex() {
 
 function renderCodex() {
   const body = $('codex-body');
-  const meta = game.state?.meta || store.meta() || { achievements: {}, unlockedEndings: [] };
+  const sum = $('codex-summary');
+  const meta = game.state?.meta || store.meta() || { achievements: {}, unlockedEndings: [], rootsSeen: [], sectsJoined: [] };
+
   if (ui.codexTab === 'achievements') {
+    const unlockedCount = ACHIEVEMENTS.filter((a) => meta.achievements?.[a.id]).length;
+    const hiddenTotal = ACHIEVEMENTS.filter((a) => a.hidden).length;
+    sum.textContent = `已印证 ${unlockedCount} / ${ACHIEVEMENTS.length}（含 ${hiddenTotal} 项隐藏成就）`;
     body.innerHTML = `<div class="ach-grid">${ACHIEVEMENTS.map((a) => {
       const got = Boolean(meta.achievements?.[a.id]);
       const hidden = a.hidden && !got;
       return `<div class="ach ${got ? 'done' : 'locked'}">
-        <b>${hidden ? '？？？' : a.name}</b>
-        <p>${hidden ? '隐藏成就，尚未解锁。' : a.desc}</p>
+        <b>${hidden ? '？？？' : escapeHtml(a.name)}</b>
+        <p>${hidden ? '隐藏成就，待机缘印证。' : escapeHtml(a.desc)}</p>
       </div>`;
     }).join('')}</div>`;
   } else if (ui.codexTab === 'endings') {
+    const unlocked = meta.unlockedEndings || [];
+    sum.textContent = `已抵达 ${unlocked.length} / ${ENDINGS.length} 重结局`;
     body.innerHTML = `<div class="ach-grid">${ENDINGS.map((e) => {
-      const got = (meta.unlockedEndings || []).includes(e.id);
+      const got = unlocked.includes(e.id);
       const hidden = e.hidden && !got;
       return `<div class="ach ${got ? 'done' : 'locked'}">
-        <b>${hidden ? '？？？' : e.name}</b>
-        <p>${hidden ? '尚未抵达的结局。' : e.summary}</p>
+        <b>${hidden ? '？？？' : escapeHtml(e.name)}${!hidden && e.tier ? ` · ${e.tier}` : ''}</b>
+        <p>${hidden ? '尚未抵达的隐藏终章。' : escapeHtml(e.summary)}</p>
+      </div>`;
+    }).join('')}</div>`;
+  } else if (ui.codexTab === 'roots') {
+    const seen = new Set(meta.rootsSeen || []);
+    sum.textContent = `历世已觉醒 ${seen.size} / ${ROOTS.length} 种灵根`;
+    body.innerHTML = `<div class="ach-grid">${ROOTS.map((r) => {
+      const got = seen.has(r.id);
+      const pct = ((r.weight / ROOT_WEIGHT_TOTAL) * 100).toFixed(r.weight < 1 ? 2 : 1);
+      return `<div class="ach ${got ? 'done' : 'locked'}">
+        <b style="color:${gradeColor(r.grade)}">${escapeHtml(r.name)} · ${r.grade}品</b>
+        <p>${escapeHtml(r.desc)}</p>
+        <small>修炼 ×${r.speed} · 突破 ${r.breakBonus >= 0 ? '+' : ''}${r.breakBonus}% · 概率 ${pct}%</small>
       </div>`;
     }).join('')}</div>`;
   } else {
-    body.innerHTML = `<div class="ach-grid">${ROOTS.map((r) => `
-      <div class="ach ${GRADE_ORDER[r.grade] >= 3 ? 'done' : 'locked'}">
-        <b>${r.name} · ${r.grade}</b>
-        <p>${r.desc}</p>
-      </div>`).join('')}</div>`;
+    const joined = new Set(meta.sectsJoined || []);
+    sum.textContent = `历世已拜入 ${joined.size} / ${SECTS.length} 座仙门`;
+    body.innerHTML = `<div class="ach-grid">${SECTS.map((s) => {
+      const got = joined.has(s.id);
+      return `<div class="ach ${got ? 'done' : 'locked'}">
+        <b>${escapeHtml(s.name)}（${s.align}）</b>
+        <p>${escapeHtml(s.desc)}</p>
+        <small>条件：${escapeHtml(s.requirement)} · 功法：${escapeHtml(s.technique)}</small>
+      </div>`;
+    }).join('')}</div>`;
   }
 }
 
@@ -693,6 +1071,7 @@ function exposeDebug() {
     } : null,
     achievements: game.state ? Object.keys(game.state.meta.achievements || {}).length : 0,
     result: game.state?.scene?.result?.text || null,
+    mobileTab: ui.mobileTab,
     debug: true,
   });
   window.__debugStart = (opts = {}) => {
