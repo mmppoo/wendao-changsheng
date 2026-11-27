@@ -1,5 +1,5 @@
 /**
- * 境界体系（v4.0）：十境分层，战力指数跃迁，突破瓶颈与法则共鸣体系。
+ * 境界体系（v4.0；v8 第三境改名结丹，渡劫后为真仙，不离五域）：十境分层，战力指数跃迁，突破瓶颈与法则共鸣体系。
  * exp 为「进入下一层」所需的修为，powerMult 为境界基础战力倍率。
  */
 export const REALMS = [
@@ -25,15 +25,15 @@ export const REALMS = [
       needItem: 'jiejin_dan',
       minDaoxin: 20,
       minLawLevel: 0,
-      trialDesc: '压缩气海灵液为金丹胎胚，丹纹越多，雷劫愈烈，成道根基亦愈雄厚。',
-      qualityNames: ['下品金丹', '上品金丹', '九纹金丹'],
+      trialDesc: '压缩气海灵液为丹胎，丹纹越多，雷劫越烈，成道的根基也越厚。',
+      qualityNames: ['下品结丹', '上品结丹', '九纹结丹'],
     },
   },
   {
-    id: 'jindan', name: '金丹', layers: 4, exp: 32000, growth: 1.62,
+    id: 'jindan', name: '结丹', layers: 4, exp: 32000, growth: 1.62,
     lifespan: 520, monthly: 32, tribulation: true, powerMult: 7.5,
     layerNames: ['初期', '中期', '后期', '圆满'],
-    desc: '一粒金丹吞入腹，我命由我不由天。丹成之日，雷劫必至。',
+    desc: '周天元气固结成一枚无漏之丹，神识外放如亲眼所见。在各方势力中，结丹修士已是宗师。丹成之日，雷劫必至。',
     bottleneck: {
       needItem: 'huaying_dan',
       minDaoxin: 30,
@@ -46,12 +46,12 @@ export const REALMS = [
     id: 'yuanying', name: '元婴', layers: 4, exp: 240000, growth: 1.68,
     lifespan: 1000, monthly: 130, tribulation: true, powerMult: 20,
     layerNames: ['初期', '中期', '后期', '圆满'],
-    desc: '元婴出窍，神魂可离体千里。此境的修士，已是一方老祖。',
+    desc: '丹壳破开，灵婴自生，即便肉身败亡也能寄神于他处。世人多奉为陆地神仙，常人一生难得一见。',
     bottleneck: {
       needItem: 'huashen_dan',
       minDaoxin: 42,
       minLawLevel: 1,
-      trialDesc: '元婴通天，需初窥至少一道天地法则，方能化凡神为仙神。',
+      trialDesc: '元婴通天，需初窥至少一道天地法则，方能化神。',
       qualityNames: ['初神', '玄神', '法相化神'],
     },
   },
@@ -59,7 +59,7 @@ export const REALMS = [
     id: 'huashen', name: '化神', layers: 4, exp: 1800000, growth: 1.72,
     lifespan: 2000, monthly: 520, tribulation: true, powerMult: 55,
     layerNames: ['初期', '中期', '后期', '圆满'],
-    desc: '化神者，化凡神为仙神。一念之间，山河变色。',
+    desc: '元婴之上，世人已不知其详，只在古籍残卷中偶有记载：化神者一念之间，山河变色。',
     bottleneck: {
       needItem: 'xukong_jing',
       minDaoxin: 55,
@@ -72,7 +72,7 @@ export const REALMS = [
     id: 'lianxu', name: '炼虚', layers: 4, exp: 12000000, growth: 1.76,
     lifespan: 4000, monthly: 2000, tribulation: true, powerMult: 150,
     layerNames: ['初期', '中期', '后期', '圆满'],
-    desc: '炼虚合道，虚实之间再无界限。举手投足，皆合天道。',
+    desc: '古籍残载：炼虚合道，虚实之间再无界限。这一境界在五域只存于传说。',
     bottleneck: {
       needItem: 'dao_fruit',
       minDaoxin: 70,
@@ -85,12 +85,12 @@ export const REALMS = [
     id: 'heti', name: '合体', layers: 4, exp: 76000000, growth: 1.8,
     lifespan: 8000, monthly: 7600, tribulation: true, powerMult: 420,
     layerNames: ['初期', '中期', '后期', '圆满'],
-    desc: '法与身合，身与道合。此境修士，已难被杀死。',
+    desc: '传说中法与身合、身与道合的境界。到了这里，已经很难被杀死。',
     bottleneck: {
       needItem: 'tiandao_lotus',
       minDaoxin: 88,
       minLawLevel: 4,
-      trialDesc: '万法归宗，立于下界极巅。需天道莲承压，且法则达「登峰造极」。',
+      trialDesc: '万法归宗，立于五域之巅。需天道莲承压，且法则达「登峰造极」。',
       qualityNames: ['小乘', '大乘', '极道大乘'],
     },
   },
@@ -98,12 +98,12 @@ export const REALMS = [
     id: 'dacheng', name: '大乘', layers: 4, exp: 460000000, growth: 1.85,
     lifespan: 15000, monthly: 28000, tribulation: true, powerMult: 1200,
     layerNames: ['初期', '中期', '后期', '圆满'],
-    desc: '大乘之巅，只差一步飞升。可这一步，拦住了万古英杰。',
+    desc: '大乘之巅，只差最后几重天劫。这一步，拦住过多少古修，天机阁的残卷里没有记全。',
     bottleneck: {
       needItem: 'tianjie_dan',
       minDaoxin: 105,
       minLawLevel: 4,
-      trialDesc: '引动九霄灭世雷劫，褪尽最后凡骨。一念成仙，一念灰飞烟灭。',
+      trialDesc: '引动灭世雷劫，褪尽最后的凡骨。过得去便入渡劫，过不去便灰飞烟灭。',
       qualityNames: ['凡劫', '紫霄劫', '混沌神劫'],
     },
   },
@@ -116,15 +116,15 @@ export const REALMS = [
       needItem: 'tianjie_dan',
       minDaoxin: 120,
       minLawLevel: 5,
-      trialDesc: '三劫圆满，法则圆满。斩断尘世羁绊，推开九霄天门飞升真仙。',
+      trialDesc: '三劫圆满，法则圆满。渡过最后一重天劫，便是真仙，人仍在这片天地之间。',
       qualityNames: ['散仙', '地仙', '太乙真仙'],
     },
   },
   {
     id: 'zhenxian', name: '真仙', layers: 1, exp: Infinity, growth: 1,
-    lifespan: 999999, monthly: 1, tribulation: true, powerMult: 10000,
+    lifespan: 60000, monthly: 1, tribulation: true, powerMult: 10000,
     layerNames: ['仙'],
-    desc: '飞升上界。此处之后，已非人间故事——但你可以继续走下去。',
+    desc: '劫后成仙，不离五域。寿元近乎无尽，可以看着一个个纪元过去，路还可以继续走下去。',
     bottleneck: null,
   },
 ];
@@ -151,7 +151,7 @@ export const LAWS = [
   },
   {
     id: 'thunder', name: '雷霆', element: '雷',
-    desc: '掌天罚之威，破邪诛魔，渡劫时雷威减免。',
+    desc: '执天雷之威，破邪诛魔，渡劫时雷威减免。',
     bonus: { atk: 0.09, tribulationResist: 0.08 },
   },
   {
@@ -189,15 +189,15 @@ export const LAWS = [
 export const LAW_BY_ID = Object.fromEntries(LAWS.map((l) => [l.id, l]));
 
 export const DAO_BASE_QUALITIES = [
-  { id: 'fan', name: '凡品道基', mult: 1.0, minScore: 0, desc: '中规中矩的道基，足以支撑常人修至金丹。' },
+  { id: 'fan', name: '凡品道基', mult: 1.0, minScore: 0, desc: '中规中矩的道基，足以支撑常人修至结丹。' },
   { id: 'shang', name: '上品道基', mult: 1.18, minScore: 45, desc: '灵脉澄澈，气海浑厚，同阶斗法占尽上风。' },
   { id: 'tiandao', name: '天道筑基', mult: 1.38, minScore: 80, desc: '引天道垂青铸就的无暇道基，战力与修炼潜力冠绝同辈。' },
 ];
 
 export const GOLDEN_CORE_QUALITIES = [
-  { id: 'xia', name: '下品金丹', mult: 1.0, minScore: 0, desc: '丹成无纹，虽已凝丹，却难以窥见大道极境。' },
-  { id: 'shang', name: '上品金丹', mult: 1.2, minScore: 55, desc: '丹蕴六纹，法力精纯凝练，威压四方群修。' },
-  { id: 'jiuwen', name: '九纹金丹', mult: 1.45, minScore: 90, desc: '万中无一的九纹极品金丹，丹成之日紫气东来三万里。' },
+  { id: 'xia', name: '下品结丹', mult: 1.0, minScore: 0, desc: '丹成无纹，虽已凝丹，却难以窥见大道极境。' },
+  { id: 'shang', name: '上品结丹', mult: 1.2, minScore: 55, desc: '丹蕴六纹，法力精纯凝练，威压四方群修。' },
+  { id: 'jiuwen', name: '九纹结丹', mult: 1.45, minScore: 90, desc: '万中无一的九纹之丹，丹成之日，百里内灵气都朝丹田涌来。' },
 ];
 
 export function realmLabel(char) {

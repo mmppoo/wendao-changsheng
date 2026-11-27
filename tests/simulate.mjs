@@ -14,6 +14,7 @@ function policy(g) {
   const c = s.char;
   const list = g.choices().filter((ch) => !ch.disabled);
   const by = (kw) => list.find((ch) => ch.label.includes(kw));
+  const byId = (id) => list.find((ch) => ch.id === id);
   if (s.scene.result) return { index: 0 };
 
   if (s.scene.id === 'combat') {
@@ -73,7 +74,7 @@ function policy(g) {
     return by('登台应考') || by('改日再来') || list[0];
   }
   if (s.scene.id === 'regionHub') {
-    if (s.turn % 8 === 0 && by('九州舆图')) return by('九州舆图');
+    if (s.turn % 8 === 0 && byId('open_map')) return byId('open_map');
     return by('探索') || by('返回洞府') || list[0];
   }
   if (s.scene.id === 'regionMap') {
@@ -86,11 +87,11 @@ function policy(g) {
 
   // 主界面策略
   if (canBreakthrough(c) && bottleneckStatus(s).ok && by('冲击境界')) return by('冲击境界');
-  if (!c.sectId && by('拜入仙门')) return by('拜入仙门');
+  if (!c.sectId && byId('find_sect')) return byId('find_sect');
   if (canBreakthrough(c) && !bottleneckStatus(s).ok && by('洞府修行')) return by('洞府修行');
   const mod = s.turn % 10;
-  if (mod === 0 && by('九州历练')) return by('九州历练');
-  if ((mod === 3 || mod === 6) && by('仙门大殿')) return by('仙门大殿');
+  if (mod === 0 && byId('open_region')) return byId('open_region');
+  if ((mod === 3 || mod === 6) && byId('open_sect')) return byId('open_sect');
   return by('洞府修行') || list[0];
 }
 

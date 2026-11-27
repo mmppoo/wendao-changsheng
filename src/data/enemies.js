@@ -1,7 +1,9 @@
 import { REALMS } from './realms.js';
+import { NEMESIS_ENEMIES } from './events/nemesis.js';
 
 /**
- * 敌手（v5.0）：共 66 名敌手（完整保留原有 25 名 ID），覆盖炼气至真仙全部十境。
+ * 敌手（v8）：共 66 名敌手，覆盖炼气至真仙全部十境；名字按 docs/WORLD_CANON.md 换成五域实有之物。
+ * 元婴以上的敌手都是世人只在传说、古籍残载里听过的东西（雁门古战场、前朝旧都、流沙、赤霞旧府）。
  * 数值按 REALMS[r].powerMult 严格标定：同阶 hp ≈ 150-210*pm，atk ≈ 14-19*pm，def ≈ 5-8*pm。
  */
 export const ENEMIES = [
@@ -24,27 +26,27 @@ export const ENEMIES = [
   {
     id: 'wild_boar', name: '赤眼山猪', realm: 0, hp: 155, atk: 14, def: 7, exp: 62, stones: 26,
     trait: '护甲', isDemon: true,
-    desc: '常年拱食青牛山灵根的巨彘，獠牙如弯刀，皮糙堪比熟铁。',
+    desc: '夜里下山拱东田灵稻的老野猪，獠牙弯得像镰刀，一身皮糙得刀砍不进。',
   },
   {
-    id: 'mire_toad', name: '腐沼毒蟾', realm: 0, hp: 160, atk: 15, def: 5, exp: 76, stones: 40,
+    id: 'mire_toad', name: '芦荡毒蟾', realm: 0, hp: 160, atk: 15, def: 5, exp: 76, stones: 40,
     trait: '毒煞', isDemon: true,
-    desc: '潜伏于山谷腐泽的磨盘大蟾，鼓腮一喷便是漫天腥臭瘴气。',
+    desc: '伏在菱湖芦荡淤泥里的毒蟾，有磨盘大，鼓腮一喷就是一片腥臭瘴气。',
   },
   {
-    id: 'bone_crow', name: '阴山骨鸦', realm: 0, hp: 135, atk: 17, def: 4, exp: 72, stones: 34,
+    id: 'bone_crow', name: '鹳滩黑鸦', realm: 0, hp: 135, atk: 17, def: 4, exp: 72, stones: 34,
     trait: '快刀', isDemon: true,
-    desc: '羽毛漆黑如铁的食腐妖禽，扑击迅若利箭，专啄修士眉心。',
+    desc: '芦洲鹳滩上吃腐肉吃成了气候的黑鸦，扑下来又快又准，专啄人眉心。',
   },
   {
-    id: 'herb_thief', name: '采药黑修', realm: 0, hp: 175, atk: 16, def: 6, exp: 92, stones: 58,
+    id: 'herb_thief', name: '黑风寨头目', realm: 0, hp: 175, atk: 16, def: 6, exp: 92, stones: 58,
     trait: '快刀', isDemon: true,
-    desc: '游荡于落霞城外十里的蒙面散修，专门尾随采药新人杀人越货。',
+    desc: '在旧河闸口带着十几个水寇收过路钱的头目，学过几手邪门吐纳，专挑落单的采药人和行商下手。',
   },
   {
-    id: 'creek_spirit', name: '溪涧水煞', realm: 0, hp: 195, atk: 18, def: 7, exp: 118, stones: 78,
+    id: 'creek_spirit', name: '骨甲鲵', realm: 0, hp: 195, atk: 18, def: 7, exp: 118, stones: 78,
     trait: '水煞', isDemon: true,
-    desc: '溺亡修士执念与阴寒泉眼合化的水鬼，所过之处灵力凝滞。',
+    desc: '藏在河湾堤下暗渠里的邪祟，灰白骨甲，倒刺骨尾，一甩尾就搅得人周身灵力发滞。',
   },
 
   // ==================== 筑基境 (realm 1, powerMult 2.8) ====================
@@ -54,9 +56,9 @@ export const ENEMIES = [
     desc: '没有脚，飘在半空。它记得自己是怎么死的。',
   },
   {
-    id: 'spirit_ape', name: '通臂灵猿', realm: 1, hp: 400, atk: 42, def: 14, exp: 360, stones: 120,
+    id: 'spirit_ape', name: '涧谷老猿', realm: 1, hp: 400, atk: 42, def: 14, exp: 360, stones: 120,
     trait: '猛扑', isDemon: true,
-    desc: '双臂过膝，筋骨如铁。啸声震落林梢残叶，擅长近身搏杀。',
+    desc: '七十二涧深处吃了多年灵芝的老猿，双臂过膝，筋骨硬如铁，擅长近身扑杀。',
   },
   {
     id: 'beast', name: '铁甲妖猪', realm: 1, hp: 480, atk: 38, def: 22, exp: 420, stones: 140,
@@ -64,9 +66,9 @@ export const ENEMIES = [
     desc: '皮比铁硬，冲起来像一座山。',
   },
   {
-    id: 'poison_python', name: '碧磷毒蟒', realm: 1, hp: 360, atk: 46, def: 12, exp: 400, stones: 160,
+    id: 'poison_python', name: '骨鳞蟒', realm: 1, hp: 360, atk: 46, def: 12, exp: 400, stones: 160,
     trait: '毒煞', isDemon: true,
-    desc: '盘踞于腐沼古木间的十丈大蟒，信子吐出的碧雾能蚀穿护体灵光。',
+    desc: '五丈长、水桶粗的邪祟，灰白骨鳞上带着倒钩，毒涎能蚀穿砖石，怕烟怕火。盘在铜谷废矿的积水里。',
   },
   {
     id: 'cultivator', name: '筑基修士', realm: 1, hp: 440, atk: 50, def: 18, exp: 520, stones: 245,
@@ -74,280 +76,280 @@ export const ENEMIES = [
     desc: '对方的灵气比你先动，说明他的筑基比你稳。',
   },
   {
-    id: 'blood_bat', name: '嗜血蝠妖', realm: 1, hp: 450, atk: 48, def: 15, exp: 460, stones: 185,
+    id: 'blood_bat', name: '废矿血蝠', realm: 1, hp: 450, atk: 48, def: 15, exp: 460, stones: 185,
     trait: '血煞', isDemon: true,
-    desc: '倒悬于妖森溶洞顶端的丈翼赤蝠，声波裂石，吸人精血愈战愈勇。',
+    desc: '倒挂在铜谷废矿洞顶的赤蝠，翼展一丈，叫声能震裂石头，吸了血越打越凶。',
   },
   {
-    id: 'stone_golem', name: '古林石傀', realm: 1, hp: 560, atk: 43, def: 22, exp: 510, stones: 210,
+    id: 'stone_golem', name: '失控炉傀', realm: 1, hp: 560, atk: 43, def: 22, exp: 510, stones: 210,
     trait: '护甲',
-    desc: '古修洞府外残存的青石守卫，灵纹虽黯，双拳仍具开碑裂石之威。',
+    desc: '铜谷炉坊早年试造的石铁傀儡，灵纹走岔，没人管得住，夜里自己出了坊，见活物就砸。',
   },
   {
-    id: 'blade_rogue', name: '断魂刀客', realm: 1, hp: 490, atk: 53, def: 17, exp: 580, stones: 275,
+    id: 'blade_rogue', name: '私矿打手', realm: 1, hp: 490, atk: 53, def: 17, exp: 580, stones: 275,
     trait: '快刀', isDemon: true,
-    desc: '背负宽背鬼头刀的筑基恶徒，出刀狠辣决绝，从不留活口。',
+    desc: '替铜谷私矿看场子的打手，背一把宽背刀，练过邪门刀法，出手从不留活口。',
   },
 
-  // ==================== 金丹境 (realm 2, powerMult 7.5) ====================
+  // ==================== 结丹境 (realm 2, powerMult 7.5) ====================
   {
-    id: 'sea_yaksha', name: '深海夜叉', realm: 2, hp: 1050, atk: 105, def: 36, exp: 1500, stones: 380,
+    id: 'sea_yaksha', name: '深水老蛟', realm: 2, hp: 1050, atk: 105, def: 36, exp: 1500, stones: 380,
     trait: '水煞', isDemon: true,
-    desc: '生于归墟暗流的鳞甲海妖，三叉戟卷起滔天黑浪。',
+    desc: '盘在深潭大江底下几百年的老蛟，鳞甲青黑，一摆尾就卷起半潭冷水。',
   },
   {
-    id: 'ancient_puppet', name: '古修机关傀儡', realm: 2, hp: 1350, atk: 96, def: 62, exp: 1800, stones: 480,
+    id: 'ancient_puppet', name: '古修机关傀', realm: 2, hp: 1350, atk: 96, def: 62, exp: 1800, stones: 480,
     trait: '护甲',
-    desc: '以玄铁与灵核铸成的千年守墓傀儡，无痛无惧，拳风如雷。',
+    desc: '古修留下的铜木石铁傀儡，前朝遗阵、古墓、流沙下的废城里都挖出过。没了号令也不认人，拳风沉重。',
   },
   {
-    id: 'blood_cult', name: '血魔宗弟子', realm: 2, hp: 1150, atk: 124, def: 42, exp: 1900, stones: 560,
+    id: 'blood_cult', name: '赤霞遗脉门人', realm: 2, hp: 1150, atk: 124, def: 42, exp: 1900, stones: 560,
     trait: '血煞', isDemon: true,
-    desc: '他在笑。笑的时候牙齿是红的。',
+    desc: '他在笑。笑的时候牙齿是红的。赤霞遗脉的掠灵法门，靠吸别人的血气养自己。',
   },
   {
-    id: 'jindan_elder', name: '金丹长老', realm: 2, hp: 1480, atk: 142, def: 58, exp: 2600, stones: 940,
+    id: 'jindan_elder', name: '结丹长老', realm: 2, hp: 1480, atk: 142, def: 58, exp: 2600, stones: 940,
     trait: '剑意',
     desc: '对方只是抬了抬手，你脚下的地就陷了三寸。',
   },
   {
-    id: 'coral_demon', name: '珊瑚妖将', realm: 2, hp: 1320, atk: 118, def: 52, exp: 1980, stones: 620,
+    id: 'coral_demon', name: '浊浆水魅', realm: 2, hp: 1320, atk: 118, def: 52, exp: 1980, stones: 620,
     trait: '水煞', isDemon: true,
-    desc: '身披血红珊瑚重甲的东海海族统领，挥戟可唤百丈寒潮压境。',
+    desc: '上游矿浆在涧底淤了几十年，淤出这样一团阴物。它裹着浊水扑人，沾上了，灵力就凝住。',
   },
   {
-    id: 'thunder_roc', name: '裂云雷鹏', realm: 2, hp: 1240, atk: 136, def: 45, exp: 2200, stones: 700,
+    id: 'thunder_roc', name: '九峰雷雕', realm: 2, hp: 1240, atk: 136, def: 45, exp: 2200, stones: 700,
     trait: '猛扑', isDemon: true,
-    desc: '翼展十丈的紫羽大禽，掠空时电弧炸响，爪下不知撕碎多少金丹修士。',
+    desc: '在玄衡九峰绝顶筑巢的大雕，翼展三丈，雷雨天出巢，爪下撕过不少结丹修士。',
   },
   {
-    id: 'corpse_general', name: '阴煞尸将', realm: 2, hp: 1540, atk: 124, def: 59, exp: 2380, stones: 780,
+    id: 'corpse_general', name: '古矿阴尸', realm: 2, hp: 1540, atk: 124, def: 59, exp: 2380, stones: 780,
     trait: '毒煞', isDemon: true,
-    desc: '古战场阴脉养出的金甲旱魃，举手黑雾弥漫，尸毒侵骨难解。',
+    desc: '玄衡古矿塌方时压死的人，被阴脉泡了上百年，皮肉发黑不腐，一抬手便是一片尸毒黑雾。',
   },
   {
-    id: 'sword_rogue', name: '孤鸿剑修', realm: 2, hp: 1360, atk: 142, def: 49, exp: 2520, stones: 860,
+    id: 'sword_rogue', name: '沙道刀客', realm: 2, hp: 1360, atk: 142, def: 49, exp: 2520, stones: 860,
     trait: '剑意',
-    desc: '无门无派的斗笠金丹剑客，一生只修一剑，剑出如孤鸿剪水。',
+    desc: '从西陲流沙一路走到东岭的刀客，替沙道势力收过井钱，一生只练一刀。',
   },
 
   // ==================== 元婴境 (realm 3, powerMult 20) ====================
   {
-    id: 'demon_general', name: '妖将', realm: 3, hp: 3200, atk: 290, def: 125, exp: 8200, stones: 1350,
+    id: 'demon_general', name: '朔川狼王', realm: 3, hp: 3200, atk: 290, def: 125, exp: 8200, stones: 1350,
     trait: '猛扑', isDemon: true,
-    desc: '半人半兽，甲胄上挂着七颗头颅。',
+    desc: '朔部老人说草滩上有一头活了几百年的白狼，比马还高，冬天带着狼群袭牧帐。见过它的人不多，活下来的更少。',
   },
   {
-    id: 'ghost_king', name: '鬼王', realm: 3, hp: 3600, atk: 330, def: 110, exp: 9600, stones: 1650,
+    id: 'ghost_king', name: '千魂怨主', realm: 3, hp: 3600, atk: 330, def: 110, exp: 9600, stones: 1650,
     trait: '噬灵', isDemon: true,
-    desc: '它开口时，你听见了一千个人的惨叫。',
+    desc: '死在同一处的上千个人，怨气聚成了它。雁门关外、旧河闸底，老人都说有这样的东西。它开口时，你听见了一千个人的惨叫。',
   },
   {
-    id: 'abyss_leviathan', name: '归墟巨鲲', realm: 3, hp: 4400, atk: 310, def: 160, exp: 11500, stones: 2200,
+    id: 'abyss_leviathan', name: '千年巨鳌', realm: 3, hp: 4400, atk: 310, def: 160, exp: 11500, stones: 2200,
     trait: '护甲', isDemon: true,
-    desc: '潜伏于无尽海眼之下的太古凶兽，一吸便吞尽百里灵气。',
+    desc: '老人说它睡在深水或冻土底下已有上千年，背甲比城砖还厚。它翻一回身，岸就塌一段，关墙就裂一道。',
   },
   {
-    id: 'blood_elder', name: '血海长老', realm: 3, hp: 3800, atk: 360, def: 135, exp: 12000, stones: 2550,
+    id: 'blood_elder', name: '掠灵血修', realm: 3, hp: 3800, atk: 360, def: 135, exp: 12000, stones: 2550,
     trait: '血煞', isDemon: true,
-    desc: '周身环绕九道血河幡影，元婴化作猩红骷髅，杀气凝若实质。',
+    desc: '把掠灵邪法修到元婴的老人，周身缠着血气，杀意重得压人。传说他的法门出自赤霞遗脉。',
   },
   {
-    id: 'bone_dragon', name: '冥海骨蛟', realm: 3, hp: 3920, atk: 345, def: 146, exp: 10800, stones: 2050,
+    id: 'bone_dragon', name: '冰河骨蛟', realm: 3, hp: 3920, atk: 345, def: 146, exp: 10800, stones: 2050,
     trait: '水煞', isDemon: true,
-    desc: '陨落蛟龙骸骨浸润归墟黑水千年复生，龙吟所至浪涌如山。',
+    desc: '朔川冰河底下冻着的一副蛟骨，开春冰裂时会自己游动，浪头打上岸，就是一片冰碴。',
   },
   {
-    id: 'soul_reaper', name: '九幽勾魂使', realm: 3, hp: 3420, atk: 365, def: 118, exp: 10400, stones: 1850,
+    id: 'soul_reaper', name: '古战场阴兵', realm: 3, hp: 3420, atk: 365, def: 118, exp: 10400, stones: 1850,
     trait: '噬灵', isDemon: true,
-    desc: '玄袍锁链的九幽阴司战将，锁魂链一抖便直摄修士神魂灵力。',
+    desc: '雁门外古战场上夜里列队的阴兵，铁甲锈穿，锁链一抖，就抽走人的灵力。',
   },
   {
-    id: 'iron_titan', name: '机关巨神傀', realm: 3, hp: 4180, atk: 325, def: 158, exp: 11400, stones: 2350,
+    id: 'iron_titan', name: '攻城古傀', realm: 3, hp: 4180, atk: 325, def: 158, exp: 11400, stones: 2350,
     trait: '护甲',
-    desc: '高达十丈的玄铁灵核战傀，胸膛阵图流转，堪称元婴境移动堡垒。',
+    desc: '军中传说宁高祖攻克旧都时，山中异人造过攻城的铁傀。雁门外还躺着一具残骸，高十丈，胸口的阵图仍在转。',
   },
   {
-    id: 'crimson_sword', name: '血衣剑尊', realm: 3, hp: 3580, atk: 378, def: 132, exp: 12600, stones: 2750,
+    id: 'crimson_sword', name: '血衣叛将', realm: 3, hp: 3580, atk: 378, def: 132, exp: 12600, stones: 2750,
     trait: '剑意', isDemon: true,
-    desc: '堕入魔道的前代剑宗弃徒，赤袍猎猎，每一剑皆斩向道心破绽。',
+    desc: '前朝一位雁门守将开关降敌，被斩于关下。边军说他的刀意至今未散，那件红袍还在关外走。',
   },
 
   // ==================== 化神境 (realm 4, powerMult 55) ====================
   {
     id: 'demon_king', name: '妖王', realm: 4, hp: 9600, atk: 860, def: 360, exp: 42000, stones: 3600,
     trait: '天威', isDemon: true,
-    desc: '它站起来的时候，天暗了一半。',
+    desc: '古籍残载的妖王，说它在宁高祖起兵之前占着河洛以西的群山。它站起来的时候，天暗了一半。',
   },
   {
-    id: 'sword_phantom', name: '太古剑灵残影', realm: 4, hp: 8800, atk: 980, def: 320, exp: 48000, stones: 4500,
+    id: 'sword_phantom', name: '剑冢残意', realm: 4, hp: 8800, atk: 980, def: 320, exp: 48000, stones: 4500,
     trait: '剑意',
-    desc: '上古剑仙遗留在剑冢中的一缕执念，人未至，剑气已割裂虚空。',
+    desc: '前朝旧都废墟里有一座剑冢，冢中一位古剑客的执念未散。人还没到，剑气先到。',
   },
   {
-    id: 'star_golem', name: '观星古守卫', realm: 4, hp: 10600, atk: 880, def: 415, exp: 46500, stones: 4100,
+    id: 'star_golem', name: '观星台古铜人', realm: 4, hp: 10600, atk: 880, def: 415, exp: 46500, stones: 4100,
     trait: '护甲',
-    desc: '上古星宫遗留的青铜巨人，体表镶嵌星辰砂，不动如岳、动若奔雷。',
+    desc: '观星台大观星台地底镇着的前朝铜人，体表嵌满磁砂。不动时稳如山岳，动起来快得惊人。',
   },
   {
-    id: 'venom_wyrm', name: '万毒黑龙', realm: 4, hp: 9900, atk: 935, def: 350, exp: 49500, stones: 4900,
+    id: 'venom_wyrm', name: '毒渊老蛟', realm: 4, hp: 9900, atk: 935, def: 350, exp: 49500, stones: 4900,
     trait: '毒煞', isDemon: true,
-    desc: '盘踞北荒毒渊的化神孽龙，龙息过处百里草木化作枯骨。',
+    desc: '盘在深渊淤泥下的老蛟，河洛古漕渠、铜谷废矿的毒渊里都有人见过。吐一口气，两岸百里草木枯死。',
   },
   {
-    id: 'blood_fiend_king', name: '血渊魔主', realm: 4, hp: 9400, atk: 995, def: 335, exp: 52500, stones: 5800,
+    id: 'blood_fiend_king', name: '血祭邪主', realm: 4, hp: 9400, atk: 995, def: 335, exp: 52500, stones: 5800,
     trait: '血煞', isDemon: true,
-    desc: '统御北荒一方魔渊的化神巨擘，周身血浪翻涌，吞噬生机如饮甘露。',
+    desc: '古籍里记过的一种邪修，借血祭撕开裂缝吸取灵气，吞人生机如喝水。',
   },
   {
-    id: 'void_stalker', name: '裂界暗影', realm: 4, hp: 8600, atk: 1015, def: 305, exp: 51000, stones: 5300,
+    id: 'void_stalker', name: '裂缝影祟', realm: 4, hp: 8600, atk: 1015, def: 305, exp: 51000, stones: 5300,
     trait: '虚空', isDemon: true,
-    desc: '藏身空间夹缝的诡谲影魔，身形飘忽不定，寻常神通每每落空。',
+    desc: '从空间裂缝里爬出来的邪祟，身形忽隐忽现，寻常神通打上去多半落空。',
   },
   {
-    id: 'thunder_sovereign', name: '紫霄雷灵', realm: 4, hp: 10200, atk: 965, def: 380, exp: 55000, stones: 6300,
+    id: 'thunder_sovereign', name: '雷槐古灵', realm: 4, hp: 10200, atk: 965, def: 380, exp: 55000, stones: 6300,
     trait: '天威',
-    desc: '万年雷池孕育而成的先天雷灵，举手引动天罚雷威，慑人心魄。',
+    desc: '郑邑郊外一株被雷劈了上千年仍未死的古槐，槐心里生出了雷灵，抬手就是一道天雷。',
   },
 
   // ==================== 炼虚境 (realm 5, powerMult 150) ====================
   {
-    id: 'void_fiend', name: '域外虚空魔', realm: 5, hp: 25500, atk: 2350, def: 920, exp: 190000, stones: 8200,
+    id: 'void_fiend', name: '裂缝魔物', realm: 5, hp: 25500, atk: 2350, def: 920, exp: 190000, stones: 8200,
     trait: '虚空', isDemon: true,
-    desc: '从界壁裂隙渗入的无相魔物，身形在虚实之间闪烁，专食修士法则。',
+    desc: '观星台推算的大裂缝里渗出来的东西，没有定形，在虚实之间闪烁，专吃修士的法则感悟。',
   },
   {
-    id: 'heaven_envoy', name: '上界巡查使', realm: 5, hp: 28500, atk: 2600, def: 1100, exp: 230000, stones: 11500,
+    id: 'heaven_envoy', name: '前朝镇陵将', realm: 5, hp: 28500, atk: 2600, def: 1100, exp: 230000, stones: 11500,
     trait: '天威',
-    desc: '身披银甲、手持天律法旨的巡界使者，俯瞰下界生灵如视蝼蚁。',
+    desc: '前朝皇陵的守陵石将，传说以帝王之气养了上千年。它看来人的眼神，和看地上的蚂蚁没有两样。',
   },
   {
-    id: 'abyss_kraken', name: '太虚魔章', realm: 5, hp: 29800, atk: 2420, def: 1080, exp: 215000, stones: 9400,
+    id: 'abyss_kraken', name: '河洛古鼋', realm: 5, hp: 29800, atk: 2420, def: 1080, exp: 215000, stones: 9400,
     trait: '水煞', isDemon: true,
-    desc: '沉眠于归墟最底层的太古魔蛸，八条触腕遮天蔽海，卷动无尽寒潮。',
+    desc: '河洛城下古渠深处的老鼋，背壳大如晒场，翻一回身，浊浪就漫过两岸。',
   },
   {
-    id: 'blade_saint_shade', name: '陨落剑圣影', realm: 5, hp: 24800, atk: 2820, def: 940, exp: 240000, stones: 12400,
+    id: 'blade_saint_shade', name: '苍和剑客遗影', realm: 5, hp: 24800, atk: 2820, def: 940, exp: 240000, stones: 12400,
     trait: '剑意',
-    desc: '万年前陨落中州的绝世剑圣残影，虽无血肉，剑光依旧锋寒彻骨。',
+    desc: '苍和末年群雄割据时，一位剑客死在中州。他早没了血肉，剑光还是冷的。',
   },
   {
-    id: 'nether_marshal', name: '黄泉镇狱帅', realm: 5, hp: 27600, atk: 2560, def: 1040, exp: 225000, stones: 10600,
+    id: 'nether_marshal', name: '地宫殉葬将', realm: 5, hp: 27600, atk: 2560, def: 1040, exp: 225000, stones: 10600,
     trait: '噬灵', isDemon: true,
-    desc: '九幽冥府坐镇一方的炼虚大帅，战戟挥落便引黄泉倒灌、灵元枯竭。',
+    desc: '前朝旧都地宫里殉葬的将军，长戟一挥，四下的灵气就被抽干。',
   },
   {
-    id: 'mirror_demon', name: '幻界心魔尊', realm: 5, hp: 26400, atk: 2680, def: 960, exp: 250000, stones: 13600,
+    id: 'mirror_demon', name: '魔种化身', realm: 5, hp: 26400, atk: 2680, def: 960, exp: 250000, stones: 13600,
     trait: '心魔', isDemon: true,
-    desc: '以万千修士道心裂隙为食的无形魔尊，专能映出世人最深沉的执念。',
+    desc: '被魔种吃空的人，只剩一张脸。它照得出旁人心里最怕的东西。',
   },
 
   // ==================== 合体境 (realm 6, powerMult 420) ====================
   {
-    id: 'old_monster', name: '万古老怪', realm: 6, hp: 74000, atk: 6800, def: 2800, exp: 920000, stones: 17500,
+    id: 'old_monster', name: '流沙老怪', realm: 6, hp: 74000, atk: 6800, def: 2800, exp: 920000, stones: 17500,
     trait: '噬灵', isDemon: true,
-    desc: '它活了太久，久到已经不记得自己是什么。',
+    desc: '它活了太久，久到已经不记得自己是什么。驼商说它住在沙州以西的流沙底下。',
   },
   {
-    id: 'chaos_beast', name: '太古混沌兽', realm: 6, hp: 86000, atk: 7400, def: 3400, exp: 1150000, stones: 22500,
+    id: 'chaos_beast', name: '地脉古兽', realm: 6, hp: 86000, atk: 7400, def: 3400, exp: 1150000, stones: 22500,
     trait: '护甲', isDemon: true,
-    desc: '自昆仑墟深渊苏醒的洪荒遗种，吐息之间五行逆乱、法则崩塌。',
+    desc: '赤霞旧府灵根崩毁以后，从地脉深处醒过来的古兽，西陲沙下、北境雪原都有人撞见过。它一喘气，罗盘乱转，四下灵气倒流。',
   },
   {
-    id: 'kunlun_guardian', name: '昆仑古玉神将', realm: 6, hp: 82000, atk: 7100, def: 3200, exp: 1050000, stones: 20500,
+    id: 'kunlun_guardian', name: '沙州古玉傀', realm: 6, hp: 82000, atk: 7100, def: 3200, exp: 1050000, stones: 20500,
     trait: '护甲',
-    desc: '守护昆仑玉虚遗殿的合体神将，浑身古玉铭文不灭，重戟镇山河。',
+    desc: '沙州绿洲地底一座古城的守卫，用西陲美玉雕成，周身铭文不灭，持重戟守着城门。',
   },
   {
-    id: 'crimson_asura', name: '修罗古战魔', realm: 6, hp: 76000, atk: 7850, def: 2650, exp: 1180000, stones: 25500,
+    id: 'crimson_asura', name: '白骨井魔', realm: 6, hp: 76000, atk: 7850, def: 2650, exp: 1180000, stones: 25500,
     trait: '血煞', isDemon: true,
-    desc: '三头六臂的太古修罗魔将，浴血狂战不休，每一击皆带血海倾覆之势。',
+    desc: '十三大井争水那些年，死在井边的人白骨露于野。白骨堆里聚出了这东西，浴血不休。',
   },
   {
-    id: 'star_devourer', name: '噬星天妖', realm: 6, hp: 79000, atk: 7500, def: 2900, exp: 1120000, stones: 24000,
+    id: 'star_devourer', name: '沙暴妖影', realm: 6, hp: 79000, atk: 7500, def: 2900, exp: 1120000, stones: 24000,
     trait: '虚空', isDemon: true,
-    desc: '横渡界海而来的吞星异兽，周身星涡旋转，能令攻击陷入无尽虚空。',
+    desc: '驼商说沙暴里有东西。看不见形状，刀砍进去如砍空处，人马却一队一队地没了。',
   },
   {
-    id: 'frost_empress', name: '玄冥寒帝残魂', realm: 6, hp: 72000, atk: 7650, def: 2750, exp: 1200000, stones: 27500,
+    id: 'frost_empress', name: '雪山寒魄', realm: 6, hp: 72000, atk: 7650, def: 2750, exp: 1200000, stones: 27500,
     trait: '水煞',
-    desc: '冰封于昆仑雪崖的太古女帝神魂，素手轻拂便冻结万里灵气长河。',
+    desc: '西陲雪山顶上一缕古修残魂，在冰里冻了几千年。她一抬手，雪水便停在半空结成冰。',
   },
 
   // ==================== 大乘境 (realm 7, powerMult 1200) ====================
   {
-    id: 'ancient_corpse', name: '古仙尸傀', realm: 7, hp: 220000, atk: 20000, def: 8800, exp: 4800000, stones: 35000,
+    id: 'ancient_corpse', name: '赤霞古修遗蜕', realm: 7, hp: 220000, atk: 20000, def: 8800, exp: 4800000, stones: 35000,
     trait: '毒煞', isDemon: true,
-    desc: '陨落于上古仙战的大能遗蜕，虽灵智已灭，残存仙威仍令天地战栗。',
+    desc: '赤霞旧府灵根崩毁那日死在大殿里的古修。灵智早已灭了，残存的威压仍叫人站不住。',
   },
   {
-    id: 'immortal_sword_remnant', name: '仙剑冢镇灵', realm: 7, hp: 205000, atk: 22400, def: 7800, exp: 5200000, stones: 39000,
+    id: 'immortal_sword_remnant', name: '流沙剑冢镇灵', realm: 7, hp: 205000, atk: 22400, def: 7800, exp: 5200000, stones: 39000,
     trait: '剑意',
-    desc: '由昆仑百柄断仙剑合凝而成的无上剑灵，剑意纵横处万法皆断。',
+    desc: '白驼废墟有一处剑冢，上百柄断剑埋在沙下，剑气聚成了它。剑意所到，法术尽断。',
   },
   {
-    id: 'void_emperor', name: '虚空魔帝', realm: 7, hp: 235000, atk: 21200, def: 8400, exp: 5500000, stones: 45000,
+    id: 'void_emperor', name: '裂缝彼端之物', realm: 7, hp: 235000, atk: 21200, def: 8400, exp: 5500000, stones: 45000,
     trait: '虚空', isDemon: true,
-    desc: '端坐域外暗渊的大乘魔帝投影，抬手撕裂界壁，视下界苍生如草芥。',
+    desc: '观星台古档只记了一句：大裂缝的另一头有东西在看。偶尔它伸过一只手来，界壁就破一个洞。',
   },
   {
-    id: 'blood_ocean_lord', name: '血海古祖', realm: 7, hp: 242000, atk: 21800, def: 8200, exp: 5600000, stones: 48000,
+    id: 'blood_ocean_lord', name: '赤霞掠灵祖', realm: 7, hp: 242000, atk: 21800, def: 8200, exp: 5600000, stones: 48000,
     trait: '血煞', isDemon: true,
-    desc: '太古血海孕育的滔天魔祖，挥袖红潮蔽日，血河不干则魔躯难灭。',
+    desc: '赤霞遗脉奉为祖师的古修。传说他掠尽一方灵气养出一片血海，血海不干，他就不死。',
   },
   {
-    id: 'golden_dragon_king', name: '太古金龙王', realm: 7, hp: 250000, atk: 20800, def: 9400, exp: 5900000, stones: 51000,
+    id: 'golden_dragon_king', name: '沙海金鳞蛟', realm: 7, hp: 250000, atk: 20800, def: 9400, exp: 5900000, stones: 51000,
     trait: '天威', isDemon: true,
-    desc: '盘踞昆仑龙脉极巅的五爪金龙，龙威浩荡如天宪，俯瞰天下妖族。',
+    desc: '驼商传说沙海底下有一条金鳞大蛟，顺着地脉游走。它抬头的地方，沙丘一夜之间就挪了位。',
   },
   {
-    id: 'yin_yang_elder', name: '阴阳混元古尊', realm: 7, hp: 228000, atk: 21500, def: 8600, exp: 5400000, stones: 42000,
+    id: 'yin_yang_elder', name: '绿洲避世古修', realm: 7, hp: 228000, atk: 21500, def: 8600, exp: 5400000, stones: 42000,
     trait: '噬灵',
-    desc: '避世三万载的大乘老尊，袖藏太极双鱼，吞吐之间化去诸般神通灵力。',
+    desc: '在沙州绿洲深处避世三千年的古修，袖里藏一对阴阳鱼佩，吞吐之间化去旁人的神通灵力。',
   },
 
   // ==================== 渡劫境 (realm 8, powerMult 3500) ====================
   {
-    id: 'sky_arbiter', name: '九霄天门裁决者', realm: 8, hp: 680000, atk: 62000, def: 26000, exp: 22000000, stones: 65000,
+    id: 'sky_arbiter', name: '赤霞旧府守府傀儡', realm: 8, hp: 680000, atk: 62000, def: 26000, exp: 22000000, stones: 65000,
     trait: '天威',
-    desc: '镇守南天门外的无情雷铠巨人，唯有击败它，方有资格叩响真仙之门。',
+    desc: '赤霞旧府山门前的守府巨傀，雷铠至今未锈，仍按几千年前的旧令拦住每一个来人。',
   },
   {
-    id: 'thunder_tribulation_avatar', name: '紫霄天劫法身', realm: 8, hp: 640000, atk: 64500, def: 24000, exp: 24000000, stones: 78000,
+    id: 'thunder_tribulation_avatar', name: '天火余烬', realm: 8, hp: 640000, atk: 64500, def: 24000, exp: 24000000, stones: 78000,
     trait: '天威',
-    desc: '九重天劫雷海显化的人形法身，手握紫霄雷戟，代天考验渡劫者道骨。',
+    desc: '当年赤霞诸派引下的天火没有烧尽，在流沙底下烧了几千年，聚成人形，手里握着一道雷火。',
   },
   {
-    id: 'fallen_immortal', name: '坠世散仙', realm: 8, hp: 610000, atk: 66000, def: 23000, exp: 25000000, stones: 84000,
+    id: 'fallen_immortal', name: '赤霞末代剑主', realm: 8, hp: 610000, atk: 66000, def: 23000, exp: 25000000, stones: 84000,
     trait: '剑意',
-    desc: '飞升失败而转修九劫散仙的绝世剑修，剑中蕴含滔天不甘与寂灭仙意。',
+    desc: '灵根崩毁那日没有逃走的剑修，剑里压着几千年的不甘。',
   },
   {
-    id: 'chaos_leviathan', name: '混沌吞界鲲', realm: 8, hp: 725000, atk: 59000, def: 27500, exp: 26500000, stones: 92000,
+    id: 'chaos_leviathan', name: '地底巨兽', realm: 8, hp: 725000, atk: 59000, def: 27500, exp: 26500000, stones: 92000,
     trait: '护甲', isDemon: true,
-    desc: '遨游于九霄星海边缘的太初巨兽，身躯横亘千里，鳞甲硬撼仙雷无损。',
+    desc: '驼商和牧人都说过的地底巨兽，能一口吞下整支驼队，身躯横亘数里，鳞甲硬接雷火不损。',
   },
   {
-    id: 'karmic_demon_lord', name: '万劫心魔皇', realm: 8, hp: 595000, atk: 63500, def: 22500, exp: 23500000, stones: 72000,
+    id: 'karmic_demon_lord', name: '崩脉怨魔', realm: 8, hp: 595000, atk: 63500, def: 22500, exp: 23500000, stones: 72000,
     trait: '心魔', isDemon: true,
-    desc: '凝聚古今所有渡劫败亡者怨念的魔皇，直击道心最隐秘的畏惧。',
+    desc: '灵根崩毁时，千里沃壤里死去的人和物，怨念聚成了它。它专挑人心里最隐秘的怕。',
   },
 
   // ==================== 真仙境 (realm 9, powerMult 10000) ====================
   {
-    id: 'celestial_warden', name: '南天门仙将', realm: 9, hp: 1750000, atk: 168000, def: 68000, exp: 90000000, stones: 118000,
+    id: 'celestial_warden', name: '赤霞镇殿古像', realm: 9, hp: 1750000, atk: 168000, def: 68000, exp: 90000000, stones: 118000,
     trait: '天威',
-    desc: '身披九霄金鳞仙甲的天庭守将，手持镇界长戈，每一击皆带仙律镇压。',
+    desc: '赤霞旧府主殿的镇殿铜像，诸派合铸，传说灌过地心磁砂元精。它每一击都压着整座旧府的分量。',
   },
   {
-    id: 'primordial_sword_immortal', name: '太古剑仙意念', realm: 9, hp: 1620000, atk: 186000, def: 62000, exp: 105000000, stones: 138000,
+    id: 'primordial_sword_immortal', name: '赤霞开府剑痕', realm: 9, hp: 1620000, atk: 186000, def: 62000, exp: 105000000, stones: 138000,
     trait: '剑意',
-    desc: '留名青史的太古剑仙映照九霄的一缕道身，青衫一挥，星河为之断流。',
+    desc: '赤霞旧府开府祖师留在殿壁上的一道剑痕，几千年过去，剑意仍在。走近的人会看见一个青衫背影抬起手来。',
   },
   {
-    id: 'abyssal_immortal_demon', name: '域外魔仙', realm: 9, hp: 1980000, atk: 178000, def: 74000, exp: 115000000, stones: 156000,
+    id: 'abyssal_immortal_demon', name: '磁砂元精之灵', realm: 9, hp: 1980000, atk: 178000, def: 74000, exp: 115000000, stones: 156000,
     trait: '虚空', isDemon: true,
-    desc: '自上界堕入界海深渊的真仙级魔主，虚实莫测，举念可覆灭一方下界。',
+    desc: '赤霞诸派当年争夺的那团地心磁砂元精，灵根崩毁之后有了灵性，虚实不定，一个念头就能毁掉一片绿洲。',
   },
 
   // ==================== 特殊：心魔（动态同步玩家当前境界 powerMult） ====================
@@ -358,6 +360,8 @@ export const ENEMIES = [
   },
 ];
 
+// v8：宿敌线的敌手（宿敌本人带 isRival，显示其名、不随境界缩放）
+ENEMIES.push(...NEMESIS_ENEMIES);
 export const ENEMY_BY_ID = Object.fromEntries(ENEMIES.map((e) => [e.id, e]));
 
 export function scaleEnemy(def, realm) {

@@ -10,7 +10,7 @@ import { ORIGINS } from './data/origins.js';
 import {
   REALMS, realmLabel, LAW_BY_ID, LAW_STAGES, DAO_BASE_QUALITIES, GOLDEN_CORE_QUALITIES,
 } from './data/realms.js';
-import { SECTS, SECT_BY_ID, SECT_RANKS } from './data/sects.js';
+import { SECTS, SECT_BY_ID, SECT_RANKS, sectRankName } from './data/sects.js';
 import { REGIONS, REGION_BY_ID } from './data/regions.js';
 import { ALL_TECHNIQUES } from './data/techniques.js';
 import { NPCS } from './data/npcs.js';
@@ -18,8 +18,15 @@ import { ACHIEVEMENTS } from './data/achievements.js';
 import { ENDINGS } from './data/endings.js';
 import { ITEM_BY_ID } from './data/items.js';
 import { TALENTS } from './data/talents.js';
+import {
+  migrateMeta, originUnlocked, goldenFingerUnlocked, ORIGIN_UNLOCKS, GF_UNLOCKS, maxSelectableJieshu, jieshuMods, JIESHU_DESC,
+  talentLevel, talentCost, talentScale, talentTotalCost, buyTalentLevel, TALENT_MAX_LEVEL,
+} from './engine/meta.js';
 import { GOLDEN_FINGERS, GOLDEN_FINGER_BY_ID, PET_BY_ID } from './data/golden_fingers.js';
 import { SpiritCanvas, SoundFX, triggerScreenFx } from './ui/fx.js';
+import { handbookEntries, worldYear, DOMAIN_NAMES } from './engine/history.js';
+import { ERA1_CHAPTERS } from './data/history/chronicle.js';
+import { ERA1_FINALE } from './data/history/era1_b076_b100.js';
 import { PixelStage, sceneThemeFor, renderPixelPortrait, PIXEL_ICONS } from './ui/pixelScene.js';
 
 function formatNum(n) {
@@ -43,13 +50,14 @@ const ui = {
   gender: '女',
   rolledRoot: null,
   rerollUsed: false,
-  codexTab: 'achievements',
+  codexTab: 'handbook',
   saveMode: 'save',
   mobileTab: 'story',
   logExpand: false,
   rollTimer: null,
   seenAchIds: null,
   lastSnapshot: null,
+  jieshu: 0,
 };
 
 /* ---------------------------------- 启动 ---------------------------------- */
@@ -102,38 +110,72 @@ function showScreen(which) {
 
 /* ---------------------------------- 建角 ---------------------------------- */
 
-function initCreate() {
+/** v8：出身、机缘按历世成就解锁；未解锁的灰显并写明解锁条件。每次进建角页都重画。 */
+function renderCreateChoices() {
+  const meta = store.meta() || {};
+  migrateMeta(meta);
   const grid = $('origin-grid');
   grid.innerHTML = '';
   ORIGINS.forEach((o) => {
+    const open = originUnlocked(meta, o.id);
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'origin-card';
+    btn.className = 'origin-card' + (open ? '' : ' is-locked') + (ui.originId === o.id ? ' is-active' : '');
     btn.dataset.origin = o.id;
     btn.setAttribute('role', 'radio');
-    btn.setAttribute('aria-checked', 'false');
-    btn.innerHTML = `<h4>${o.name}</h4><p>${o.desc}</p><span class="origin-hook">${o.hook}</span>`;
-    btn.addEventListener('click', () => { sfx.play('click'); selectOrigin(o.id); });
+    btn.setAttribute('aria-checked', String(ui.originId === o.id));
+    btn.disabled = !open;
+    btn.innerHTML = open
+      ? `<h4>${o.name}</h4><p>${o.desc}</p><span class="origin-hook">${o.hook}</span>`
+      : `<h4>${o.name}</h4><p>未解锁</p><span class="origin-hook">解锁：${ORIGIN_UNLOCKS[o.id]?.hint || ''}</span>`;
+    if (open) btn.addEventListener('click', () => { sfx.play('click'); selectOrigin(o.id); });
     grid.appendChild(btn);
   });
 
+  if (!goldenFingerUnlocked(meta, ui.goldenFingerId)) ui.goldenFingerId = 'gf_bottle';
   const gfGrid = $('gf-grid');
   gfGrid.innerHTML = '';
   GOLDEN_FINGERS.forEach((gf) => {
+    const open = goldenFingerUnlocked(meta, gf.id);
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'gf-card' + (gf.id === ui.goldenFingerId ? ' is-active' : '');
+    btn.className = 'gf-card' + (gf.id === ui.goldenFingerId ? ' is-active' : '') + (open ? '' : ' is-locked');
     btn.dataset.gf = gf.id;
     btn.setAttribute('role', 'radio');
     btn.setAttribute('aria-checked', String(gf.id === ui.goldenFingerId));
-    btn.innerHTML = `
+    btn.disabled = !open;
+    btn.innerHTML = open ? `
       <div class="gf-top"><b>${gf.name}</b><span class="gf-tag">${gf.tag}</span></div>
       <p>${gf.desc}</p>
       <span class="gf-perk">${gf.perk}</span>
+    ` : `
+      <div class="gf-top"><b>${gf.name}</b><span class="gf-tag">未解锁</span></div>
+      <span class="gf-perk">解锁：${GF_UNLOCKS[gf.id]?.hint || ''}</span>
     `;
-    btn.addEventListener('click', () => { sfx.play('click'); selectGoldenFinger(gf.id); });
+    if (open) btn.addEventListener('click', () => { sfx.play('click'); selectGoldenFinger(gf.id); });
     gfGrid.appendChild(btn);
   });
+
+  // 劫数：活过第一千年后开放
+  const maxJ = maxSelectableJieshu(meta);
+  $('jieshu-block').hidden = maxJ <= 0;
+  const range = $('jieshu-range');
+  range.max = String(maxJ);
+  ui.jieshu = Math.min(ui.jieshu || 0, maxJ);
+  range.value = String(ui.jieshu);
+  const showJ = () => {
+    const j = Number(range.value) || 0;
+    ui.jieshu = j;
+    const m = jieshuMods(j);
+    $('jieshu-label').textContent = j === 0 ? '常世' : `${j} 重劫 · 轮回点 ×${m.karmaMult.toFixed(2)}`;
+    $('jieshu-desc').textContent = JIESHU_DESC[j] || '';
+  };
+  range.oninput = showJ;
+  showJ();
+}
+
+function initCreate() {
+  renderCreateChoices();
 
   document.querySelectorAll('.seg').forEach((seg) => {
     seg.addEventListener('click', () => {
@@ -152,7 +194,7 @@ function initCreate() {
     buyTalent(btn.dataset.talent);
   });
   $('btn-back-title').addEventListener('click', () => { seedTitleMeta(); showScreen('title'); });
-  $('btn-new').addEventListener('click', () => { sfx.play('click'); renderTalents(); showScreen('create'); });
+  $('btn-new').addEventListener('click', () => { sfx.play('click'); renderTalents(); renderCreateChoices(); showScreen('create'); });
   $('btn-continue').addEventListener('click', () => { sfx.play('chime'); continueGame(); });
   $('btn-gallery').addEventListener('click', () => { sfx.play('click'); openCodex(); });
 
@@ -178,7 +220,7 @@ function updateCreateHint() {
   const o = ORIGINS.find((x) => x.id === ui.originId);
   const gf = GOLDEN_FINGER_BY_ID[ui.goldenFingerId];
   if (!o) {
-    $('create-hint').textContent = `已择伴生机缘「${gf?.name || '掌天小绿瓶'}」，请再选中一个出身。`;
+    $('create-hint').textContent = `已择伴生机缘「${gf?.name || ''}」，请再选中一个出身。`;
     return;
   }
   $('create-hint').textContent = `${o.name} × ${gf?.name || ''} — 点击开启测灵阵。`;
@@ -186,16 +228,23 @@ function updateCreateHint() {
 
 function renderTalents() {
   const meta = store.meta() || { karmaPoints: 0, talents: [] };
+  migrateMeta(meta);
   const points = meta.karmaPoints || 0;
-  const owned = meta.talents || [];
-  $('karma-points').textContent = `轮回点 ${points} · 已点亮 ${owned.length}/${TALENTS.length}`;
+  const spent = TALENTS.reduce((a, t) => {
+    let x = 0;
+    for (let l = 1; l <= talentLevel(meta, t.id); l++) x += talentCost(t, l);
+    return a + x;
+  }, 0);
+  $('karma-points').textContent = `轮回点 ${points} · 已投入 ${spent}/${talentTotalCost()}`;
   $('talent-grid').innerHTML = TALENTS.map((t) => {
-    const on = owned.includes(t.id);
-    const afford = points >= t.cost;
-    return `<button type="button" class="talent ${on ? 'is-on' : ''}" data-talent="${t.id}"
-      ${on || !afford ? 'disabled' : ''}>
-      <b data-cost="${on ? '已点亮' : `${t.cost} 点`}">${t.name}</b>
-      <span>${t.desc}</span>
+    const lv = talentLevel(meta, t.id);
+    const maxed = lv >= TALENT_MAX_LEVEL;
+    const cost = talentCost(t, lv + 1);
+    const afford = points >= cost;
+    return `<button type="button" class="talent ${lv ? 'is-on' : ''}" data-talent="${t.id}"
+      ${maxed || !afford ? 'disabled' : ''}>
+      <b data-cost="${maxed ? '五重圆满' : `${cost} 点升第${lv + 1}重`}">${t.name}${lv ? ` · ${lv}重` : ''}</b>
+      <span>${t.desc}${lv ? `（当前效果 ×${talentScale(lv).toFixed(1)}）` : ''}</span>
     </button>`;
   }).join('');
 }
@@ -203,15 +252,14 @@ function renderTalents() {
 function buyTalent(id) {
   const t = TALENTS.find((x) => x.id === id);
   const meta = store.meta() || { karmaPoints: 0, talents: [] };
-  if (!t || (meta.talents || []).includes(id)) return;
-  if ((meta.karmaPoints || 0) < t.cost) return;
-  meta.karmaPoints = (meta.karmaPoints || 0) - t.cost;
-  meta.talents = [...(meta.talents || []), id];
+  if (!t) return;
+  const r = buyTalentLevel(meta, id);
+  if (!r.ok) { toast(r.reason); return; }
   store.saveMeta(meta);
   game.meta = meta;
   renderTalents();
   sfx.play('chime');
-  toast(`轮回天赋「${t.name}」已点亮`, 'gold');
+  toast(`轮回天赋「${t.name}」升至第${r.level}重`, 'gold');
 }
 
 function selectOrigin(id) {
@@ -338,7 +386,11 @@ function acceptRoot() {
 
 function startRun(opts) {
   const seed = (Math.random() * 0xffffffff) >>> 0;
-  game.newRun({ ...opts, seed, meta: store.meta() || game.meta });
+  game.newRun({ ...opts, seed, meta: store.meta() || game.meta, jieshu: ui.jieshu || 0 });
+  // 前世遗泽已带入，清掉存档里的待领记录
+  const m = store.meta();
+  if (m?.pendingLegacy) { m.pendingLegacy = null; store.saveMeta(m); }
+  for (const n of game.state.legacyNotes || []) game.pushRumor(`【前世遗泽】${n}`);
   ui.lastSnapshot = snapshotChar();
   ui.seenAchIds = new Set(Object.keys(game.state.meta.achievements || {}));
   setMobileTab('story');
@@ -409,7 +461,20 @@ function renderAll(deltas = []) {
   renderStory(deltas);
   renderRightPanel();
   const c = game.state.char;
-  $('top-realm').textContent = `${c.name} · ${realmLabel(c)}`;
+  // v8 年历：第几年、哪一章、灵气走势常驻顶栏
+  const yr = worldYear(game.state);
+  const era = currentWorldEra(game.state);
+  const yearEl = $('top-year');
+  if (yearEl.dataset.year && yearEl.dataset.year !== String(yr)) {
+    yearEl.classList.remove('is-turning');
+    void yearEl.offsetWidth;
+    yearEl.classList.add('is-turning');
+  }
+  yearEl.dataset.year = String(yr);
+  yearEl.textContent = `第 ${yr.toLocaleString()} 年`;
+  const trend = era.chapter.cult > 0 ? '↑' : era.chapter.cult < 0 ? '↓' : '';
+  $('top-chapter').textContent = `${era.chapter.id} ${era.chapter.name} · 灵气 ${era.lingqi}${trend}`;
+  $('top-chapter').title = `${era.chapter.world}（${era.chapter.balance}）`;
   $('brand-mark').textContent = REALMS[c.realm]?.name?.[0] || '道';
   $('turn-line').textContent = `第 ${game.state.turn} 回合 · ${Math.floor(c.age / 12)}岁`;
 }
@@ -426,21 +491,21 @@ function renderSubhubBar() {
     techEquip: { icon: 'book', title: '功法运使', badge: `${activeTechniques(c).length}/${maxTechSlots(c.realm)} 槽`, cls: '', back: 'cave', backLabel: '← 洞府' },
     alchemy: { icon: 'pill', title: '丹房开炉', badge: `成丹 ${s.counters?.alchemy || 0}`, cls: 'jade', back: 'cave', backLabel: '← 洞府' },
     regionHub: { icon: 'region', title: c.location, badge: `探索 ${Math.min(100, Math.round(c.regionProgress?.[c.regionId] || 0))}%`, cls: 'jade', back: 'hub', backLabel: '← 主界' },
-    regionMap: { icon: 'region', title: '九州舆图', badge: `已游 ${(c.visitedLocations || []).length}/8 州`, cls: 'jade', back: 'regionHub', backLabel: '← 九州' },
+    regionMap: { icon: 'region', title: '五域舆图', badge: `已游 ${(c.visitedLocations || []).length}/8 地`, cls: 'jade', back: 'regionHub', backLabel: '← 五域' },
     delve: { icon: 'region', title: dv?.name || '秘境探幽', badge: `第 ${dv?.floor || 1}/${dv?.maxFloor || 5} 层`, cls: 'jade', back: 'extract', backLabel: '← 撤离' },
     sectHall: { icon: 'sect', title: game.currentSectName(), badge: `贡献 ${formatNum(c.contribution)}`, cls: '', back: 'hub', backLabel: '← 主界' },
     sectMissions: { icon: 'mission', title: '宗门任务堂', badge: `贡献 ${formatNum(c.contribution)}`, cls: '', back: 'sectHall', backLabel: '← 大殿' },
     sectLibrary: { icon: 'book', title: '宗门藏经阁', badge: `贡献 ${formatNum(c.contribution)}`, cls: '', back: 'sectHall', backLabel: '← 大殿' },
     sectTreasury: { icon: 'treasury', title: '宗门宝库', badge: `贡献 ${formatNum(c.contribution)}`, cls: '', back: 'sectHall', backLabel: '← 大殿' },
-    sectPromote: { icon: 'promote', title: '晋升考核台', badge: `${SECT_RANKS[c.sectRank || 0]?.name || '外门'}`, cls: '', back: 'sectHall', backLabel: '← 大殿' },
-    cityHub: { icon: 'city', title: '仙城坊市', badge: `灵石 ${formatNum(c.stones)}`, cls: '', back: 'hub', backLabel: '← 主界' },
+    sectPromote: { icon: 'promote', title: '晋升考核台', badge: `${sectRankName(c.sectId, c.sectRank || 0)}`, cls: '', back: 'sectHall', backLabel: '← 大殿' },
+    cityHub: { icon: 'city', title: '市集坊间', badge: `灵石 ${formatNum(c.stones)}`, cls: '', back: 'hub', backLabel: '← 主界' },
     market: { icon: 'city', title: `${c.location}商行`, badge: `灵石 ${formatNum(c.stones)}`, cls: '', back: 'cityHub', backLabel: '← 坊市' },
     sell: { icon: 'city', title: '出售灵材', badge: `灵石 ${formatNum(c.stones)}`, cls: '', back: 'market', backLabel: '← 商行' },
-    techShop: { icon: 'book', title: '古籍秘阁', badge: `灵石 ${formatNum(c.stones)}`, cls: '', back: 'cityHub', backLabel: '← 坊市' },
+    techShop: { icon: 'book', title: '书肆残卷', badge: `灵石 ${formatNum(c.stones)}`, cls: '', back: 'cityHub', backLabel: '← 坊市' },
     auction: { icon: 'treasury', title: '十年暗拍', badge: `灵石 ${formatNum(c.stones)}`, cls: '', back: 'cityHub', backLabel: '← 坊市' },
     arena: { icon: 'sword', title: '问道擂台', badge: `${s.counters?.arena_win || 0} 胜`, cls: '', back: 'cityHub', backLabel: '← 坊市' },
     tianji: { icon: 'fate', title: '天机潜龙榜', badge: `声望 ${c.reputation}`, cls: 'jade', back: 'cityHub', backLabel: '← 坊市' },
-    npcHub: { icon: 'npc', title: '红尘道友', badge: `${NPCS.length} 位名宿`, cls: 'jade', back: 'hub', backLabel: '← 主界' },
+    npcHub: { icon: 'npc', title: '故人', badge: `${NPCS.length} 位`, cls: 'jade', back: 'hub', backLabel: '← 主界' },
     npcDetail: { icon: 'npc', title: '道友论道', badge: `灵石 ${formatNum(c.stones)}`, cls: 'jade', back: 'npcHub', backLabel: '← 道友' },
   }[id];
   if (!meta || s.scene.result) {
@@ -458,8 +523,8 @@ function renderRumorBar() {
   const rumors = game.state.rumors || [];
   const bar = $('rumor-bar');
   const era = currentWorldEra(game.state);
-  const fallback = `【天机阁风闻】${game.state.char.location}灵气微动，四方散修云集。`;
-  bar.textContent = `【天象·${era.name} ${era.tag}】 ${rumors[0] || fallback}`;
+  const fallback = `【${game.state.char.location}】${era.chapter.regions?.nanze ? '市井如常，人们照旧赶集、下田、开渡。' : ''}`;
+  bar.textContent = rumors[0] || fallback;
 }
 
 function renderMobileHud() {
@@ -491,6 +556,7 @@ function renderMobileHud() {
       <span class="c-gold">石 <b>${formatNum(c.stones)}</b></span>
       <span class="c-jade">攻 <b>${formatNum(game.playerAtk())}</b></span>
       <span class="${lifeCls}">寿 <b>${remain}年</b></span>
+      <span class="c-realm">${escapeHtml(realmLabel(c))}</span>
       <span>${escapeHtml(c.location)}</span>
       ${c.demon > 0 ? `<span class="c-demon">魔 <b>${Math.round(c.demon)}</b></span>` : ''}
     </div>
@@ -544,7 +610,7 @@ function renderSceneBanner() {
     banner.classList.add('has-hud');
     hud.innerHTML = `
       <div class="combat-hud-row">
-        <b>九霄雷阵 · ${REALMS[c.realm]?.name || ''}之劫</b>
+        <b>天劫雷阵 · ${REALMS[c.realm]?.name || ''}之劫</b>
         <span>第 ${t.stage} / ${t.total} 重天雷</span>
       </div>
       <div class="trib-steps">
@@ -563,23 +629,25 @@ function renderSceneBanner() {
 }
 
 function kickerFor(node) {
-  if (!node) return '九州';
+  if (!node) return '五域';
   const id = node.id;
   if (id === 'hub') return game.state.char.location;
   if (id === 'cave' || id === 'techEquip' || id === 'alchemy') return '洞府修行';
-  if (id === 'regionHub' || id === 'regionMap') return '九州历练';
+  if (id === 'regionHub' || id === 'regionMap') return '五域行走';
   if (id === 'delve') return '秘境探幽';
-  if (id === 'sectHall' || id === 'sectMissions' || id === 'sectLibrary' || id === 'sectTreasury' || id === 'sectPromote') return '仙门大殿';
-  if (id === 'cityHub' || id === 'tianji' || id === 'techShop' || id === 'arena') return '仙城坊市';
-  if (id === 'npcHub' || id === 'npcDetail') return '红尘道友';
+  if (id === 'sectHall' || id === 'sectMissions' || id === 'sectLibrary' || id === 'sectTreasury' || id === 'sectPromote') return game.currentSectName();
+  if (id === 'cityHub' || id === 'tianji' || id === 'techShop' || id === 'arena') return '市集坊间';
+  if (id === 'npcHub' || id === 'npcDetail') return '故人';
   if (id === 'combat') return '斗法';
-  if (id === 'tribulation') return '九霄天劫';
+  if (id === 'tribulation') return '天劫';
   if (id === 'breakthrough') return '叩关破境';
-  if (id === 'auction') return '万宝暗拍';
+  if (id === 'auction') return '商会暗拍';
   if (id === 'market' || id === 'sell') return '灵材商行';
-  if (id === 'recruit') return '寻访仙门';
+  if (id === 'recruit') return '投身门户';
   if (id === 'ending') return '此生终章';
-  return node.pool === 'sect' ? '宗门' : node.pool === 'inner' ? '内景' : node.pool === 'story' ? '宿命因果' : '机缘奇遇';
+  if (id === 'chapter') return '百年一章';
+  if (node.history) return node.history.domain ? `${DOMAIN_NAMES[node.history.domain]}大事` : '天下大事';
+  return node.pool === 'sect' ? '宗门' : node.pool === 'inner' ? '内景' : node.pool === 'story' ? '宿命因果' : '见闻';
 }
 
 function renderBagMarkup() {
@@ -609,7 +677,7 @@ function renderCharPanel() {
   const root = ROOT_BY_ID[c.rootId];
   const realm = REALMS[c.realm];
   const sect = c.sectId ? SECT_BY_ID[c.sectId] : null;
-  const rankName = sect ? (SECT_RANKS[c.sectRank || 0]?.name || '外门弟子') : '散修';
+  const rankName = sect ? (sectRankName(c.sectId, c.sectRank || 0)) : '散修';
   const region = REGION_BY_ID[c.regionId] || REGION_BY_ID.qingniu;
   const regionProg = Math.min(100, Math.round(c.regionProgress?.[region.id] || 0));
   const gf = c.goldenFingerId ? GOLDEN_FINGER_BY_ID[c.goldenFingerId] : null;
@@ -691,7 +759,7 @@ function renderCharPanel() {
       <div class="stat-line"><span>功法槽位</span><b style="${conflict.conflict ? 'color:#ff7163' : ''}">${activeSet.size} / ${maxTechSlots(c.realm)} 运使${conflict.conflict ? '（正邪冲突!）' : ''}</b></div>
       <div class="stat-line"><span>洞府灵脉</span><b>${c.caveLevel || 1} 阶（+${Math.round(((c.caveLevel || 1) - 1) * 18)}%）</b></div>
       ${daoBase ? `<div class="stat-line"><span>道基品质</span><b style="color:var(--jade)">${daoBase.name}</b></div>` : ''}
-      ${goldCore ? `<div class="stat-line"><span>金丹品阶</span><b style="color:var(--gold)">${goldCore.name}</b></div>` : ''}
+      ${goldCore ? `<div class="stat-line"><span>结丹品阶</span><b style="color:var(--gold)">${goldCore.name}</b></div>` : ''}
       <div class="stat-line"><span>所在州域</span><b>${escapeHtml(region.name)}（${regionProg}%）</b></div>
     </div>
 
@@ -913,7 +981,8 @@ function startReincarnation(meta) {
   seedTitleMeta();
   showScreen('create');
   sfx.play('breakthrough');
-  toast('一碗忘川水落肚，前尘如烟散尽，唯有一缕道心长存。', 'gold');
+  renderCreateChoices();
+  toast('魂识回到第一年的河湾渡口。前世手札还在。', 'gold');
 }
 
 /* ---------------------------------- 移动端导航 / 储物使用 ---------------------------------- */
@@ -1119,22 +1188,22 @@ function wireOverlays() {
   });
   $('menu-help').addEventListener('click', () => {
     $('menu-body').innerHTML = `
-      <h4>六大支柱 · 战术长生路</h4>
-      <p><b>洞府修行</b>：吐纳炼气、闭关冲层（智能出关）、功法槽位运使（防正邪冲突）、八大丹方开炉、十阶法宝祭炼、九阶灵脉升级与灵兽养成。<br>
-      <b>九州历练</b>：八大梯度灵域（青牛山脉→九霄天门）、五层秘境探幽（步步抉择风险回报，可随时携宝撤离）、满百探索灵脉采撷。<br>
-      <b>仙门大殿</b>：十三宗皆设两年限额任务堂、六阶藏经阁、宗门宝库、灵脉聚灵阵与按境礼聘；元婴后可真实开宗立派扩建山门。<br>
-      <b>仙城坊市与红尘道友</b>：随州域与九州纪元天象演化的灵材商行、可分页筛选的古籍秘阁、十年限量暗拍、问道擂台与十二位名宿唯一绝学亲传。</p>
-      <h4>战术斗法 2.0 与九州天象</h4>
-      <p>敌手每回合预告意图：蓄力重击时以「守势」化解可触发【蓄势反击】（1.55×必暴）；战斗中可祭出符箓破招、领悟法则后可展开【法则领域】压制全场；九州每 30–45 年轮转六大天象纪元。</p>
+      <h4>这一世怎么过</h4>
+      <p><b>大历史</b>：第一纪元一万年，百年一章。每章的天下大势照剧本推进；你在场就亲历、能插手，不在场就只听到风声。<br>
+      <b>前世手札</b>：死后魂识回到第一年的青石镇。亲历或听闻的大事都记进手札，下一世到了年份会应验，事件里会多出「先知」的选项。改变了默认走向，就记一笔「历史已改写」。<br>
+      <b>灵气与境界</b>：灵气随章起落。灵气高的年代修得快，元婴以上要等天地灵机够；末法年代几乎修不动，机巧兴起。没有飞升——境界到了，人还在世上，看纪元更替。<br>
+      <b>门户与故人</b>：玄衡宗、青崖宗、观星台、北境边军、通远商会……投身一处，得其差事与传承；与故人论道、切磋、赠礼。<br>
+      <b>快进与了结</b>：结丹以上可「闭关至下一件大事」，遇身边大事、新篇章、寿元告急自动出关；也可「兵解入轮回」，按此生作为结算。</p>
+      <h4>斗法</h4>
+      <p>敌手每回合预告意图：蓄力重击时以「守势」化解可触发反击；可祭符破招、展开法则领域。越阶斩杀得重赏，境界压制时一招可毙。</p>
       <h4>双端操作</h4>
       <p>电脑支持 1–9 选择、空格继续、S/L 存读档、C 图鉴；手机固定单屏布局，底部五栏切换问道、道躯、储物、行止与图鉴。</p>
     `;
   });
   $('menu-about').addEventListener('click', () => {
     $('menu-body').innerHTML = `
-      <h4>关于《问道长生》v7.0 · 大千世界</h4>
-      <p>16-bit HD-2D 国风像素仙侠 RPG × inkle/ink 互动叙事引擎，实时像素画布随八大州域、十重境界、宗门与灵兽动态演化。</p>
-      <p>内置 1,098 叙事节点、123 重独立结局、142 部功法典籍、105 种奇珍丹器、66 类特性敌手、12 位红尘道友、五层秘境探幽、六大九州天象与 270 项成就。</p>
+      <h4>关于《问道长生》v8 · 第一纪元</h4>
+      <p>世界、年表与人物取自《长生模拟器》第一纪元剧本（2026-11-07 审定稿）。像素画面随地域、境界与年代变化。</p>
     `;
   });
 }
@@ -1182,7 +1251,29 @@ function renderCodex() {
   const sum = $('codex-summary');
   const meta = game.state?.meta || store.meta() || { achievements: {}, unlockedEndings: [], rootsSeen: [], sectsJoined: [] };
 
-  if (ui.codexTab === 'achievements') {
+  if (ui.codexTab === 'handbook') {
+    const entries = handbookEntries(meta);
+    const cur = game.state ? worldYear(game.state) : 0;
+    sum.textContent = entries.length
+      ? `前世手札 · 已记 ${entries.length} 件大事（只记亲历或确知之事）${cur ? ` · 今为第 ${cur} 年` : ''}`
+      : '前世手札尚无一字。活过一世，亲历或听闻的大事都会记在这里，下一世可凭此先知。';
+    body.innerHTML = `<ol class="handbook-list">${entries.map((e) => {
+      const yr = e.window ? (e.window[0] === e.window[1] ? `第${e.window[0]}年` : `第${e.window[0]}—${e.window[1]}年`) : '';
+      const dom = e.domain ? DOMAIN_NAMES[e.domain] : '天下';
+      const past = cur && e.window && cur > e.window[1];
+      const outcome = e.lastOutcome === 'changed' ? `曾改写：${escapeHtml(e.rewriteNote || '')}` : (e.source === '风闻' ? '只闻风声' : '亲历');
+      return `<li class="${past ? 'is-past' : ''}"><span class="hb-year">${yr}</span><span class="hb-dom">${dom}</span><b>${escapeHtml(e.title || e.key)}</b><p>${escapeHtml(e.baseline || '')}</p><small>${outcome} · 记于第 ${(e.lives || []).join('、')} 世</small></li>`;
+    }).join('')}</ol>`;
+  } else if (ui.codexTab === 'chronicle') {
+    const cur = game.state ? worldYear(game.state) : 1;
+    const seen = Math.max(meta.maxYear || 0, cur);
+    const eraEnds = ERA1_FINALE.map((e) => `${(meta.era1Endings || []).includes(e.id) ? '●' : '○'} ${e.name}`).join('　');
+    sum.textContent = `第一纪元 · 一万年百章 · 历世最远到第 ${seen} 年 · 纪元结局：${eraEnds}`;
+    body.innerHTML = `<ol class="chronicle-list">${ERA1_CHAPTERS.map((c) => {
+      const reached = c.from <= seen;
+      return `<li class="${reached ? '' : 'is-locked'}${c.from <= cur && cur <= c.to ? ' is-now' : ''}"><span class="hb-year">第${c.from}—${c.to}年</span><b>${c.id} · ${reached ? escapeHtml(c.name) : '？？'}</b><p>${reached ? escapeHtml(c.world) : '尚未活到此世。'}</p></li>`;
+    }).join('')}</ol>`;
+  } else if (ui.codexTab === 'achievements') {
     const unlockedCount = ACHIEVEMENTS.filter((a) => meta.achievements?.[a.id]).length;
     const hiddenTotal = ACHIEVEMENTS.filter((a) => a.hidden).length;
     sum.textContent = `已印证 ${unlockedCount} / ${ACHIEVEMENTS.length}（含 ${hiddenTotal} 项隐藏成就）`;
@@ -1233,19 +1324,19 @@ function renderCodex() {
       ...(meta.techniquesSeen || []),
       ...(game.state?.char?.techniques || []).map((t) => t.id),
     ]);
-    sum.textContent = `历世已参悟 ${owned.size} / ${ALL_TECHNIQUES.length} 部九州功法（宗门 78 + 九州散落 64）`;
+    sum.textContent = `历世已参悟 ${owned.size} / ${ALL_TECHNIQUES.length} 部五域功法（宗门 78 + 五域散落 64）`;
     body.innerHTML = `<div class="ach-grid">${ALL_TECHNIQUES.map((t) => {
       const got = owned.has(t.id);
       return `<div class="ach ${got ? 'done' : 'locked'}">
         <b style="color:${gradeColor(t.grade)}">${escapeHtml(t.name)} · ${t.grade}品</b>
         <p>${escapeHtml(t.desc)}</p>
-        <small>来源：${escapeHtml(t.source || '九州秘传')} · 绝招「${escapeHtml(t.artName || '无')}」</small>
+        <small>来源：${escapeHtml(t.source || '五域秘传')} · 绝招「${escapeHtml(t.artName || '无')}」</small>
       </div>`;
     }).join('')}</div>`;
   } else {
     const progMap = game.state?.char?.regionProgress || {};
     const visited = new Set(game.state?.char?.visitedLocations || []);
-    sum.textContent = `已踏足 ${visited.size} / ${REGIONS.length} 大九州灵域`;
+    sum.textContent = `已踏足 ${visited.size} / ${REGIONS.length} 大五域灵域`;
     body.innerHTML = `<div class="ach-grid">${REGIONS.map((r) => {
       const pct = Math.min(100, Math.round(progMap[r.id] || 0));
       const got = visited.has(r.name) || pct > 0;

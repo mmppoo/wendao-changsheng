@@ -13,6 +13,17 @@ const FUNCS = {
   sect: (ctx) => ctx.state.char.sectId || '',
   root: (ctx) => ctx.state.char.rootId || '',
   region: (ctx) => ctx.state.char.regionId || 'qingniu',
+  // v8 大历史：当前纪元年份；前世手札是否记载；本世历史是否已被改写
+  year: (ctx) => Math.max(1, Math.floor(((ctx.state.char.age || 192) - 192) / 12) + 1),
+  // 前世手札有记：必须是前几世记下的（本世刚亲历、刚写进手札的不算先知）
+  known: (ctx, key) => {
+    const e = ctx.state.meta?.handbook?.[key];
+    const cur = ctx.state.meta?.cycle || 1;
+    return Boolean(e && (e.lives || []).some((l) => l < cur));
+  },
+  happened: (ctx, key) => Boolean(ctx.state.history?.[key]),
+  outcome: (ctx, key) => ctx.state.history?.[key]?.outcome || '',
+  world: (ctx, field) => Number(ctx.state.world?.[field]) || 0,
   law: (ctx, id) => Number(ctx.state.char.laws?.[id]) || 0,
   maxLaw: (ctx) => Math.max(0, ...Object.values(ctx.state.char.laws || {}).map(Number)),
   rel: (ctx, name) => Number(ctx.state.char.relations?.[name]) || 0,

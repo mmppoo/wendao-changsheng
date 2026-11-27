@@ -13,7 +13,23 @@ export function mergeMeta(primary = {}, secondary = {}) {
   for (const [k, v] of Object.entries(b.achievements || {})) {
     if (achievements[k] && v) achievements[k] = Math.min(Number(achievements[k]) || v, Number(v) || achievements[k]);
   }
+  // v8：先整体保留两边的字段（新加的跨世字段不会在合并时丢失），再按规则合并已知字段
+  const talentLevels = { ...(b.talentLevels || {}) };
+  for (const [k, v] of Object.entries(a.talentLevels || {})) talentLevels[k] = Math.max(talentLevels[k] || 0, v || 0);
+  const handbook = { ...(b.handbook || {}), ...(a.handbook || {}) };
   return {
+    ...b,
+    ...a,
+    talentLevels,
+    handbook,
+    unlockedOrigins: Array.from(new Set([...(b.unlockedOrigins || []), ...(a.unlockedOrigins || [])])),
+    unlockedGF: Array.from(new Set([...(b.unlockedGF || []), ...(a.unlockedGF || [])])),
+    era1Endings: Array.from(new Set([...(b.era1Endings || []), ...(a.era1Endings || [])])),
+    maxRealm: Math.max(a.maxRealm || 0, b.maxRealm || 0),
+    maxAge: Math.max(a.maxAge || 0, b.maxAge || 0),
+    maxYear: Math.max(a.maxYear || 0, b.maxYear || 0),
+    totalKills: Math.max(a.totalKills || 0, b.totalKills || 0),
+    maxRegions: Math.max(a.maxRegions || 0, b.maxRegions || 0),
     cycle: Math.max(a.cycle || 1, b.cycle || 1),
     karmaPoints: Math.max(a.karmaPoints || 0, b.karmaPoints || 0),
     talents: Array.from(new Set([...(b.talents || []), ...(a.talents || [])])),
@@ -77,6 +93,8 @@ export class SaveStore {
     try {
       const data = JSON.parse(raw);
       if (!data?.state?.char) return null;
+      // v8：旧世界（九州）的进行中存档不能载入新世界；跨世进度（meta）另存，不受影响
+      if ((data.version || data.state.version || 0) < SAVE_VERSION) return null;
       return data;
     } catch {
       return null;

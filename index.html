@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="theme-color" content="#0d111a" />
 <title>问道长生 · 像素修仙模拟器</title>
-<meta name="description" content="一款参考 inkle/ink 架构的 HD-2D 像素国风修仙模拟器：掌天小绿瓶、残剑老祖、三年之约、血色禁地、万宝拍卖、本命法宝、伴生灵兽与百小时多结局轮回。" />
+<meta name="description" content="像素国风修仙模拟：宁朝第一纪元一万年，死后回到同一年，凭前世手札改写历史，活过修仙与机巧交替的纪元。" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%230d111a'/%3E%3Crect x='1' y='1' width='14' height='14' fill='none' stroke='%23e6b95c' stroke-width='1'/%3E%3Crect x='7' y='3' width='2' height='10' fill='%23e6b95c'/%3E%3Crect x='5' y='10' width='6' height='1' fill='%23d44d38'/%3E%3C/svg%3E" />
 <link rel="stylesheet" href="styles/main.css" />
 </head>
@@ -13,7 +13,7 @@
   <canvas id="fx-canvas" class="fx-canvas" aria-hidden="true"></canvas>
   <div id="fx-flash" class="fx-flash" aria-hidden="true"></div>
 
-  <!-- 标题 / 启动（全屏实时 16-bit 像素山海天门） -->
+  <!-- 标题 / 启动（全屏实时像素山水） -->
   <section id="title-screen" class="screen title-screen">
     <div class="title-bg" aria-hidden="true">
       <canvas id="title-pixel-canvas" class="pixel-bg-canvas" width="320" height="180"></canvas>
@@ -21,24 +21,23 @@
     </div>
     <div class="title-inner px-frame">
       <div class="title-seal" aria-hidden="true">问<br>道</div>
-      <p class="eyebrow">HD-2D 像素仙侠 · INK 互动叙事</p>
+      <p class="eyebrow">宁朝 · 第一纪元 · 南泽青石镇</p>
       <h1 class="game-title">问道长生</h1>
-      <p class="title-sub">掌天绿瓶、残剑老祖、三年之约、血色禁地——在有限寿元里走出你的长生大道。</p>
+      <p class="title-sub">死后魂识回到同一年的河湾渡口。带着前世记下的事，再活一次，改写这一万年。</p>
       <div class="title-actions">
         <button id="btn-continue" class="btn btn-primary" hidden>继续今生</button>
         <button id="btn-new" class="btn btn-primary-outline">踏入仙途</button>
         <button id="btn-gallery" class="btn btn-ghost">命途图鉴</button>
       </div>
       <div class="title-highlights" aria-label="游戏特性">
-        <span>1,090+ 叙事节点</span>
-        <span>123 重独立结局</span>
-        <span>142 部功法绝学</span>
-        <span>八大九州灵域</span>
-        <span>十三宗六阶大殿</span>
+        <span>第一纪元 · 万年百章</span>
+        <span>前世手札 · 改写历史</span>
+        <span>五域 · 十三门户</span>
+        <span>修仙与机巧 · 纪元更替</span>
       </div>
       <p class="title-meta" id="title-meta"></p>
     </div>
-    <div class="title-vertical" aria-hidden="true">一粒金丹吞入腹，我命由我不由天</div>
+    <div class="title-vertical" aria-hidden="true">世事如奔流之水，日夜不息</div>
   </section>
 
   <!-- 建角：道号 + 出身 + 伴生金手指 + 轮回天赋 -->
@@ -80,8 +79,17 @@
           <h3>三、轮回天赋</h3>
           <span id="karma-points">轮回点 0</span>
         </div>
-        <p class="talent-sub">每历一世可得轮回点，点亮后此后每一世永久生效。</p>
+        <p class="talent-sub">每历一世可得轮回点。天赋分五重，越往上越贵，点亮后此后每一世永久生效。</p>
         <div class="talent-grid" id="talent-grid"></div>
+      </div>
+
+      <div class="talent-block" id="jieshu-block" hidden>
+        <div class="talent-head">
+          <h3>四、劫数</h3>
+          <span id="jieshu-label">常世</span>
+        </div>
+        <p class="talent-sub" id="jieshu-desc">在某一劫数下活过第一千年，即可选更高一重。劫数越高，世间越凶险，轮回点与收获越丰厚。</p>
+        <input type="range" id="jieshu-range" min="0" max="0" value="0" step="1" aria-label="劫数" />
       </div>
 
       <div class="create-foot">
@@ -99,8 +107,8 @@
       <div class="brand">
         <span class="brand-mark" id="brand-mark">炼</span>
         <div class="brand-text">
-          <strong>问道长生</strong>
-          <span id="top-realm">炼气一层</span>
+          <strong class="year-line"><span class="year-era">第一纪元</span><b id="top-year">第 1 年</b></strong>
+          <span id="top-chapter" class="chapter-line">B001 山河未定 · 灵气 50</span>
         </div>
       </div>
       <div class="topbar-actions">
@@ -126,12 +134,12 @@
           <div class="scene-banner-grad"></div>
           <div class="scene-banner-meta">
             <span class="scene-kicker" id="scene-kicker">人间</span>
-            <span class="scene-banner-loc" id="scene-banner-loc">青牛村</span>
+            <span class="scene-banner-loc" id="scene-banner-loc">青石镇</span>
           </div>
           <div class="scene-combat-hud" id="scene-combat-hud" hidden></div>
         </figure>
 
-        <!-- 天机阁修真界风闻栏 -->
+        <!-- 风闻栏 -->
         <div class="rumor-bar" id="rumor-bar" aria-label="修真界风闻"></div>
 
         <!-- 子界面像素面包屑导航栏 -->
@@ -140,7 +148,7 @@
         <div class="story-scroll" id="story-scroll">
           <div class="scene-body">
             <div class="scene-head">
-              <h2 class="scene-title" id="scene-title">青牛村</h2>
+              <h2 class="scene-title" id="scene-title">青石镇</h2>
               <div class="delta-strip" id="delta-strip" aria-live="off"></div>
             </div>
             <div class="scene-text" id="scene-text"></div>
@@ -240,12 +248,14 @@
         <button class="icon-btn" data-close="codex-overlay" aria-label="关闭">×</button>
       </header>
       <div class="tabs" id="codex-tabs">
-        <button class="tab is-active" data-tab="achievements">成就</button>
+        <button class="tab is-active" data-tab="handbook">前世手札</button>
+        <button class="tab" data-tab="chronicle">纪年</button>
+        <button class="tab" data-tab="achievements">成就</button>
         <button class="tab" data-tab="endings">结局</button>
         <button class="tab" data-tab="roots">灵根</button>
         <button class="tab" data-tab="sects">宗门</button>
         <button class="tab" data-tab="techniques">功法</button>
-        <button class="tab" data-tab="regions">九州</button>
+        <button class="tab" data-tab="regions">五域</button>
       </div>
       <div class="codex-summary" id="codex-summary"></div>
       <div class="codex-body" id="codex-body"></div>

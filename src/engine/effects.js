@@ -7,6 +7,7 @@ import { SECT_BY_ID } from '../data/sects.js';
 import { REALMS } from '../data/realms.js';
 import { PET_BY_ID } from '../data/golden_fingers.js';
 import { clamp } from './rng.js';
+import { markRewrite } from './history.js';
 
 /**
  * 统一效果结算。所有剧情、物品、事件都只描述 effects，不直接改状态。
@@ -159,6 +160,21 @@ export function applyEffects(state, effects = {}, ctx = {}) {
   if (effects.flag) {
     for (const [k, v] of Object.entries(effects.flag)) state.flags[k] = v;
   }
+  // v8 大历史：改动世界指标（粮储天数、路运、组织、号令等）与世界印记
+  if (effects.world) {
+    state.world = state.world || {};
+    for (const [k, v] of Object.entries(effects.world)) {
+      state.world[k] = (Number(state.world[k]) || 0) + Number(v || 0);
+    }
+  }
+  if (effects.rewrite) {
+    const line = markRewrite(state, effects.rewrite);
+    if (line) out.push(line);
+  }
+  if (effects.worldFlag) {
+    state.world = state.world || {};
+    state.world.flags = { ...(state.world.flags || {}), ...effects.worldFlag };
+  }
   if (effects.counter) {
     for (const [k, v] of Object.entries(effects.counter)) {
       state.counters[k] = (state.counters[k] || 0) + v;
@@ -182,7 +198,7 @@ export function applyEffects(state, effects = {}, ctx = {}) {
   }
   if (effects.relation) {
     for (const [k, v] of Object.entries(effects.relation)) {
-      c.relations[k] = (c.relations[k] || 0) + v;
+      c.relations[k] = clamp((c.relations[k] || 0) + v, -100, 100);
     }
   }
   if (effects.sect) {

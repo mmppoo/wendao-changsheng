@@ -8,17 +8,20 @@ import { ORIGIN_BY_ID } from '../data/origins.js';
 import { ITEM_BY_ID } from '../data/items.js';
 import { SECT_BY_ID, SECT_RANKS, PLAYER_SECT_TEMPLATE, sectRank } from '../data/sects.js';
 import { TALENT_BY_ID } from '../data/talents.js';
+import { talentLevel, talentScale, jieshuMods, migrateMeta } from './meta.js';
+import { ERA1_CHAPTERS, chapterForYear } from '../data/history/chronicle.js';
+import { freshCentury1World } from '../data/history/index.js';
 import { GOLDEN_FINGER_BY_ID, PET_BY_ID } from '../data/golden_fingers.js';
 import { REGIONS, REGION_BY_ID } from '../data/regions.js';
 
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8; // v8：世界换成宁朝五域，v7 及以前的「进行中的一世」不再载入（跨世进度保留）
 export const START_AGE_MONTHS = 16 * 12;
 
 export const WORLD_ERAS = [
   {
     id: 'aura_tide', name: '灵气潮汐', tag: '修炼 +25%',
     speed: 0.25, veinMult: 1.2,
-    desc: '九州地脉灵雾喷薄，闭关修行与灵脉采撷收益大增。',
+    desc: '五域地脉灵雾喷薄，闭关修行与灵脉采撷收益大增。',
   },
   {
     id: 'demon_surge', name: '妖潮动荡', tag: '战利 +35%',
@@ -28,7 +31,7 @@ export const WORLD_ERAS = [
   {
     id: 'pill_craft_fair', name: '丹器盛会', tag: '炼丹 +15%',
     alchemy: 0.15, refineDiscount: 0.2,
-    desc: '九州丹尊器师云集，炼丹成丹率 +15%、祭炼费用 -20%。',
+    desc: '五域丹尊器师云集，炼丹成丹率 +15%、祭炼费用 -20%。',
   },
   {
     id: 'trade_boom', name: '万宝商潮', tag: '坊市 -12%',
@@ -49,9 +52,65 @@ export const WORLD_ERAS = [
 
 export const WORLD_ERA_BY_ID = Object.fromEntries(WORLD_ERAS.map((e) => [e.id, e]));
 
+/* ---------------- v8 大历史：年份、篇章、灵气 ---------------- */
+
+/** 第一纪元第几年（每一世都从第 1 年开始，主角 16 岁）。 */
+export function yearOf(state) {
+  return Math.max(1, Math.floor(((state?.char?.age ?? START_AGE_MONTHS) - START_AGE_MONTHS) / 12) + 1);
+}
+
+/** 各章末的灵气（0–100）：照百章总表「修凡消长」逐章累计，起点 50。 */
+const LINGQI_BY_CHAPTER = (() => {
+  let L = 50;
+  return ERA1_CHAPTERS.map((c) => { L = Math.max(0, Math.min(100, L + c.cult * 8)); return L; });
+})();
+
+/** 某年的灵气：章内从上一章末值线性过渡到本章末值。 */
+export function lingqiAt(year) {
+  const y = Math.max(1, year | 0);
+  if (y > 10000) return LINGQI_BY_CHAPTER[LINGQI_BY_CHAPTER.length - 1];
+  const idx = Math.min(LINGQI_BY_CHAPTER.length - 1, Math.floor((y - 1) / 100));
+  const prev = idx === 0 ? 50 : LINGQI_BY_CHAPTER[idx - 1];
+  const t = ((y - 1) % 100) / 100;
+  return Math.round(prev + (LINGQI_BY_CHAPTER[idx] - prev) * t);
+}
+
+/** 冲击某一大境所需的天地灵机（剧本：元婴以上是世人不知的境地，只在灵气鼎盛之世可成）。 */
+export const LINGQI_FOR_REALM = [0, 10, 30, 45, 70, 78, 82, 86, 88, 90];
+
+export function realmCapByLingqi(L) {
+  let cap = 0;
+  for (let r = 0; r < LINGQI_FOR_REALM.length; r++) if (L >= LINGQI_FOR_REALM[r]) cap = r;
+  return cap;
+}
+
+/**
+ * 当世气象（取代旧的随机「天象纪元」）：由本章与灵气决定。
+ * 字段沿用旧接口：speed / breakBonus / veinMult / shopDiscount / sellBonus / combatLoot …
+ */
 export function currentWorldEra(state) {
-  const id = state?.worldEra?.id;
-  return WORLD_ERA_BY_ID[id] || WORLD_ERAS[0];
+  const year = yearOf(state);
+  const ch = chapterForYear(year);
+  const L = lingqiAt(year);
+  const speed = (0.15 + 1.7 * L / 100) - 1;
+  const techUp = ch.tech > 0;
+  const trend = ch.balance.split('。')[0];
+  return {
+    id: ch.id,
+    name: `${ch.id} · ${ch.name}`,
+    tag: `灵气 ${L} · ${trend}`,
+    desc: ch.world,
+    chapter: ch,
+    lingqi: L,
+    speed,
+    veinMult: Math.max(0.1, L / 50),
+    breakBonus: Math.round((L - 50) / 10),
+    shopDiscount: techUp ? 0.08 : 0,
+    sellBonus: techUp ? 0.1 : 0,
+    alchemy: L >= 70 ? 0.1 : (L < 20 ? -0.2 : 0),
+    lawMult: L >= 80 ? 1.3 : 1,
+    combatLoot: 0,
+  };
 }
 
 export function rollWorldEra(state, rng, excludeId = null) {
@@ -71,6 +130,20 @@ export function activeDaoGoal(state) {
   if (life.level === 'critical') {
     return { label: '大限告急', detail: `余寿仅 ${life.remainYears} 年！速破境或寻延寿丹药`, priority: 'critical' };
   }
+  // v8：第一百年大水已过，本世没改写——提示可以带着记忆回到第一年
+  const judged = state.history?.['y019.century_judgement'];
+  if (judged && (state.meta?.cycle || 1) <= 3 && !(state.rewrites || []).length && yearOf(state) < 120) {
+    return { label: '前世之鉴', detail: '临河这场大水已记进前世手札。若想改写，可到洞府「了此一生」，带着记忆回到第一年', priority: 'warn' };
+  }
+  // v8：末法预警——按当前境界，灵气枯竭时寿元只剩四成，算出熬不熬得过去
+  const yr = yearOf(state);
+  if (c.realm >= 1 && yr < 4700) {
+    const fullMonths = c.lifespan / Math.max(0.4, c.mofaMult || 1);
+    const deathYear = Math.floor((fullMonths * 0.4 - START_AGE_MONTHS) / 12) + 1;
+    if (deathYear > 4700 && deathYear < 8000 && yr >= 1200) {
+      return { label: '末法将至', detail: `灵气将在第四千七百年前后枯竭。以${REALMS[c.realm].name}之寿，约第 ${deathYear} 年便撑不住，等不到第八千年灵潮`, priority: 'warn' };
+    }
+  }
   const conflict = techAlignmentConflict(c);
   if (conflict.conflict) {
     return { label: '真气相冲', detail: '正邪功法混修，前往洞府「功法运使」卸除冲突典籍', priority: 'warn' };
@@ -87,7 +160,7 @@ export function activeDaoGoal(state) {
     return { label: '镇压心魔', detail: `当前心魔 ${Math.round(c.demon)}，赴洞府「静心涤魔」或服清心丹`, priority: 'warn' };
   }
   if (!c.sectId && c.realm <= 2 && !(c.sectLeaveUntil && c.age < c.sectLeaveUntil)) {
-    return { label: '拜入仙门', detail: '叩问十三宗山门，解锁藏经阁、任务堂与宗门宝库', priority: 'normal' };
+    return { label: '拜入仙门', detail: '玄衡、青崖、边军、商会……投身一处门户，得其传承与差事', priority: 'normal' };
   }
   const needPill = REALMS[c.realm]?.bottleneck?.needItem;
   if (needPill && isRealmMaxLayer(c) && !hasItem(state, needPill)) {
@@ -104,7 +177,7 @@ export function activeDaoGoal(state) {
     return { label: `迁徙${nextRegion.name}`, detail: '前往新灵域获取首临见闻礼与更高阶丹材秘境', priority: 'normal' };
   }
   if (c.realm >= 8) {
-    return { label: '叩问九霄天门', detail: '渡劫圆满可飞升真仙，或三拒天门证红尘仙', priority: 'primary' };
+    return { label: '渡劫证真', detail: '此世无飞升之路：渡过天劫即成真仙，仍在五域，看纪元更替', priority: 'primary' };
   }
   const era = currentWorldEra(state);
   return { label: `顺应「${era.name}」`, detail: `${era.desc}`, priority: 'normal' };
@@ -348,7 +421,7 @@ export function lifespanAlert(char) {
   return { level: 'ok', remainYears, remainMonths, text: '' };
 }
 
-export function createRun({ seed, name, gender, originId, rootId, goldenFingerId = null, meta = {} }) {
+export function createRun({ seed, name, gender, originId, rootId, goldenFingerId = null, meta = {}, jieshu = 0 }) {
   const rng = new RNG(seed);
   const origin = ORIGIN_BY_ID[originId] || ORIGIN_BY_ID.farmer;
   const root = ROOT_BY_ID[rootId] || ROOT_BY_ID.wuling;
@@ -410,9 +483,9 @@ export function createRun({ seed, name, gender, originId, rootId, goldenFingerId
     equippedTechs: [],
     titles: [],
     regionId: 'qingniu',
-    location: '青牛山脉',
+    location: '青石镇',
     regionProgress: { qingniu: 0 },
-    visitedLocations: ['青牛山脉'],
+    visitedLocations: ['青石镇'],
     injuries: 0,
     relations: {},
   };
@@ -443,18 +516,32 @@ export function createRun({ seed, name, gender, originId, rootId, goldenFingerId
     if (ap.flag) Object.assign(talentFlags, ap.flag);
   }
 
+  migrateMeta(meta);
   for (const tid of meta.talents || []) {
     const t = TALENT_BY_ID[tid];
     if (!t?.apply) continue;
     const ap = t.apply;
-    if (ap.attrs) for (const [k, v] of Object.entries(ap.attrs)) attrs[k] = (attrs[k] || 0) + v;
-    if (ap.stones) char.stones += ap.stones;
-    if (ap.lifespan) char.bonusLifespan += ap.lifespan * 12;
+    // v8：天赋分五重，数值随重数放大（一重 ×1 … 五重 ×3）；功法、物品、印记只给一次
+    const f = talentScale(talentLevel(meta, tid));
+    if (f <= 0) continue;
+    if (ap.attrs) for (const [k, v] of Object.entries(ap.attrs)) attrs[k] = (attrs[k] || 0) + Math.round(v * f);
+    if (ap.stones) char.stones += Math.round(ap.stones * f);
+    if (ap.lifespan) char.bonusLifespan += Math.round(ap.lifespan * f) * 12;
     for (const id of ap.items || []) addItemRaw(char, id, 1);
     for (const tech of ap.techniques || []) addStartingTech(tech);
-    if (ap.buffs) for (const [k, v] of Object.entries(ap.buffs)) buffs[k] = (buffs[k] || 0) + v;
+    if (ap.buffs) for (const [k, v] of Object.entries(ap.buffs)) buffs[k] = (buffs[k] || 0) + v * f;
     if (ap.flag) Object.assign(talentFlags, ap.flag);
   }
+
+  // v8：前世遗泽
+  const legacyNotes = [];
+  for (const lg of meta.pendingLegacy || []) {
+    if (lg.kind === 'tech' && lg.payload) { addStartingTech(lg.payload); legacyNotes.push(`前世功法 ${lg.payload.name}`); }
+    if (lg.kind === 'item' && ITEM_BY_ID[lg.id]) { addItemRaw(char, lg.id, 1); legacyNotes.push(`前世遗宝 ${ITEM_BY_ID[lg.id].name}`); }
+    if (lg.kind === 'stones') { char.stones += lg.payload?.stones || 0; legacyNotes.push(`前世遗财 ${(lg.payload?.stones || 0).toLocaleString()} 灵石`); }
+    if (lg.kind === 'law' && lg.payload?.lawId) { char.laws = { ...(char.laws || {}), [lg.payload.lawId]: Math.max(1, char.laws?.[lg.payload.lawId] || 0) }; legacyNotes.push('前世道韵'); }
+  }
+  char.jieshu = Math.max(0, Math.min(12, jieshu | 0));
 
   recomputeDerived(char);
   char.hp = char.maxHp;
@@ -487,7 +574,14 @@ export function createRun({ seed, name, gender, originId, rootId, goldenFingerId
       actions: 0, breakthroughs: 0, failures: 0, encounters: 0, kills: 0,
       deaths: 0, tribulations: 0, pills: 0, years: 0, events: 0, goldSpent: 0, contribSpent: 0,
     },
+    jieshu: char.jieshu,
+    legacyNotes,
+    // v8：第一百年的世界指标（粮储、路运、号令、组织、堤、船……），每一世重置为剧本起点
+    world: freshCentury1World(),
+    history: {},
     meta: {
+      ...meta,
+      pendingLegacy: null,
       cycle: meta.cycle || 1,
       karmaPoints: meta.karmaPoints || 0,
       talents: meta.talents || [],
@@ -606,7 +700,16 @@ export function gainLawExp(state, amount, preferredLawId = null) {
   return out;
 }
 
+/** v8：六维属性上限随境界提高（炼气 40，每高一大境 +20，真仙 220）。反复出现的事件、参悟再多也不会刷到上千。 */
+export function attrCap(realm = 0) {
+  return 40 + Math.max(0, realm | 0) * 20;
+}
+
 export function recomputeDerived(char) {
+  if (char.attrs) {
+    const cap = attrCap(char.realm);
+    for (const k of ATTR_KEYS) if ((char.attrs[k] || 0) > cap) char.attrs[k] = cap;
+  }
   // 兼容旧存档与直接构造角色对象的默认字段补齐
   if (!Array.isArray(char.techniques)) char.techniques = [];
   if (!Array.isArray(char.equippedTechs)) char.equippedTechs = [];
@@ -658,7 +761,12 @@ export function recomputeDerived(char) {
   char.bonusLifespan = clamp(char.bonusLifespan || 0, -60000, 120000);
   const effectiveBonus = clamp(char.bonusLifespan, bonusMinMonths, bonusCapMonths);
   char.lifespanBase = Math.round(baseYears * 12);
-  char.lifespan = Math.max(12 * 30, char.lifespanBase + effectiveBonus);
+  // v8 末法折寿：灵气低于 50 时，修士寿元随灵气折损，灵气为 0 时只剩四成（凡人不受影响）
+  const yearNow = Math.max(1, Math.floor(((char.age ?? START_AGE_MONTHS) - START_AGE_MONTHS) / 12) + 1);
+  const Lnow = lingqiAt(yearNow);
+  const mofaMult = char.realm >= 1 ? 0.4 + 0.6 * clamp(Lnow / 50, 0, 1) : 1;
+  char.mofaMult = mofaMult;
+  char.lifespan = Math.max(12 * 30, Math.round((char.lifespanBase + effectiveBonus) * jieshuMods(char.jieshu || 0).lifespanMult * mofaMult));
 
   char.hp = clamp(char.hp, 0, char.maxHp);
   char.mp = clamp(char.mp, 0, char.maxMp);
@@ -699,6 +807,12 @@ export function bottleneckStatus(state) {
   if (bn.minLawLevel && maxLawLevel(c) < bn.minLawLevel) {
     missing.push(`至少一道法则达「${LAW_STAGES[bn.minLawLevel]}」（当前 ${LAW_STAGES[maxLawLevel(c)]}）`);
   }
+  // v8：天地灵机不足，大境冲不上去（等灵气回升之世）
+  const L = lingqiAt(yearOf(state));
+  const needL = LINGQI_FOR_REALM[c.realm + 1] ?? 0;
+  if (L < needL) {
+    missing.push(`天地灵机不足：当世灵气 ${L}，冲击${REALMS[c.realm + 1]?.name || '下一境'}需 ${needL}`);
+  }
   return { ok: missing.length === 0, missing, bottleneck: bn };
 }
 
@@ -710,18 +824,19 @@ export function breakthroughChance(state) {
   const alignInfo = techAlignmentConflict(char);
   const era = currentWorldEra(state);
   const permBreak = (state.buffs?.permBreakBonus || 0)
-    || ((state.meta?.talents || []).includes('t_niming') ? 6 : 0);
+    || (talentLevel(state.meta, 't_niming') ? 6 * talentScale(talentLevel(state.meta, 't_niming')) : 0);
   const base = 0.9 - char.realm * 0.058;
   let p = base
     + (root?.breakBonus || 0) / 100
-    + (char.attrs.道心 + (tBonus.daoxin || 0)) * 0.003
-    + (char.attrs.气运 + (pBonus.luck || 0)) * 0.0016
+    + Math.min(150, char.attrs.道心 + (tBonus.daoxin || 0)) * 0.003
+    + Math.min(120, char.attrs.气运 + (pBonus.luck || 0)) * 0.0016
     + lawBonusSum(char, 'breakBonus') / 100
     + (state.buffs?.breakBonus || 0) / 100
     + permBreak / 100
     + (era.breakBonus || 0) / 100
     - (alignInfo.breakPenalty || 0) / 100
     - char.demon * 0.0045
+    - jieshuMods(char.jieshu || 0).breakPenalty / 100
     - (char.injuries || 0) * 0.015;
   if (canBreakthrough(char) && isRealmMaxLayer(char)) p -= 0.1;
   if (char.rootId === 'hundun') p -= 0.05;
@@ -771,7 +886,8 @@ export function monthlyExp(state) {
     * (1 + (era.speed || 0))
     * (1 + buff);
   const demonPenalty = 1 - clamp(char.demon / 260, 0, 0.7);
-  return Math.max(1, Math.round(base * speed * realm.monthly * demonPenalty));
+  const jMult = jieshuMods(char.jieshu || 0).speedMult;
+  return Math.max(1, Math.round(base * speed * realm.monthly * demonPenalty * jMult));
 }
 
 export function gainExp(state, amount) {
@@ -822,10 +938,13 @@ export function advanceMonths(state, months, rng) {
     notes.push(`正邪功法同修气机相冲，心魔 +${gain}`);
   }
   if (char.injuries > 0 && months >= 3) char.injuries = Math.max(0, char.injuries - 1);
-  if (state.worldEra && char.age >= state.worldEra.until) {
-    const { era: nextEra } = rollWorldEra(state, rng, state.worldEra.id);
-    notes.push(`【九州天象更迭】进入「${nextEra.name}」纪元（${nextEra.tag}）：${nextEra.desc}`);
+  // v8：百年一章。跨章时播报新篇章（导语由引擎另行展示）
+  const chNow = chapterForYear(yearOf(state));
+  if (state.chapterId && state.chapterId !== chNow.id) {
+    notes.push(`【新篇 · ${chNow.id} ${chNow.name}（第${chNow.from}—${chNow.to}年）】${chNow.world}`);
+    state.pendingChapter = chNow.id;
   }
+  state.chapterId = chNow.id;
   recomputeDerived(char);
   state.stats.years = Math.floor((char.age - START_AGE_MONTHS) / 12);
   return notes;

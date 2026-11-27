@@ -311,26 +311,26 @@ export const PIXEL_ICONS = {
 
 export const SCENE_THEMES = {
   // 8 大州域专属实景生态
-  qingniu:      { kind: 'qingniu',      caption: '青牛山脉 · 烟火竹村', skyTop: '#0b1322', skyMid: '#18283e', skyBot: '#293e52', accent: '#f2c26b' },
-  luoxia:       { kind: 'luoxia',       caption: '落霞仙城 · 暮色长街', skyTop: '#241126', skyMid: '#592434', skyBot: '#9e4e3d', accent: '#ffba5c' },
-  yaosen:       { kind: 'yaosen',       caption: '苍茫妖森 · 瘴海古林', skyTop: '#061314', skyMid: '#0d2624', skyBot: '#193d35', accent: '#62e09b' },
-  guixu:        { kind: 'guixu',        caption: '东海归墟 · 龙宫海眼', skyTop: '#061524', skyMid: '#0d2d45', skyBot: '#184c66', accent: '#6be8df' },
-  beihuang:     { kind: 'beihuang',     caption: '北荒魔域 · 血月荒原', skyTop: '#16060b', skyMid: '#300c15', skyBot: '#541822', accent: '#f05a46' },
-  zhongzhou:    { kind: 'zhongzhou',    caption: '中州圣域 · 悬剑仙峰', skyTop: '#0c162b', skyMid: '#1c3254', skyBot: '#395575', accent: '#f2cb72' },
-  kunlun:       { kind: 'kunlun',       caption: '昆仑墟界 · 星裂仙墟', skyTop: '#09071a', skyMid: '#1c143d', skyBot: '#32225e', accent: '#c996ff' },
-  jiuxiao:      { kind: 'jiuxiao',      caption: '九霄天门 · 紫霄仙阙', skyTop: '#161736', skyMid: '#3a345c', skyBot: '#7d6250', accent: '#fff0b3' },
+  qingniu:      { kind: 'qingniu',      caption: '南泽 · 青石镇河湾渡', skyTop: '#0b1322', skyMid: '#18283e', skyBot: '#293e52', accent: '#f2c26b' },
+  luoxia:       { kind: 'luoxia',       caption: '南泽 · 临河城粮码头', skyTop: '#241126', skyMid: '#592434', skyBot: '#9e4e3d', accent: '#ffba5c' },
+  yaosen:       { kind: 'yaosen',       caption: '东岭 · 青崖谷与铜谷', skyTop: '#061314', skyMid: '#0d2624', skyBot: '#193d35', accent: '#62e09b' },
+  guixu:        { kind: 'guixu',        caption: '东岭 · 玄衡群峰', skyTop: '#061524', skyMid: '#0d2d45', skyBot: '#184c66', accent: '#6be8df' },
+  beihuang:     { kind: 'beihuang',     caption: '北境 · 雁门关外', skyTop: '#16060b', skyMid: '#300c15', skyBot: '#541822', accent: '#f05a46' },
+  zhongzhou:    { kind: 'zhongzhou',    caption: '中州 · 宁京与河洛', skyTop: '#0c162b', skyMid: '#1c3254', skyBot: '#395575', accent: '#f2cb72' },
+  kunlun:       { kind: 'kunlun',       caption: '西陲 · 玉门与沙州', skyTop: '#09071a', skyMid: '#1c143d', skyBot: '#32225e', accent: '#c996ff' },
+  jiuxiao:      { kind: 'jiuxiao',      caption: '西陲 · 白驼赤霞旧府', skyTop: '#161736', skyMid: '#3a345c', skyBot: '#7d6250', accent: '#fff0b3' },
 
   // 核心系统与事件专属主题（保持向后兼容）
-  title:        { kind: 'title',        caption: '山海问仙 · 浮云天门', skyTop: '#0b101b', skyMid: '#162033', skyBot: '#29364f', accent: '#e6b95c' },
-  village:      { kind: 'village',      caption: '青牛幽居 · 烟火洞府', skyTop: '#0f1622', skyMid: '#1c283b', skyBot: '#2c3a4f', accent: '#f0b868' },
+  title:        { kind: 'title',        caption: '宁朝 · 第一纪元', skyTop: '#0b101b', skyMid: '#162033', skyBot: '#29364f', accent: '#e6b95c' },
+  village:      { kind: 'village',      caption: '青石镇 · 旧宅静室', skyTop: '#0f1622', skyMid: '#1c283b', skyBot: '#2c3a4f', accent: '#f0b868' },
   wild:         { kind: 'wild',         caption: '荒野古道 · 鬼火竹林', skyTop: '#091418', skyMid: '#11242b', skyBot: '#1b363d', accent: '#58b98a' },
   sect:         { kind: 'sect',         caption: '仙门浮峰 · 剑影云海', skyTop: '#0e1526', skyMid: '#1c2b45', skyBot: '#2f4463', accent: '#e6b95c' },
-  market:       { kind: 'market',       caption: '云桥坊市 · 万宝灯火', skyTop: '#16111c', skyMid: '#261a29', skyBot: '#3b2833', accent: '#f2a852' },
-  auction:      { kind: 'auction',      caption: '万宝拍卖 · 暗拍重宝', skyTop: '#1b1116', skyMid: '#2e1a20', skyBot: '#472629', accent: '#f5c767' },
+  market:       { kind: 'market',       caption: '市集 · 灯火坊间', skyTop: '#16111c', skyMid: '#261a29', skyBot: '#3b2833', accent: '#f2a852' },
+  auction:      { kind: 'auction',      caption: '通远商会 · 暗拍', skyTop: '#1b1116', skyMid: '#2e1a20', skyBot: '#472629', accent: '#f5c767' },
   combat:       { kind: 'combat',       caption: '生死斗法 · 剑气纵横', skyTop: '#180a10', skyMid: '#2e1119', skyBot: '#471a23', accent: '#e85846' },
   tribulation:  { kind: 'tribulation',  caption: '九重天劫 · 紫雷破空', skyTop: '#0b071a', skyMid: '#190f33', skyBot: '#2e1b52', accent: '#be85ff' },
   breakthrough: { kind: 'breakthrough', caption: '丹田内景 · 聚气叩关', skyTop: '#09111f', skyMid: '#132436', skyBot: '#1f384a', accent: '#e6c56c' },
-  ascend:       { kind: 'ascend',       caption: '天门洞开 · 白日飞升', skyTop: '#182438', skyMid: '#3a424d', skyBot: '#6e6349', accent: '#fff0b8' },
+  ascend:       { kind: 'ascend',       caption: '天劫散尽', skyTop: '#182438', skyMid: '#3a424d', skyBot: '#6e6349', accent: '#fff0b8' },
   fall:         { kind: 'fall',         caption: '秋雨孤剑 · 尘世一梦', skyTop: '#11141f', skyMid: '#1f222e', skyBot: '#332d36', accent: '#d99082' },
 };
 

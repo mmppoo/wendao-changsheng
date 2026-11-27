@@ -10,9 +10,18 @@ import { ENDINGS } from '../src/data/endings.js';
 import { ACHIEVEMENTS } from '../src/data/achievements.js';
 import { EVENTS } from '../src/engine/narrative.js';
 
+const SU = (await import('../src/data/npcs.js')).NPC_BY_ID.npc_su.relationKey;
+
 function fresh(opts = {}) {
   const g = new Game();
   g.newRun({ seed: 12345, name: '阿禾', gender: '女', originId: 'farmer', rootId: 'shuangling', ...opts });
+  // v8：每一世先看第一章导语；单元测试直接从主界面开始
+  assert.equal(g.state.scene.id, 'chapter');
+  g.choose(0);
+  // 通用单元测试里让大历史保持安静（视为都已按基准发生）；大历史专项测试会自行清空
+  if (!opts.history) {
+    for (const ev of g.registry.values()) if (ev.history?.key) g.state.history[ev.history.key] = { outcome: 'baseline' };
+  }
   return g;
 }
 
@@ -252,15 +261,17 @@ test('事件注册表无重复 id，且至少 60 条', () => {
   assert.equal(new Set(EVENTS.map((e) => e.id)).size, EVENTS.length);
 });
 
-test('寻访仙门：可按条件加入宗门并获得身份', () => {
+test('寻访仙门：可按条件加入宗门并获得身份', async () => {
+  const { SECT_BY_ID } = await import('../src/data/sects.js');
+  const sectName = SECT_BY_ID.qingyun.name;
   const g = fresh();
   g.state.char.attrs.悟性 = 30;
   g.state.char.attrs.道心 = 30;
   g.act_sectRecruit();
   assert.equal(g.state.scene.id, 'recruit');
   const cs = g.choices();
-  assert.ok(cs.some((c) => c.label.includes('青云门')));
-  const idx = cs.findIndex((c) => c.label.includes('青云门'));
+  assert.ok(cs.some((c) => c.label.includes(sectName)));
+  const idx = cs.findIndex((c) => c.label.includes(sectName));
   g.choose(idx);
   assert.equal(g.state.char.sectId, 'qingyun');
   assert.ok(g.state.char.contribution === 0);
@@ -513,6 +524,10 @@ test('v4.0 大境瓶颈、道基品质与百分比疗伤丹药', async () => {
   c.layer = 3;
   c.exp = needExp(c);
   c.attrs.道心 = 50;
+  // v8：第 1 年灵气 50，冲化神需 70 —— 天地灵机不足
+  assert.equal(bottleneckStatus(g.state).ok, false);
+  assert.ok(bottleneckStatus(g.state).missing.some((m) => m.includes('天地灵机')));
+  c.age = 192 + 860 * 12; // 第 861 年，B009 灵气回升
   assert.equal(bottleneckStatus(g.state).ok, false);
   gainLawExp(g.state, 100, 'sword');
   assert.equal(bottleneckStatus(g.state).ok, true);
@@ -539,24 +554,28 @@ test('v4.0 大境瓶颈、道基品质与百分比疗伤丹药', async () => {
   assert.ok(g3.state.char.hp > 5000, `炼虚境服疗伤丹应按百分比恢复，当前 hp=${g3.state.char.hp}`);
 });
 
-test('v4.0 九州八大灵域迁徙探索与红尘道友羁绊', () => {
+test('v4.0 地域迁徙探索与道友羁绊', async () => {
+  const { REGION_BY_ID } = await import('../src/data/regions.js');
+  const { NPC_BY_ID } = await import('../src/data/npcs.js');
+  const regName = REGION_BY_ID.guixu.name;
+  const relKey = NPC_BY_ID.npc_su.relationKey;
   const g = fresh();
   g.state.char.realm = 2;
   g.act_openRegionMap();
-  const guixu = g.choices().find((c) => c.label.includes('东海归墟'));
+  const guixu = g.choices().find((c) => c.label.includes(regName));
   assert.ok(guixu && !guixu.disabled);
   g.choose(guixu.index);
   assert.equal(g.state.char.regionId, 'guixu');
-  assert.equal(g.state.char.location, '东海归墟');
+  assert.equal(g.state.char.location, regName);
 
-  // 拜访苏晚晴、赠礼、结为道侣
+  // 拜访可结侣的道友、赠礼、结为道侣
   g.state.scene = { id: 'hub', result: null };
   g.state.char.inventory.push({ id: 'lingcao', qty: 3 });
   g.act_openNpc({ params: { npcId: 'npc_su' } });
   assert.equal(g.state.scene.id, 'npcDetail');
   g.act_npcGift({ params: { npcId: 'npc_su', itemId: 'lingcao' } });
-  assert.ok(g.state.char.relations['苏晚晴'] >= 5 && g.state.char.relations['苏晚晴'] <= 10);
-  g.state.char.relations['苏晚晴'] = 42;
+  assert.ok(g.state.char.relations[relKey] >= 5 && g.state.char.relations[relKey] <= 10);
+  g.state.char.relations[relKey] = 42;
   g.act_npcBond({ params: { npcId: 'npc_su' } });
   assert.equal(g.state.flags['道侣'], true);
 });
@@ -585,7 +604,7 @@ test('v5.0 大千世界规模与古籍秘阁/道友传艺校验', async () => {
   assert.ok(g.state.char.techniques.length >= 1);
 
   // 红尘道友高好感传授绝学
-  g.state.char.relations['苏晚晴'] = 40;
+  g.state.char.relations[SU] = 40;
   g.act_openNpc({ params: { npcId: 'npc_su' } });
   const teach = g.choices().find((c) => c.label.includes('请教唯一绝学'));
   assert.ok(teach && !teach.disabled);
@@ -640,10 +659,10 @@ test('v6.0 审计专项回归：功法槽位防叠加、按境礼聘、叛门黑
   const gGift = fresh();
   gGift.state.char.inventory.push({ id: 'lingcao', qty: 1 }, { id: 'dao_fruit', qty: 1 });
   gGift.act_npcGift({ params: { npcId: 'npc_su', itemId: 'lingcao' } });
-  const rCheap = gGift.state.char.relations['苏晚晴'];
-  gGift.state.char.relations['苏晚晴'] = 0;
+  const rCheap = gGift.state.char.relations[SU];
+  gGift.state.char.relations[SU] = 0;
   gGift.act_npcGift({ params: { npcId: 'npc_su', itemId: 'dao_fruit' } });
-  const rExpensive = gGift.state.char.relations['苏晚晴'];
+  const rExpensive = gGift.state.char.relations[SU];
   assert.ok(rExpensive > rCheap * 2, `悟道果好感(${rExpensive})应远高于灵草(${rCheap})`);
 
   // 6. 开宗立派真实建立玩家宗门 + 讲道/收徒/配方炼丹/寿元预警
@@ -734,7 +753,13 @@ test('v7.0 P0 回归：炼丹真成丹、非致死战败不暴毙、逆命天赋
   gSan.act_sectLeave();
   assert.equal(gSan.state.char.sectId, null);
   assert.equal(gSan.state.char.betrayCount, 0);
-  assert.equal(gSan.state.char.sectLeaveUntil, 0);
+  // v8 审计修复：散修辞别不算叛门，但一年内不能再入门户（堵住辞别重入刷任务榜与入门效果）
+  assert.equal(gSan.state.char.sectLeaveUntil, gSan.state.char.age + 12);
+  const luck0 = gSan.state.char.attrs.气运;
+  assert.ok(gSan.act_joinSect({ sectId: 'sanxiu' })?.error);
+  gSan.state.char.age += 12;
+  gSan.act_joinSect({ sectId: 'sanxiu' });
+  assert.equal(gSan.state.char.attrs.气运, luck0, '入门效果一世只给一次');
 
   // 6. 存档 meta 合并绝不抹除新世解锁的成就与结局
   const merged = mergeMeta(
@@ -835,4 +860,142 @@ test('v7.0 可玩性跃迁：战术斗法2.0（意图/蓄势反击/战符/法则
   assert.ok(activeDaoGoal(gSmart.state).label);
   gSmart.act_smartCultivate();
   assert.ok(gSmart.state.char.exp > 0 && gSmart.state.scene.result);
+});
+
+test('v8 审计漏洞回归：套利、灵脉、论道、祭炼、喂兽、门徒', async () => {
+  const { monthlyExp } = await import('../src/engine/state.js');
+  // 1. 回收价永远低于自己的买入价
+  const g = fresh();
+  g.state.char.attrs.魅力 = 200;
+  g.state.char.goldenFingerId = 'gf_karma_mirror';
+  g.state.char.sectId = 'wanbao';
+  assert.ok(g.sellRate() < g.shopDiscountMult(), '卖价必须低于买价');
+
+  // 2. 灵脉采撷与闭关同量级（不再是按层需修为百分比）
+  const g2 = fresh();
+  const c2 = g2.state.char;
+  c2.realm = 8; c2.layer = 0;
+  const region = Object.values((await import('../src/data/regions.js')).REGION_BY_ID).find((r) => r.veinYield);
+  c2.regionId = region.id;
+  c2.regionProgress = { [region.id]: 100 };
+  const before = c2.exp;
+  const perHalfYear = monthlyExp(g2.state) * 6;
+  g2.act_regionVein();
+  assert.ok(c2.exp - before <= perHalfYear * 2.5, `采撷 ${c2.exp - before} 不应远超闭关 ${perHalfYear}`);
+
+  // 3. 论道：同一人一年一次、一世至多 12 次
+  const g3 = fresh();
+  const npcId = (await import('../src/data/npcs.js')).NPCS[0].id;
+  g3.state.char.realm = 9;
+  const a0 = JSON.stringify(g3.state.char.attrs);
+  g3.act_npcChat({ params: { npcId } });
+  const a1 = JSON.stringify(g3.state.char.attrs);
+  g3.act_npcChat({ params: { npcId } });
+  assert.equal(JSON.stringify(g3.state.char.attrs), a1, '一年内第二次论道不再加属性');
+  assert.notEqual(a0, a1);
+
+  // 4. 祭炼：一块玄铁不能顶掉高阶费用
+  const g4 = fresh();
+  g4.state.char.stones = 0;
+  g4.state.char.artifactLevel = 6;
+  g4.state.char.inventory.push({ id: 'xuantie', qty: 1 });
+  g4.act_refine();
+  assert.equal(g4.state.char.artifactLevel, 6);
+
+  // 5. 喂兽：没有足够内丹与灵石不能进阶
+  const g5 = fresh();
+  g5.state.char.petId = Object.keys((await import('../src/data/golden_fingers.js')).PET_BY_ID)[0];
+  g5.state.char.petLevel = 3;
+  g5.state.char.inventory.push({ id: 'yaoshou_neidan', qty: 1 });
+  assert.ok(g5.act_feedPet()?.error);
+
+  // 6. 门徒有上限
+  const g6 = fresh();
+  for (let i = 0; i < 30; i++) g6.act_recruitDisciple();
+  assert.ok((g6.state.counters.disciples || 0) <= 6);
+});
+
+test('v8 大历史：亲历、风闻、前世手札、先知只认前世', async () => {
+  const { tickHistory, historyIndex } = await import('../src/engine/history.js');
+  const g = fresh();
+  const list = historyIndex(g.registry);
+  assert.ok(list.length > 100, `历史事件应已注册，当前 ${list.length}`);
+  const ev = list.find((e) => e.history.major && e.history.regions?.length);
+  g.state.history = {};
+  // 1. 窗口已过、人不在场：化为风闻并写进手札
+  g.state.char.regionId = ev.history.regions[0] === 'qingniu' ? 'beihuang' : 'qingniu';
+  g.state.char.age = 192 + (ev.history.window[1] + 1) * 12;
+  const r = tickHistory(g.state, g.registry);
+  assert.equal(g.state.history[ev.history.key].outcome, 'baseline');
+  assert.ok(g.state.meta.handbook[ev.history.key], '风闻写进手札');
+  assert.ok(r.notes.length >= 1);
+  // 2. 先知：本世刚记下的不算，下一世才算
+  const ctx = (await import('../src/engine/narrative.js')).contextOf(g.state, g);
+  const { compileCondition } = await import('../src/engine/expr.js');
+  assert.equal(compileCondition(`known("${ev.history.key}")`)(ctx), false);
+  g.state.meta.cycle = (g.state.meta.cycle || 1) + 1;
+  assert.equal(compileCondition(`known("${ev.history.key}")`)(ctx), true);
+  // 3. 窗口之内、人在场：亲历（插入剧情）
+  const g2 = fresh();
+  g2.state.char.regionId = ev.history.regions[0];
+  g2.state.char.realm = 9;
+  g2.state.char.age = 192 + (ev.history.window[0] - 1) * 12;
+  g2.state.char.lifespan = 1e9;
+  g2.state.char.hp = g2.state.char.maxHp;
+  g2.state.history = Object.fromEntries(list.filter((e) => e !== ev && e.history.window[0] <= ev.history.window[0]).map((e) => [e.history.key, { outcome: 'baseline' }]));
+  g2.state.scene = { id: 'hub', result: null };
+  g2.afterAction();
+  assert.equal(g2.state.scene.id, ev.id);
+  assert.equal(g2.state.history[ev.history.key].source, '亲历');
+});
+
+test('v8 第一百年：无人干预落到剧本基准「临河失守」，判定节点在第 19 年后亲历', async () => {
+  const { tickHistory } = await import('../src/engine/history.js');
+  const { evaluateCentury1Outcome } = await import('../src/data/history/index.js');
+  const g = fresh({ history: true });
+  g.state.char.regionId = 'beihuang'; // 人不在南泽：南泽大事都化为风闻
+  g.state.char.lifespan = 1e9;
+  for (let y = 1; y <= 21; y++) {
+    g.state.char.age = 192 + (y - 1) * 12;
+    tickHistory(g.state, g.registry);
+  }
+  const o = evaluateCentury1Outcome(g.state);
+  assert.ok(o && o.name.includes('临河失守'), `基准结局应为临河失守，实际 ${o?.name}`);
+  assert.ok(Object.keys(g.state.meta.handbook).length >= 5, '风闻的大事写进了手札');
+});
+
+test('v8 存档：旧世界进行中的存档不载入；老玩家已开放的出身机缘不会被锁回去', async () => {
+  const { SaveStore } = await import('../src/engine/save.js');
+  const { migrateMeta, originUnlocked, recordLifeStats } = await import('../src/engine/meta.js');
+  const mem = new Map();
+  const storage = { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, String(v)), removeItem: (k) => mem.delete(k) };
+  const store = new SaveStore(storage);
+  storage.setItem(store.key(1), JSON.stringify({ version: 7, state: { version: 7, char: { name: '旧' } } }));
+  assert.equal(store.load(1), null);
+  const g = fresh();
+  store.save(2, g);
+  assert.ok(store.load(2));
+  const old = { runs: 3, unlockedEndings: [], achievements: {} };
+  migrateMeta(old);
+  assert.ok(originUnlocked(old, 'outsider'));
+  recordLifeStats(old, g.state);
+  assert.ok(originUnlocked(old, 'outsider'), '记过一世之后也不能锁回去');
+  const fresh0 = { runs: 0 };
+  migrateMeta(fresh0);
+  assert.equal(originUnlocked(fresh0, 'outsider'), false, '新玩家要靠成就解锁');
+});
+
+test('v8 审计修复：做过的宗门任务冷却，不会连着上榜', () => {
+  const g = fresh();
+  g.act_joinSect({ sectId: 'sanxiu' });
+  const board = g.ensureSectBoard();
+  const id = board.slots[0].missionId;
+  g.act_runSectMission({ params: { missionId: id } });
+  g.state.char.hp = g.state.char.maxHp = 1e9;
+  let guard = 0;
+  while (g.state.scene.id === 'combat' && guard++ < 500) g.combatRound('attack');
+  assert.ok((g.state.flags[`任务冷却:${id}`] || 0) > g.state.char.age, '完成后写入冷却');
+  g.state.sectBoard.refreshAt = 0;
+  const next = g.ensureSectBoard();
+  assert.ok(!next.slots.some((x) => x.missionId === id) || next.slots.length < 3, '冷却中的任务不上新榜');
 });

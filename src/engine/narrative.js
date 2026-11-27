@@ -1,7 +1,8 @@
 import { compileCondition, buildContext } from './expr.js';
+import { LEGACY_EVENT_IDS } from '../data/events/index.js';
 import { REALMS, realmLabel, LAW_BY_ID, LAW_STAGES } from '../data/realms.js';
 import { ROOT_BY_ID } from '../data/roots.js';
-import { SECT_BY_ID, SECT_RANKS } from '../data/sects.js';
+import { SECT_BY_ID, SECT_RANKS, sectRankName } from '../data/sects.js';
 import { ITEM_BY_ID } from '../data/items.js';
 import { REGION_BY_ID } from '../data/regions.js';
 import { GOLDEN_FINGER_BY_ID, PET_BY_ID } from '../data/golden_fingers.js';
@@ -35,11 +36,12 @@ export function formatText(text, state) {
   const sect = c.sectId ? SECT_BY_ID[c.sectId] : null;
   const sectDisplay = sect?.name || c.playerSectName || '散修';
   const rankName = sect
-    ? (SECT_RANKS[c.sectRank || 0]?.name || '外门弟子')
+    ? (sectRankName(c.sectId, c.sectRank || 0))
     : (c.playerSectName ? '开山祖师' : '无门无派');
   const cultYear = Math.max(1, Math.floor((c.age - START_AGE_MONTHS) / 12) + 1);
   return String(text)
     .replaceAll('{name}', c.name)
+    .replaceAll('{rival}', state.flags?.['宿敌名'] || '那人')
     .replaceAll('{realm}', realmLabel(c))
     .replaceAll('{root}', root?.name || '凡体')
     .replaceAll('{sect}', sectDisplay)
@@ -49,7 +51,7 @@ export function formatText(text, state) {
     .replaceAll('{stones}', String(c.stones))
     .replaceAll('{exp}', String(Math.floor(c.exp)))
     .replaceAll('{need}', String(Number.isFinite(needExp(c)) ? needExp(c) : '∞'))
-    .replaceAll('{location}', c.location || '青牛山脉');
+    .replaceAll('{location}', c.location || '青石镇');
 }
 
 export function contextOf(state, game) {
@@ -94,6 +96,7 @@ export function pickEvent(state, rng, game, kind = 'wild', regionId = null) {
   const ctx = contextOf(state, game);
   const curRegion = regionId || state.char.regionId || 'qingniu';
   const pool = EVENTS.filter((ev) => {
+    if (LEGACY_EVENT_IDS.has(ev.id)) return false;
     if (ev.pool && ev.pool !== kind) return false;
     if (ev.minRealm != null && state.char.realm < ev.minRealm) return false;
     if (ev.maxRealm != null && state.char.realm > ev.maxRealm) return false;
@@ -122,13 +125,13 @@ export function pickEvent(state, rng, game, kind = 'wild', regionId = null) {
 
 /**
  * 零重叠主界面六大支柱（v4.0）：
- * [冲击境界(修为满时)] / [再临天门(渡劫)] / 洞府修行 / 九州历练 / 仙门大殿(或拜入仙门) / 仙城坊市 / 红尘道友 / 此生履历
+ * [冲击境界(修为满时)] / [再临天门(渡劫)] / 洞府修行 / 五域行走 / 仙门大殿(或拜入仙门) / 市集坊间 / 红尘道友 / 此生履历
  */
 export function buildHub(game) {
   const { state } = game;
   const c = state.char;
   const sect = c.sectId ? SECT_BY_ID[c.sectId] : null;
-  const rankName = sect ? (SECT_RANKS[c.sectRank || 0]?.name || '外门弟子') : '散修';
+  const rankName = sect ? (sectRankName(c.sectId, c.sectRank || 0)) : '散修';
   const region = REGION_BY_ID[c.regionId] || REGION_BY_ID.qingniu;
   const progress = Math.min(100, Math.round(c.regionProgress?.[region.id] || 0));
   const bn = bottleneckStatus(state);
@@ -143,16 +146,17 @@ export function buildHub(game) {
       effect: 'primary',
     });
   }
-  if (c.realm >= 8 && (state.counters.refuse_ascend || 0) >= 1) {
+
+  // v8：结丹以上，跨越岁月的主入口——闭关到下一件身边大事（遇大事、新篇章、修为圆满、寿元告急即出关）
+  if (c.realm >= 1 && !(canBreakthrough(c) && bottleneckStatus(state).ok)) {
     choices.push({
-      id: 'revisit_gate',
-      label: '再临天门',
-      hint: '九霄天门虚影重现，决定飞升或留世',
-      action: 'revisitGate',
+      id: 'long_seclusion',
+      label: '闭关至下一件大事',
+      hint: '至多百年 · 遇身边大事、新篇章、修为圆满或寿元告急即出关',
+      action: 'longSeclusion',
       effect: 'primary',
     });
   }
-
   choices.push(
     {
       id: 'open_cave',
@@ -163,7 +167,7 @@ export function buildHub(game) {
     },
     {
       id: 'open_region',
-      label: '九州历练',
+      label: '五域行走',
       hint: `${region.name} ${progress}% · 探险迁徙`,
       action: 'openRegion',
     },
@@ -172,22 +176,22 @@ export function buildHub(game) {
   if (sect) {
     choices.push({
       id: 'open_sect',
-      label: '仙门大殿',
+      label: '门户',
       hint: `${sect.name} · ${rankName}`,
       action: 'openSectHall',
     });
   } else if (c.playerSectName) {
     choices.push({
       id: 'open_sect',
-      label: '仙门大殿',
+      label: '门户',
       hint: `${c.playerSectName} · 祖师（${c.playerSectLevel || 1}品）`,
       action: 'openSectHall',
     });
   } else {
     choices.push({
       id: 'find_sect',
-      label: '拜入仙门',
-      hint: '叩问十三宗山门',
+      label: '投身门户',
+      hint: '玄衡、青崖、边军、商会……',
       action: 'sectRecruit',
     });
   }
@@ -195,13 +199,13 @@ export function buildHub(game) {
   choices.push(
     {
       id: 'open_city',
-      label: '仙城坊市',
+      label: '市集坊间',
       hint: '商行 · 秘阁 · 暗拍',
       action: 'openCity',
     },
     {
       id: 'open_npc',
-      label: '红尘道友',
+      label: '故人',
       hint: '十二名修 · 论道结缘',
       action: 'openNpcHub',
     },
@@ -243,7 +247,6 @@ export function buildHub(game) {
       if (c.playerSectName) {
         notes.push(`自创仙宗「${c.playerSectName}」（${c.playerSectLevel || 1}品 · 门徒 ${c.playerSectDisciples || 0} 人）香火绵延。`);
       }
-      if (state.flags['宿敌林昊'] && !state.flags['败林昊']) notes.push('【三年之约】林昊之辱犹在眼前，入筑基后将迎问道台对决。');
       const mainLaw = LAW_BY_ID[defaultLawFor(c)];
       const lawStage = LAW_STAGES[maxLawLevel(c)] || '未入门';
       const lawLine = c.realm >= 2 || maxLawLevel(c) > 0 ? ` · 法则：${mainLaw?.name || '剑道'}（${lawStage}）` : '';

@@ -24,7 +24,7 @@ for (const ev of ALL_EVENTS) {
   ids.add(ev.id);
 }
 
-const validPools = new Set(['wild', 'world', 'sect', 'inner', 'story', 'branch']);
+const validPools = new Set(['wild', 'world', 'sect', 'inner', 'story', 'branch', 'history']);
 const checkExpr = (src, where) => {
   if (!src || typeof src !== 'string') return;
   try { parseExpression(src); } catch (e) { errors.push(`${where} 条件语法错误: ${src} → ${e.message}`); }
@@ -35,6 +35,7 @@ const VALID_EFFECT_KEYS = new Set([
   'lifespan', 'reputation', 'contribution', 'karma', 'demon', 'pet', 'injury', 'heal',
   'items', 'removeItems', 'techniques', 'title', 'flag', 'counter', 'breakBonus',
   'shield', 'escape', 'buff', 'relation', 'sect', 'realmSet', 'layerSet', 'time', 'achievements',
+  'world', 'worldFlag', 'rewrite',
 ]);
 
 function checkEffects(effects, where) {
