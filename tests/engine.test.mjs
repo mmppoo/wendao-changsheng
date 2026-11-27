@@ -15,9 +15,12 @@ const SU = (await import('../src/data/npcs.js')).NPC_BY_ID.npc_su.relationKey;
 function fresh(opts = {}) {
   const g = new Game();
   g.newRun({ seed: 12345, name: '阿禾', gender: '女', originId: 'farmer', rootId: 'shuangling', ...opts });
-  // v8：每一世先看第一章导语；单元测试直接从主界面开始
-  assert.equal(g.state.scene.id, 'chapter');
-  g.choose(0);
+  // v8：开局直接进本地第一件大事；单元测试从主界面开始，并撤销这次开场记录
+  assert.ok(g.currentNode()?.history, '开局应直接进入第一件大事');
+  g.state.scene = { id: 'hub', result: null };
+  g.state.currentHistoryKey = null;
+  g.state.history = {};
+  g.state.meta.handbook = {};
   // 通用单元测试里让大历史保持安静（视为都已按基准发生）；大历史专项测试会自行清空
   if (!opts.history) {
     for (const ev of g.registry.values()) if (ev.history?.key) g.state.history[ev.history.key] = { outcome: 'baseline' };
@@ -526,7 +529,7 @@ test('v4.0 大境瓶颈、道基品质与百分比疗伤丹药', async () => {
   c.attrs.道心 = 50;
   // v8：第 1 年灵气 50，冲化神需 70 —— 天地灵机不足
   assert.equal(bottleneckStatus(g.state).ok, false);
-  assert.ok(bottleneckStatus(g.state).missing.some((m) => m.includes('天地灵机')));
+  assert.ok(bottleneckStatus(g.state).missing.some((m) => m.includes('天地灵气')));
   c.age = 192 + 860 * 12; // 第 861 年，B009 灵气回升
   assert.equal(bottleneckStatus(g.state).ok, false);
   gainLawExp(g.state, 100, 'sword');

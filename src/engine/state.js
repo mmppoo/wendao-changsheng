@@ -75,6 +75,16 @@ export function lingqiAt(year) {
   return Math.round(prev + (LINGQI_BY_CHAPTER[idx] - prev) * t);
 }
 
+/** 灵气的大白话说法（界面只给词，不给数字）。 */
+export function lingqiWord(L) {
+  if (L >= 85) return '鼎盛';
+  if (L >= 65) return '充沛';
+  if (L >= 40) return '平常';
+  if (L >= 20) return '稀薄';
+  if (L > 0) return '将尽';
+  return '断绝';
+}
+
 /** 冲击某一大境所需的天地灵机（剧本：元婴以上是世人不知的境地，只在灵气鼎盛之世可成）。 */
 export const LINGQI_FOR_REALM = [0, 10, 30, 45, 70, 78, 82, 86, 88, 90];
 
@@ -152,15 +162,15 @@ export function activeDaoGoal(state) {
   if (canBreakthrough(c)) {
     const nextName = REALMS[c.realm + 1]?.name || '更高境界';
     if (bn.ok) {
-      return { label: '修为圆满', detail: `即刻点击「冲击境界」迈向${isRealmMaxLayer(c) ? nextName : '下一重'}`, priority: 'primary' };
+      return { label: '可以突破了', detail: `到洞府「冲击境界」，迈向${isRealmMaxLayer(c) ? nextName : '下一层'}`, priority: 'primary' };
     }
-    return { label: '破解瓶颈', detail: `${bn.missing[0]}（前往洞府「参悟大道」）`, priority: 'warn' };
+    return { label: '卡在瓶颈', detail: bn.missing[0].startsWith('如今天地') ? bn.missing[0] : `${bn.missing[0]}（到洞府「参悟大道」）`, priority: 'warn' };
   }
   if (c.demon >= 50) {
     return { label: '镇压心魔', detail: `当前心魔 ${Math.round(c.demon)}，赴洞府「静心涤魔」或服清心丹`, priority: 'warn' };
   }
   if (!c.sectId && c.realm <= 2 && !(c.sectLeaveUntil && c.age < c.sectLeaveUntil)) {
-    return { label: '拜入仙门', detail: '玄衡、青崖、边军、商会……投身一处门户，得其传承与差事', priority: 'normal' };
+    return { label: '找个门路', detail: '投身一处门户，能学功法、领差事、换资源', priority: 'normal' };
   }
   const needPill = REALMS[c.realm]?.bottleneck?.needItem;
   if (needPill && isRealmMaxLayer(c) && !hasItem(state, needPill)) {
@@ -170,17 +180,17 @@ export function activeDaoGoal(state) {
   const reg = REGION_BY_ID[c.regionId] || REGION_BY_ID.qingniu;
   const prog = Math.min(100, Math.round(c.regionProgress?.[reg.id] || 0));
   if (prog < 100) {
-    return { label: `踏破${reg.name}`, detail: `探索度 ${prog}%（满百解锁灵脉采撷，亦可闯五层秘境探幽）`, priority: 'normal' };
+    return { label: `走遍${reg.name}`, detail: `已走过 ${prog}%。走遍之后，可采灵脉、下秘境`, priority: 'normal' };
   }
   const nextRegion = REGIONS.find((r) => c.realm >= r.minRealm && !(c.visitedLocations || []).includes(r.name));
   if (nextRegion) {
-    return { label: `迁徙${nextRegion.name}`, detail: '前往新灵域获取首临见闻礼与更高阶丹材秘境', priority: 'normal' };
+    return { label: `去${nextRegion.name}`, detail: '那里有新的人、新的事，也有更好的药材和秘境', priority: 'normal' };
   }
   if (c.realm >= 8) {
     return { label: '渡劫证真', detail: '此世无飞升之路：渡过天劫即成真仙，仍在五域，看纪元更替', priority: 'primary' };
   }
   const era = currentWorldEra(state);
-  return { label: `顺应「${era.name}」`, detail: `${era.desc}`, priority: 'normal' };
+  return { label: '四处走走', detail: '五域各有大事，人在哪里，就能亲眼看见哪里的事', priority: 'normal' };
 }
 
 const ATTR_KEYS = ['悟性', '根骨', '神识', '道心', '气运', '魅力'];
@@ -811,7 +821,7 @@ export function bottleneckStatus(state) {
   const L = lingqiAt(yearOf(state));
   const needL = LINGQI_FOR_REALM[c.realm + 1] ?? 0;
   if (L < needL) {
-    missing.push(`天地灵机不足：当世灵气 ${L}，冲击${REALMS[c.realm + 1]?.name || '下一境'}需 ${needL}`);
+    missing.push(`如今天地灵气${lingqiWord(L)}，撑不起${REALMS[c.realm + 1]?.name || '下一境'}，要等灵气更足的年月`);
   }
   return { ok: missing.length === 0, missing, bottleneck: bn };
 }
@@ -938,13 +948,18 @@ export function advanceMonths(state, months, rng) {
     notes.push(`正邪功法同修气机相冲，心魔 +${gain}`);
   }
   if (char.injuries > 0 && months >= 3) char.injuries = Math.max(0, char.injuries - 1);
-  // v8：百年一章。跨章时播报新篇章（导语由引擎另行展示）
+  // v8：灵气随年代起落。不播报「篇章」，只在灵气明显变了的时候说一句人话
   const chNow = chapterForYear(yearOf(state));
-  if (state.chapterId && state.chapterId !== chNow.id) {
-    notes.push(`【新篇 · ${chNow.id} ${chNow.name}（第${chNow.from}—${chNow.to}年）】${chNow.world}`);
-    state.pendingChapter = chNow.id;
-  }
   state.chapterId = chNow.id;
+  const wordNow = lingqiWord(lingqiAt(yearOf(state)));
+  if (state.lingqiWord && state.lingqiWord !== wordNow) {
+    const order = ['断绝', '将尽', '稀薄', '平常', '充沛', '鼎盛'];
+    const up = order.indexOf(wordNow) > order.indexOf(state.lingqiWord);
+    notes.push(up
+      ? `这些年，天地间的灵气一年比一年足（灵气${wordNow}），吐纳比从前快了。`
+      : `这些年，天地间的灵气一年比一年薄（灵气${wordNow}），修行比从前慢了。`);
+  }
+  state.lingqiWord = wordNow;
   recomputeDerived(char);
   state.stats.years = Math.floor((char.age - START_AGE_MONTHS) / 12);
   return notes;

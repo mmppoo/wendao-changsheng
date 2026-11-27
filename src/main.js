@@ -3,7 +3,7 @@ import { SaveStore, mergeMeta } from './engine/save.js';
 import {
   recomputeDerived, qualityMultiplier, maxTechSlots, activeTechniques,
   techAlignmentConflict, lifespanAlert, titleBonuses, monthlyExp,
-  currentWorldEra, activeDaoGoal,
+  currentWorldEra, activeDaoGoal, lingqiWord,
 } from './engine/state.js';
 import { ROOTS, ROOT_BY_ID, GRADE_ORDER, ROOT_WEIGHT_TOTAL } from './data/roots.js';
 import { ORIGINS } from './data/origins.js';
@@ -325,7 +325,6 @@ function settleRoll() {
     <span class="roll-stat">修炼 ×${root.speed}</span>
     <span class="roll-stat">突破 ${root.breakBonus >= 0 ? '+' : ''}${root.breakBonus}%</span>
     <span class="roll-stat">寿元 ${root.lifespan >= 0 ? '+' : ''}${root.lifespan}年</span>
-    <span class="roll-stat">天命 ${pct}%</span>
   `;
   $('roll-desc').innerHTML = `${root.desc}<br><span style="color:var(--gold)">${root.quirk}</span>`;
 
@@ -472,9 +471,9 @@ function renderAll(deltas = []) {
   }
   yearEl.dataset.year = String(yr);
   yearEl.textContent = `第 ${yr.toLocaleString()} 年`;
-  const trend = era.chapter.cult > 0 ? '↑' : era.chapter.cult < 0 ? '↓' : '';
-  $('top-chapter').textContent = `${era.chapter.id} ${era.chapter.name} · 灵气 ${era.lingqi}${trend}`;
-  $('top-chapter').title = `${era.chapter.world}（${era.chapter.balance}）`;
+  const season = ['春', '春', '春', '夏', '夏', '夏', '秋', '秋', '秋', '冬', '冬', '冬'][(c.age % 12 + 12) % 12];
+  $('top-chapter').textContent = `${season} · 天地灵气${lingqiWord(era.lingqi)}`;
+  $('top-chapter').title = '灵气越足，修行越快；灵气不够时，高境界冲不上去。';
   $('brand-mark').textContent = REALMS[c.realm]?.name?.[0] || '道';
   $('turn-line').textContent = `第 ${game.state.turn} 回合 · ${Math.floor(c.age / 12)}岁`;
 }
@@ -764,7 +763,7 @@ function renderCharPanel() {
     </div>
 
     <div class="panel-block">
-      <h4>道途指引 · ${escapeHtml(era.name)}</h4>
+      <h4>眼下</h4>
       <div class="goal-card ${goal.priority === 'critical' ? 'is-critical' : goal.priority === 'warn' ? 'is-warn' : ''}">
         <b>${escapeHtml(goal.label)}</b>
         <span>${escapeHtml(goal.detail)}</span>
@@ -884,7 +883,7 @@ function renderChoices() {
   list.forEach((ch, i) => {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'choice' + (ch.effect === 'primary' || ch.effect === 'highlight' ? ' is-primary' : '');
+    btn.className = 'choice' + (ch.effect === 'primary' || ch.effect === 'highlight' ? ' is-primary' : '') + (ch.effect === 'quick' ? ' is-quick' : '');
     btn.disabled = Boolean(ch.disabled);
     btn.dataset.index = String(ch.index);
     const reason = ch.disabled && ch.reason ? ` <span class="reason">（${escapeHtml(ch.reason)}）</span>` : '';
@@ -1189,11 +1188,11 @@ function wireOverlays() {
   $('menu-help').addEventListener('click', () => {
     $('menu-body').innerHTML = `
       <h4>这一世怎么过</h4>
-      <p><b>大历史</b>：第一纪元一万年，百年一章。每章的天下大势照剧本推进；你在场就亲历、能插手，不在场就只听到风声。<br>
+      <p><b>世事</b>：天下大事按年份发生，不等你。你人在当地，就能亲眼看见、出手插一脚；不在，就只听到风声。<br>
       <b>前世手札</b>：死后魂识回到第一年的青石镇。亲历或听闻的大事都记进手札，下一世到了年份会应验，事件里会多出「先知」的选项。改变了默认走向，就记一笔「历史已改写」。<br>
-      <b>灵气与境界</b>：灵气随章起落。灵气高的年代修得快，元婴以上要等天地灵机够；末法年代几乎修不动，机巧兴起。没有飞升——境界到了，人还在世上，看纪元更替。<br>
+      <b>灵气与境界</b>：天地灵气随年代起落，顶栏写着眼下是足是薄。灵气足的年月修得快；灵气不够，高境界冲不上去。没有飞升，境界再高，人也还在这片天地里。<br>
       <b>门户与故人</b>：玄衡宗、青崖宗、观星台、北境边军、通远商会……投身一处，得其差事与传承；与故人论道、切磋、赠礼。<br>
-      <b>快进与了结</b>：结丹以上可「闭关至下一件大事」，遇身边大事、新篇章、寿元告急自动出关；也可「兵解入轮回」，按此生作为结算。</p>
+      <b>快进与了结</b>：结丹以上可「闭关至下一件大事」，遇身边大事、寿元告急自动出关；也可「兵解入轮回」，按此生作为结算。</p>
       <h4>斗法</h4>
       <p>敌手每回合预告意图：蓄力重击时以「守势」化解可触发反击；可祭符破招、展开法则领域。越阶斩杀得重赏，境界压制时一招可毙。</p>
       <h4>双端操作</h4>

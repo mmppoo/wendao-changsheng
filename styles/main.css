@@ -1133,6 +1133,12 @@ button { cursor: pointer; }
 .choice:hover:not(:disabled) .arrow { opacity: 1; transform: translateX(2px); }
 
 .choices.is-hub-grid .choice.is-primary { grid-column: 1 / -1; }
+/* 主界直达：修炼、走走——比六个入口醒目一档 */
+.choices.is-hub-grid .choice.is-quick {
+  border-color: var(--gold);
+  background-color: rgba(230, 185, 92, 0.13);
+}
+.choices.is-hub-grid .choice.is-quick .label { color: var(--gold-bright, #f3d28a); }
 
 .choice.is-primary {
   border-color: var(--cinnabar-bright);

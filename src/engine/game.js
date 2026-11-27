@@ -5,7 +5,7 @@ import {
   qualityMultiplier, lawBonusSum, maxLawLevel, defaultLawFor, gainLawExp, bottleneckStatus,
   maxTechSlots, activeTechniques, techCollectionBonus, techAlignmentConflict, techAlign,
   equipTechnique, unequipTechnique, autoEquipBestTechniques, titleBonuses, petBonuses,
-  lifespanAlert, sectPerks, currentWorldEra, rollWorldEra, activeDaoGoal, SAVE_VERSION, lingqiAt,
+  lifespanAlert, sectPerks, currentWorldEra, rollWorldEra, activeDaoGoal, SAVE_VERSION, lingqiAt, lingqiWord,
 } from './state.js';
 import { applyEffects } from './effects.js';
 import {
@@ -93,9 +93,10 @@ export class Game {
       this.state.flags['宿敌'] = arch.id;
       this.state.flags['宿敌名'] = this.rng.pick(arch.surnames) + this.rng.pick(arch.givenNames);
     }
-    // v8：每一世从第一章导语开始
+    // v8：不放「篇章导语」，开局直接进第一件事
     this.state.chapterId = 'B001';
-    this.state.scene = { id: 'chapter', chapterId: 'B001', result: null };
+    this.state.lingqiWord = lingqiWord(lingqiAt(1));
+    this.openFirstHistory();
     this.checkAchievements();
     this.emit();
     return s;
@@ -549,7 +550,7 @@ export class Game {
       });
     }
     if (c.realm >= 1) {
-      choices.push({ id: 'long_seclusion', label: '闭关至下一件大事', hint: '至多百年 · 遇身边大事、新篇章、瓶颈解开、心魔或寿元告急即出关', action: 'longSeclusion', effect: 'quiet' });
+      choices.push({ id: 'long_seclusion', label: '闭关至下一件大事', hint: '至多百年 · 遇身边大事、瓶颈解开、心魔或寿元告急即出关', action: 'longSeclusion', effect: 'quiet' });
     }
     choices.push(c.realm >= 2
       ? { id: 'bingjie', label: '兵解入轮回', hint: '主动了结此生，魂归第一年青石渡口（按此生作为结算）', action: 'bingjie' }
@@ -661,8 +662,6 @@ export class Game {
       const hist = tickHistory(s, this.registry);
       for (const n of hist.notes) { this.pushRumor(n); heard.push(n); }
       if (hist.open) { stopReason = `身边将有大事：${hist.open.title}`; break; }
-      if (s.pendingChapter) { stopReason = '百年一章，天下气象已变'; break; }
-      if (notes.some((n) => n.includes('新篇'))) { stopReason = '百年一章，天下气象已变'; break; }
       if (canBreakthrough(c) && bottleneckStatus(s).ok) { stopReason = waitingBottleneck ? '瓶颈已解（天地灵机已足），可以冲关了' : '修为圆满，破境契机已至'; break; }
       if (c.demon >= 45) { stopReason = `心魔升至 ${Math.round(c.demon)}，停关调息`; break; }
       if (lifespanAlert(c).level !== 'ok') { stopReason = '寿元告警，出关谋求破境或延寿'; break; }
@@ -1012,7 +1011,7 @@ export class Game {
     };
   }
 
-  act_regionExplore() {
+  act_regionExplore(ch = {}) {
     const s = this.state;
     const c = s.char;
     const region = REGION_BY_ID[c.regionId] || REGION_BY_ID.qingniu;
@@ -1054,7 +1053,7 @@ export class Game {
     s.scene.result = {
       text: `你沿${region.name}古道深入数十里，拨开荒草断碑，于隐蔽石隙间寻得前人遗物。`,
       lines,
-      returnTo: 'regionHub',
+      returnTo: ch.params?.returnTo || 'regionHub',
     };
     this.afterAction();
     this.emit();
@@ -4336,11 +4335,7 @@ export class Game {
     }
     // 仅在返回主界且无结果弹屏/战斗/天劫/秘境探幽时才触发主线插播，绝不吞掉刚打开的奇遇或结果文本！
     const calm = !s.scene.result && !s.combat && !s.tribulation && !s.delve;
-    if (calm && s.pendingChapter && (s.scene.id === 'hub' || s.scene.id === 'cave' || s.scene.id === 'regionHub')) {
-      s.scene = { id: 'chapter', chapterId: s.pendingChapter, result: null };
-      s.pendingChapter = null;
-      return;
-    }
+    s.pendingChapter = null;
     if (calm && hist.open && (s.scene.id === 'hub' || s.scene.id === 'regionHub' || s.scene.id === 'cave')) {
       const preface = beginHistoryEvent(s, hist.open);
       this.openScene(hist.open.id);
@@ -4350,6 +4345,16 @@ export class Game {
     if (s.scene.id !== 'hub' || !calm) return;
     const pending = this.pendingStory();
     if (pending) this.openScene(pending);
+  }
+
+  /** 开局：本地第一件大事直接开场（没有就停在主界）。 */
+  openFirstHistory() {
+    const s = this.state;
+    const hist = tickHistory(s, this.registry);
+    if (!hist.open) return;
+    const preface = beginHistoryEvent(s, hist.open);
+    this.openScene(hist.open.id);
+    if (preface) s.scene.preface = preface;
   }
 
   pendingStory() {

@@ -152,11 +152,30 @@ export function buildHub(game) {
     choices.push({
       id: 'long_seclusion',
       label: '闭关至下一件大事',
-      hint: '至多百年 · 遇身边大事、新篇章、修为圆满或寿元告急即出关',
+      hint: '至多百年 · 遇身边大事、修为圆满或寿元告急即出关',
       action: 'longSeclusion',
       effect: 'primary',
     });
   }
+  // 最常用的两件事放在主界直接点，不用先进子菜单
+  choices.push(
+    {
+      id: 'quick_cultivate',
+      label: '修炼半年',
+      hint: '吐纳炼气，攒修为',
+      action: 'cultivate',
+      params: { months: 6 },
+      effect: 'quick',
+    },
+    {
+      id: 'quick_explore',
+      label: `在${region.name}走走`,
+      hint: '三个月 · 会遇上人和事',
+      action: 'regionExplore',
+      params: { returnTo: 'hub' },
+      effect: 'quick',
+    },
+  );
   choices.push(
     {
       id: 'open_cave',
@@ -221,40 +240,30 @@ export function buildHub(game) {
     id: 'hub',
     title: `${region.name} · ${realmLabel(c)}`,
     text: () => {
-      const hours = [
-        '山风掠过洞府禁制，远处云海间偶见几道剑修遁光划破长空。',
-        '灯下拭剑，丹田灵气随周天缓缓流转，四野清寂无尘。',
-        '州域茶楼正议论秘境将启与潜龙榜更迭，天下英杰暗流涌动。',
-        '暮云低垂，灵泉雾起，正是稳固道基、参悟大道或外出历练之时。',
-        '你吐出一口浊气，双目澄明——仙路漫漫，根基厚一寸，劫难轻三分。',
-      ];
-      const idx = (state.turn + c.realm) % hours.length;
+      // 主界只写一两句眼前的景，加一条「眼下该做什么」；数值都在顶栏，不重复
+      const SCENES = {
+        qingniu: ['河湾渡口的船又摆了一趟，市集上有人在吆喝新米。', '东田里的稻子抽了穗，祠庙的钟敲过三下。', '老窑那边冒着烟，赵守又在祠庙门口贴告示。'],
+        luoxia: ['临河粮码头上，扛包的人从早排到晚。', '河堤上风大，芦洲那头隐约有船影。', '城里茶馆在议论粮价，一天一个说法。'],
+        yaosen: ['青崖谷的药田起了雾，七十二涧水声不断。', '铜谷的炉坊彻夜不熄，铁锤声隔着山都听得见。'],
+        guixu: ['玄衡群峰云气缠绕，护山大阵的符光一明一灭。', '山门前的石阶上，外门弟子扫了一早上的落叶。'],
+        beihuang: ['雁门关上烽燧无烟，关外草滩一片枯黄。', '朔川的风刮了一夜，边军在修补外堡的土墙。'],
+        zhongzhou: ['宁京街上车马不断，宫墙里的事没人说得清。', '河洛的庄园连着庄园，佃户们低头赶路。'],
+        kunlun: ['玉门关外黄沙漫天，商队在井边歇脚。', '沙州绿洲的井水又浅了一指，守井的人在吵架。'],
+        jiuxiao: ['白驼废墟里只有风声，流沙底下压着旧府的屋脊。'],
+      };
+      const lines = SCENES[c.regionId] || SCENES.qingniu;
+      const sceneLine = lines[(state.turn + c.realm) % lines.length];
       const alert = lifespanAlert(c);
-      const remain = alert.remainYears;
-      const active = activeTechniques(c);
-      const techCap = maxTechSlots(c.realm);
       const alignInfo = techAlignmentConflict(c);
       const notes = [];
-      if (alert.level === 'critical') notes.push(`【大限危警】${alert.text}`);
-      else if (alert.level === 'warn') notes.push(`【寿元警示】${alert.text}`);
-      if (alignInfo.conflict) notes.push('【功法相冲】正邪功法同修，心魔暗滋且破境成算受损！');
-      const gf = c.goldenFingerId ? GOLDEN_FINGER_BY_ID[c.goldenFingerId] : null;
-      if (gf && state.turn % 3 === 0) notes.push(`【${gf.name}】隐隐共鸣。`);
-      if (c.petId && PET_BY_ID[c.petId]) {
-        const pLvl = c.petLevel || 1;
-        notes.push(`伴生灵兽「${PET_BY_ID[c.petId].name}」（${pLvl}阶）伏于身侧吐纳。`);
-      }
-      if (c.playerSectName) {
-        notes.push(`自创仙宗「${c.playerSectName}」（${c.playerSectLevel || 1}品 · 门徒 ${c.playerSectDisciples || 0} 人）香火绵延。`);
-      }
-      const mainLaw = LAW_BY_ID[defaultLawFor(c)];
-      const lawStage = LAW_STAGES[maxLawLevel(c)] || '未入门';
-      const lawLine = c.realm >= 2 || maxLawLevel(c) > 0 ? ` · 法则：${mainLaw?.name || '剑道'}（${lawStage}）` : '';
-      const needText = Number.isFinite(needExp(c)) ? needExp(c).toLocaleString() : '∞';
-      const era = currentWorldEra(state);
-      const eraRemain = state.worldEra ? Math.max(1, Math.ceil((state.worldEra.until - c.age) / 12)) : 30;
+      if (alert.level === 'critical') notes.push(`【大限将至】${alert.text}`);
+      else if (alert.level === 'warn') notes.push(`【寿元不多】${alert.text}`);
+      if (alignInfo.conflict) notes.push('【功法相冲】正邪功法同修，心魔滋长、突破变难。');
+      if (c.playerSectName) notes.push(`你的门户「${c.playerSectName}」门下 ${c.playerSectDisciples || 0} 人。`);
       const goal = activeDaoGoal(state);
-      return `${hours[idx]}${notes.length ? `\n${notes.join('\n')}` : ''}\n\n【天象·${era.name}】${era.tag}（余 ${eraRemain} 年） · 【道途指引】${goal.label}：${goal.detail}\n${Math.floor(c.age / 12)} 岁 · ${realmLabel(c)}（余寿 ${remain} 年）· 身处「${region.name}」${lawLine}\n修为 ${Math.floor(c.exp).toLocaleString()} / ${needText} · 运使功法 ${active.length}/${techCap} · 攻 ${game.playerAtk().toLocaleString()} / 防 ${game.playerDef().toLocaleString()}`;
+      // 近来：最近听到的三条消息（世事在走，主界就该看得见）
+      const recent = (state.rumors || []).slice(1, 4).map((r) => `· ${r}`);
+      return `${sceneLine}${notes.length ? `\n\n${notes.join('\n')}` : ''}${recent.length ? `\n\n近来\n${recent.join('\n')}` : ''}\n\n眼下 · ${goal.label}：${goal.detail}`;
     },
     choices,
     hub: true,
