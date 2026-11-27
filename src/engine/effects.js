@@ -82,7 +82,7 @@ export function applyEffects(state, effects = {}, ctx = {}) {
       state.stats.contribSpent = (state.stats.contribSpent || 0) + Math.abs(effects.contribution);
     }
     c.contribution = Math.max(0, c.contribution + effects.contribution);
-    out.push(`宗门贡献 ${effects.contribution > 0 ? '+' : ''}${effects.contribution}`);
+    out.push(`门户贡献 ${effects.contribution > 0 ? '+' : ''}${effects.contribution}`);
   }
   if (effects.karma) {
     c.karma += effects.karma;
@@ -137,9 +137,9 @@ export function applyEffects(state, effects = {}, ctx = {}) {
         if (c.equippedTechs.length < cap && !c.equippedTechs.includes(t.id)) {
           c.equippedTechs.push(t.id);
           c._manualUnequip = false;
-          out.push(`习得并运使${t.name || '功法'}`);
+          out.push(`习得并修习${t.name || '功法'}`);
         } else {
-          out.push(`习得${t.name || '功法'}（已收录藏经簿，可至洞府切换运使）`);
+          out.push(`习得${t.name || '功法'}（可到洞府「功法」里选用）`);
         }
         recomputeDerived(c);
       }

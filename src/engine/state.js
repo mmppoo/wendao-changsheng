@@ -17,41 +17,6 @@ import { REGIONS, REGION_BY_ID } from '../data/regions.js';
 export const SAVE_VERSION = 8; // v8：世界换成宁朝五域，v7 及以前的「进行中的一世」不再载入（跨世进度保留）
 export const START_AGE_MONTHS = 16 * 12;
 
-export const WORLD_ERAS = [
-  {
-    id: 'aura_tide', name: '灵气潮汐', tag: '修炼 +25%',
-    speed: 0.25, veinMult: 1.2,
-    desc: '五域地脉灵雾喷薄，闭关修行与灵脉采撷收益大增。',
-  },
-  {
-    id: 'demon_surge', name: '妖潮动荡', tag: '战利 +35%',
-    combatLoot: 0.35, delveLoot: 0.3,
-    desc: '四方妖邪蠢动，猎妖灵石修为 +35%、秘境探幽收获 +30%。',
-  },
-  {
-    id: 'pill_craft_fair', name: '丹器盛会', tag: '炼丹 +15%',
-    alchemy: 0.15, refineDiscount: 0.2,
-    desc: '五域丹尊器师云集，炼丹成丹率 +15%、祭炼费用 -20%。',
-  },
-  {
-    id: 'trade_boom', name: '万宝商潮', tag: '坊市 -12%',
-    shopDiscount: 0.12, sellBonus: 0.2,
-    desc: '仙商云集百货流转，坊市与秘阁额外 -12% 折扣、出售涨价 +20%。',
-  },
-  {
-    id: 'dao_manifest', name: '天道显化', tag: '悟道 +40%',
-    lawMult: 1.4, breakBonus: 5,
-    desc: '大道道纹映照苍穹，法则感悟 +40%、破境成算 +5%。',
-  },
-  {
-    id: 'trib_storm', name: '劫云暗涌', tag: '暴击 +10% · 声望 +40%',
-    crit: 0.1, repMult: 1.4, demonMult: 1.2,
-    desc: '九霄雷云压境，斗法暴击 +10%、声望 +40%（心魔滋长微增）。',
-  },
-];
-
-export const WORLD_ERA_BY_ID = Object.fromEntries(WORLD_ERAS.map((e) => [e.id, e]));
-
 /* ---------------- v8 大历史：年份、篇章、灵气 ---------------- */
 
 /** 第一纪元第几年（每一世都从第 1 年开始，主角 16 岁）。 */
@@ -104,11 +69,9 @@ export function currentWorldEra(state) {
   const L = lingqiAt(year);
   const speed = (0.15 + 1.7 * L / 100) - 1;
   const techUp = ch.tech > 0;
-  const trend = ch.balance.split('。')[0];
   return {
     id: ch.id,
-    name: `${ch.id} · ${ch.name}`,
-    tag: `灵气 ${L} · ${trend}`,
+    name: ch.name,
     desc: ch.world,
     chapter: ch,
     lingqi: L,
@@ -123,22 +86,12 @@ export function currentWorldEra(state) {
   };
 }
 
-export function rollWorldEra(state, rng, excludeId = null) {
-  const pool = WORLD_ERAS.filter((e) => e.id !== excludeId);
-  const picked = rng ? rng.pick(pool) : pool[0];
-  const duration = rng ? rng.int(360, 540) : 420; // 30–45 年
-  const startAge = state?.char?.age ?? START_AGE_MONTHS;
-  const eraState = { id: picked.id, until: startAge + duration };
-  if (state) state.worldEra = eraState;
-  return { era: picked, eraState };
-}
-
 export function activeDaoGoal(state) {
   if (!state?.char) return { label: '踏入仙途', detail: '吐纳炼气，初探长生之道', priority: 'normal' };
   const c = state.char;
   const life = lifespanAlert(c);
   if (life.level === 'critical') {
-    return { label: '大限告急', detail: `余寿仅 ${life.remainYears} 年！速破境或寻延寿丹药`, priority: 'critical' };
+    return { label: '大限告急', detail: `余寿仅 ${life.remainYears} 年，需尽快破境或寻延寿丹药`, priority: 'critical' };
   }
   // v8：第一百年大水已过，本世没改写——提示可以带着记忆回到第一年
   const judged = state.history?.['y019.century_judgement'];
@@ -156,7 +109,7 @@ export function activeDaoGoal(state) {
   }
   const conflict = techAlignmentConflict(c);
   if (conflict.conflict) {
-    return { label: '真气相冲', detail: '正邪功法混修，前往洞府「功法运使」卸除冲突典籍', priority: 'warn' };
+    return { label: '真气相冲', detail: '正邪功法同修，到洞府「功法」里卸下相冲的功法', priority: 'warn' };
   }
   const bn = bottleneckStatus(state);
   if (canBreakthrough(c)) {
@@ -164,7 +117,7 @@ export function activeDaoGoal(state) {
     if (bn.ok) {
       return { label: '可以突破了', detail: `到洞府「冲击境界」，迈向${isRealmMaxLayer(c) ? nextName : '下一层'}`, priority: 'primary' };
     }
-    return { label: '卡在瓶颈', detail: bn.missing[0].startsWith('如今天地') ? bn.missing[0] : `${bn.missing[0]}（到洞府「参悟大道」）`, priority: 'warn' };
+    return { label: '卡在瓶颈', detail: bn.missing[0].startsWith('如今天地') ? bn.missing[0] : `${bn.missing[0]}（到洞府「参悟」）`, priority: 'warn' };
   }
   if (c.demon >= 50) {
     return { label: '镇压心魔', detail: `当前心魔 ${Math.round(c.demon)}，赴洞府「静心涤魔」或服清心丹`, priority: 'warn' };
@@ -175,7 +128,7 @@ export function activeDaoGoal(state) {
   const needPill = REALMS[c.realm]?.bottleneck?.needItem;
   if (needPill && isRealmMaxLayer(c) && !hasItem(state, needPill)) {
     const pillName = ITEM_BY_ID[needPill]?.name || needPill;
-    return { label: `筹备${pillName}`, detail: `大境在即，可于丹房炼制或坊市/宗门宝库寻「${pillName}」`, priority: 'normal' };
+    return { label: `筹备${pillName}`, detail: `大境在即，可在丹房炼制，或到市集坊间、门户宝库寻「${pillName}」`, priority: 'normal' };
   }
   const reg = REGION_BY_ID[c.regionId] || REGION_BY_ID.qingniu;
   const prog = Math.min(100, Math.round(c.regionProgress?.[reg.id] || 0));
@@ -187,7 +140,7 @@ export function activeDaoGoal(state) {
     return { label: `去${nextRegion.name}`, detail: '那里有新的人、新的事，也有更好的药材和秘境', priority: 'normal' };
   }
   if (c.realm >= 8) {
-    return { label: '渡劫证真', detail: '此世无飞升之路：渡过天劫即成真仙，仍在五域，看纪元更替', priority: 'primary' };
+    return { label: '渡劫证真', detail: '渡过天劫即成真仙，此后长居五域，看纪元更替', priority: 'primary' };
   }
   const era = currentWorldEra(state);
   return { label: '四处走走', detail: '五域各有大事，人在哪里，就能亲眼看见哪里的事', priority: 'normal' };
@@ -318,10 +271,10 @@ export function equipTechnique(char, techId) {
   const tech = char.techniques.find((t) => t.id === techId);
   if (!tech) return { ok: false, reason: '尚未习得此功法' };
   activeTechniques(char);
-  if (char.equippedTechs.includes(techId)) return { ok: true, already: true, tech, reason: '已在运使中' };
+  if (char.equippedTechs.includes(techId)) return { ok: true, already: true, tech, reason: '已在用' };
   const cap = maxTechSlots(char.realm);
   if (char.equippedTechs.length >= cap) {
-    return { ok: false, reason: `运使槽位已满（${cap}/${cap}），请先卸下其他功法` };
+    return { ok: false, reason: '在用功法已满，请先卸下一部' };
   }
   char.equippedTechs.push(techId);
   char._manualUnequip = false;
@@ -333,7 +286,7 @@ export function unequipTechnique(char, techId) {
   if (!char) return { ok: false, reason: '角色数据无效' };
   activeTechniques(char);
   const idx = char.equippedTechs.indexOf(techId);
-  if (idx < 0) return { ok: false, reason: '该功法未在运使中' };
+  if (idx < 0) return { ok: false, reason: '该功法没有在用' };
   char.equippedTechs.splice(idx, 1);
   if (char.equippedTechs.length === 0) char._manualUnequip = true;
   recomputeDerived(char);
@@ -423,7 +376,7 @@ export function lifespanAlert(char) {
   const remainYears = Math.floor(remainMonths / 12);
   const ratio = remainMonths / lifespan;
   if (remainMonths <= 60 || ratio <= 0.1) {
-    return { level: 'critical', remainYears, remainMonths, text: '寿元将竭，油尽灯枯！须即刻破境或寻延寿仙药！' };
+    return { level: 'critical', remainYears, remainMonths, text: '寿元将尽，需尽快破境或寻延寿丹药。' };
   }
   if (remainMonths <= 180 || ratio <= 0.25) {
     return { level: 'warn', remainYears, remainMonths, text: '大限渐近，余寿不足四分之一。' };
@@ -575,7 +528,6 @@ export function createRun({ seed, name, gender, originId, rootId, goldenFingerId
     buffs,
     combat: null,
     delve: null,
-    worldEra: { id: WORLD_ERAS[rng.int(0, WORLD_ERAS.length - 1)].id, until: START_AGE_MONTHS + rng.int(360, 540) },
     sectBoard: null,
     scene: { id: 'hub', result: null },
     log: [],
@@ -702,7 +654,7 @@ export function gainLawExp(state, amount, preferredLawId = null) {
   while (c.lawExp >= need && (c.laws[lid] || 0) < LAW_STAGES.length - 1) {
     c.lawExp -= need;
     c.laws[lid] = (c.laws[lid] || 0) + 1;
-    out.push(`【法则突破】${LAW_BY_ID[lid].name}法则迈入「${LAW_STAGES[c.laws[lid]]}」！`);
+    out.push(`【法则突破】${LAW_BY_ID[lid].name}法则迈入「${LAW_STAGES[c.laws[lid]]}」。`);
     recomputeDerived(c);
     need = 60 * (c.laws[lid] + 1) * (c.laws[lid] + 1);
   }
@@ -924,7 +876,7 @@ export function advanceMonths(state, months, rng) {
   if (char.sectId) {
     const pm = REALMS[char.realm]?.powerMult || 1;
     const stipend = Math.round(((perks.stones || 0) + (char.sectRank || 0) * 15) * Math.sqrt(pm) * months * 0.5);
-    if (stipend) { char.stones += stipend; notes.push(`宗门月俸 +${stipend} 灵石`); }
+    if (stipend) { char.stones += stipend; notes.push(`门户月俸 +${stipend} 灵石`); }
     char.contribution += Math.round((char.sectRank || 0) * 2 * months);
   }
   const era = currentWorldEra(state);

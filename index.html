@@ -44,9 +44,7 @@
     <div class="create-panel px-frame">
       <header class="create-head">
         <div>
-          <p class="create-kicker">入世之始 · 命格构筑</p>
-          <h2>择一出身与伴生机缘</h2>
-          <p>先定入世出身与伴生机缘，再启八卦测灵阵。每一世皆可走出截然不同的长生道途。</p>
+          <h2>这一世</h2>
         </div>
         <button id="btn-back-title" class="btn btn-ghost btn-sm">返回卷首</button>
       </header>
@@ -65,26 +63,28 @@
         </div>
       </div>
 
-      <div class="section-label">一、选择出身</div>
-      <div class="origin-grid" id="origin-grid" role="radiogroup" aria-label="出身"></div>
+      <div class="section-label">出身</div>
+      <div class="origin-grid pick-row" id="origin-grid" role="radiogroup" aria-label="出身"></div>
+      <div class="pick-detail" id="origin-detail"></div>
 
       <div class="gf-block">
-        <div class="section-label">二、伴生机缘（入世异宝）</div>
-        <div class="gf-grid" id="gf-grid" role="radiogroup" aria-label="伴生机缘"></div>
+        <div class="section-label">随身机缘</div>
+        <div class="gf-grid pick-row" id="gf-grid" role="radiogroup" aria-label="随身机缘"></div>
+        <div class="pick-detail" id="gf-detail"></div>
       </div>
 
-      <div class="talent-block">
-        <div class="talent-head">
-          <h3>三、轮回天赋</h3>
+      <details class="talent-block talent-fold">
+        <summary class="talent-head">
+          <h3>轮回天赋</h3>
           <span id="karma-points">轮回点 0</span>
-        </div>
-        <p class="talent-sub">每历一世可得轮回点。天赋分五重，越往上越贵，点亮后此后每一世永久生效。</p>
+        </summary>
+        <p class="talent-sub">每过一世得轮回点。点亮的天赋，之后每一世都生效。</p>
         <div class="talent-grid" id="talent-grid"></div>
-      </div>
+      </details>
 
       <div class="talent-block" id="jieshu-block" hidden>
         <div class="talent-head">
-          <h3>四、劫数</h3>
+          <h3>劫数</h3>
           <span id="jieshu-label">常世</span>
         </div>
         <p class="talent-sub" id="jieshu-desc">在某一劫数下活过第一千年，即可选更高一重。劫数越高，世间越凶险，轮回点与收获越丰厚。</p>
@@ -92,7 +92,7 @@
       </div>
 
       <div class="create-foot">
-        <p class="hint" id="create-hint">选中一个出身，然后开启测灵阵。</p>
+        <p class="hint" id="create-hint"></p>
         <div class="create-actions">
           <button id="btn-roll" class="btn btn-primary" disabled>开启测灵阵</button>
         </div>
@@ -233,8 +233,8 @@
       </header>
       <div class="slots" id="slot-list"></div>
       <footer class="modal-foot">
-        <button class="btn btn-ghost btn-sm" id="btn-export">导出 JSON</button>
-        <label class="btn btn-ghost btn-sm file-btn">导入 JSON<input type="file" id="import-file" accept="application/json" hidden /></label>
+        <button class="btn btn-ghost btn-sm" id="btn-export">导出存档文件</button>
+        <label class="btn btn-ghost btn-sm file-btn">导入存档文件<input type="file" id="import-file" accept="application/json" hidden /></label>
       </footer>
     </div>
   </div>
@@ -251,7 +251,7 @@
         <button class="tab" data-tab="achievements">成就</button>
         <button class="tab" data-tab="endings">结局</button>
         <button class="tab" data-tab="roots">灵根</button>
-        <button class="tab" data-tab="sects">宗门</button>
+        <button class="tab" data-tab="sects">门户</button>
         <button class="tab" data-tab="techniques">功法</button>
         <button class="tab" data-tab="regions">五域</button>
       </div>
@@ -268,6 +268,9 @@
         <button class="icon-btn" data-close="menu-overlay" aria-label="关闭">×</button>
       </header>
       <div class="menu-list">
+        <button class="menu-item menu-mobile-only" id="menu-save">存档</button>
+        <button class="menu-item menu-mobile-only" id="menu-load">读档</button>
+        <button class="menu-item menu-mobile-only" id="menu-sound">音效开关</button>
         <button class="menu-item" id="menu-restart">重入轮回</button>
         <button class="menu-item" id="menu-title">返回卷首</button>
         <button class="menu-item" id="menu-help">修行指引</button>

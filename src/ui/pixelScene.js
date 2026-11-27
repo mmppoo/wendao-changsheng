@@ -315,23 +315,23 @@ export const SCENE_THEMES = {
   luoxia:       { kind: 'luoxia',       caption: '南泽 · 临河城粮码头', skyTop: '#241126', skyMid: '#592434', skyBot: '#9e4e3d', accent: '#ffba5c' },
   yaosen:       { kind: 'yaosen',       caption: '东岭 · 青崖谷与铜谷', skyTop: '#061314', skyMid: '#0d2624', skyBot: '#193d35', accent: '#62e09b' },
   guixu:        { kind: 'guixu',        caption: '东岭 · 玄衡群峰', skyTop: '#061524', skyMid: '#0d2d45', skyBot: '#184c66', accent: '#6be8df' },
-  beihuang:     { kind: 'beihuang',     caption: '北境 · 雁门关外', skyTop: '#16060b', skyMid: '#300c15', skyBot: '#541822', accent: '#f05a46' },
+  beihuang:     { kind: 'beihuang',     caption: '北境 · 雁门关外', skyTop: '#121722', skyMid: '#262c3a', skyBot: '#4a4a50', accent: '#d8c48a' },
   zhongzhou:    { kind: 'zhongzhou',    caption: '中州 · 宁京与河洛', skyTop: '#0c162b', skyMid: '#1c3254', skyBot: '#395575', accent: '#f2cb72' },
-  kunlun:       { kind: 'kunlun',       caption: '西陲 · 玉门与沙州', skyTop: '#09071a', skyMid: '#1c143d', skyBot: '#32225e', accent: '#c996ff' },
-  jiuxiao:      { kind: 'jiuxiao',      caption: '西陲 · 白驼赤霞旧府', skyTop: '#161736', skyMid: '#3a345c', skyBot: '#7d6250', accent: '#fff0b3' },
+  kunlun:       { kind: 'kunlun',       caption: '西陲 · 玉门与沙州', skyTop: '#0d0b1a', skyMid: '#241a30', skyBot: '#4a3238', accent: '#e6c08a' },
+  jiuxiao:      { kind: 'jiuxiao',      caption: '西陲 · 白驼赤霞旧府', skyTop: '#1a0d16', skyMid: '#4a1e24', skyBot: '#9a4a36', accent: '#f08a5a' },
 
   // 核心系统与事件专属主题（保持向后兼容）
-  title:        { kind: 'title',        caption: '宁朝 · 第一纪元', skyTop: '#0b101b', skyMid: '#162033', skyBot: '#29364f', accent: '#e6b95c' },
-  village:      { kind: 'village',      caption: '青石镇 · 旧宅静室', skyTop: '#0f1622', skyMid: '#1c283b', skyBot: '#2c3a4f', accent: '#f0b868' },
-  wild:         { kind: 'wild',         caption: '荒野古道 · 鬼火竹林', skyTop: '#091418', skyMid: '#11242b', skyBot: '#1b363d', accent: '#58b98a' },
-  sect:         { kind: 'sect',         caption: '仙门浮峰 · 剑影云海', skyTop: '#0e1526', skyMid: '#1c2b45', skyBot: '#2f4463', accent: '#e6b95c' },
+  title:        { kind: 'title',        caption: '宁朝 · 第一纪元', skyTop: '#12172a', skyMid: '#2e2c48', skyBot: '#8a5a52', accent: '#e6b95c' },
+  village:      { kind: 'village',      caption: '故人', skyTop: '#0f1622', skyMid: '#1c283b', skyBot: '#2c3a4f', accent: '#f0b868' },
+  wild:         { kind: 'wild',         caption: '荒野古道', skyTop: '#091418', skyMid: '#11242b', skyBot: '#1b363d', accent: '#58b98a' },
+  sect:         { kind: 'sect',         caption: '门户驻地', skyTop: '#0e1526', skyMid: '#1c2b45', skyBot: '#2f4463', accent: '#e6b95c' },
   market:       { kind: 'market',       caption: '市集 · 灯火坊间', skyTop: '#16111c', skyMid: '#261a29', skyBot: '#3b2833', accent: '#f2a852' },
   auction:      { kind: 'auction',      caption: '通远商会 · 暗拍', skyTop: '#1b1116', skyMid: '#2e1a20', skyBot: '#472629', accent: '#f5c767' },
-  combat:       { kind: 'combat',       caption: '生死斗法 · 剑气纵横', skyTop: '#180a10', skyMid: '#2e1119', skyBot: '#471a23', accent: '#e85846' },
-  tribulation:  { kind: 'tribulation',  caption: '九重天劫 · 紫雷破空', skyTop: '#0b071a', skyMid: '#190f33', skyBot: '#2e1b52', accent: '#be85ff' },
-  breakthrough: { kind: 'breakthrough', caption: '丹田内景 · 聚气叩关', skyTop: '#09111f', skyMid: '#132436', skyBot: '#1f384a', accent: '#e6c56c' },
+  combat:       { kind: 'combat',       caption: '斗法', skyTop: '#180a10', skyMid: '#2e1119', skyBot: '#471a23', accent: '#e85846' },
+  tribulation:  { kind: 'tribulation',  caption: '天劫', skyTop: '#0b071a', skyMid: '#190f33', skyBot: '#2e1b52', accent: '#be85ff' },
+  breakthrough: { kind: 'breakthrough', caption: '静室', skyTop: '#09111f', skyMid: '#132436', skyBot: '#1f384a', accent: '#e6c56c' },
   ascend:       { kind: 'ascend',       caption: '天劫散尽', skyTop: '#182438', skyMid: '#3a424d', skyBot: '#6e6349', accent: '#fff0b8' },
-  fall:         { kind: 'fall',         caption: '秋雨孤剑 · 尘世一梦', skyTop: '#11141f', skyMid: '#1f222e', skyBot: '#332d36', accent: '#d99082' },
+  fall:         { kind: 'fall',         caption: '一世尽', skyTop: '#11141f', skyMid: '#1f222e', skyBot: '#332d36', accent: '#d99082' },
 };
 
 export function sceneThemeFor(node, state) {
@@ -348,7 +348,6 @@ export function sceneThemeFor(node, state) {
   if (id === 'recruit' || id === 'sectHall' || id === 'sectMissions' || id === 'sectLibrary' || id === 'sectTreasury' || id === 'sectPromote') {
     return SCENE_THEMES.sect;
   }
-  if (id === 'npcHub' || id === 'npcDetail') return SCENE_THEMES.village;
   if (id === 'story_ascend_1') return SCENE_THEMES.ascend;
   if (id === 'ending') {
     const eid = String(state.flags?.endingId || '');
@@ -359,7 +358,7 @@ export function sceneThemeFor(node, state) {
 
   const regId = state.char?.regionId;
   const regBiome = (regId && SCENE_THEMES[regId]) || SCENE_THEMES[REGION_BY_ID[regId]?.theme];
-  if (id === 'hub' || id === 'regionHub' || id === 'regionMap' || id === 'delve') {
+  if (id === 'hub' || id === 'regionHub' || id === 'regionMap' || id === 'delve' || id === 'npcHub' || id === 'npcDetail') {
     return regBiome || SCENE_THEMES.qingniu;
   }
   if (node.pool === 'wild' || node.pool === 'world' || node.pool === 'branch' || node.pool === 'story') {
@@ -793,167 +792,225 @@ export function renderPixelScene(canvas, opts) {
     }
     pxDrawCultivator(ctx, Math.floor(W * 0.4), groundY - 1, { realm, rootId, sectId, petId, pose: 'stand', t });
 
-  } else if (kind === 'guixu') {
-    // 东海归墟：深海漩涡、沉没龙柱、荧光海泡
-    const vx = Math.floor(W * 0.64);
-    const vy = Math.floor(H * 0.58);
-    // 海面与归墟漩涡
-    pxRect(ctx, 0, Math.floor(H * 0.56), W, H, '#0c2c40');
-    for (let r = 3; r >= 0; r--) {
-      const rw = 26 + r * 18;
-      const rh = 6 + r * 3;
-      const col = r % 2 === 0 ? '#277a8c' : '#134459';
-      pxRect(ctx, vx - rw / 2, vy - rh / 2 + Math.round(Math.sin(t * 3 + r)), rw, rh, col);
+  } else if (kind === 'guixu' || kind === 'sect') {
+    // 玄衡群峰：层叠青峰、山腰云带、峰顶宗门大殿、护山大阵的符光
+    pxDrawMountainRange(ctx, W, H, H * 0.62, 34, 0.028, 0.7, '#2a4058', true);
+    pxDrawMountainRange(ctx, W, H, H * 0.74, 22, 0.04, 2.1, '#1c2c40', true);
+    for (let i = 0; i < 6; i++) {
+      const cx = ((i * 57 + Math.floor(t * (3 + (i % 2) * 2))) % (W + 60)) - 30;
+      const cy = Math.floor(H * 0.56) + (i % 3) * 6;
+      pxRect(ctx, cx, cy, 40, 3, 'rgba(220,232,244,0.13)');
+      pxRect(ctx, cx + 8, cy - 2, 22, 2, 'rgba(220,232,244,0.09)');
     }
-    pxRect(ctx, vx - 8, vy - 2, 16, 4, '#6be8df');
-    // 沉没古龙柱
-    const pillars = [
-      { x: Math.floor(W * 0.16), h: 48 },
-      { x: Math.floor(W * 0.78), h: 54 },
-      { x: Math.floor(W * 0.89), h: 34 },
-    ];
-    pillars.forEach((p, idx) => {
-      pxRect(ctx, p.x - 6, groundY - p.h, 12, p.h, '#163547');
-      pxRect(ctx, p.x - 8, groundY - p.h, 16, 4, '#245269');
-      pxRect(ctx, p.x - 1, groundY - p.h + 8, 2, p.h - 14, idx % 2 ? '#6be8df' : '#58b98a');
-    });
-    // 礁石地面与波纹
-    pxRect(ctx, 0, groundY, W, H - groundY, '#0d2233');
-    pxRect(ctx, 0, groundY, W, 2, '#3d8da1');
-    for (let i = 0; i < 7; i++) {
-      const wx = ((i * 44 + Math.floor(t * 14)) % W);
-      pxRect(ctx, wx, groundY + 4 + (i % 3) * 4, 14, 1, 'rgba(130,238,230,0.45)');
+    // 峰顶大殿
+    const hx = Math.floor(W * 0.7);
+    const top = groundY - 46;
+    pxRect(ctx, hx - 22, top + 18, 44, groundY - top - 18, '#18263a');
+    pxRect(ctx, hx - 16, top + 6, 32, 12, '#2a2226');
+    pxRect(ctx, hx - 22, top + 2, 44, 4, '#33404f');
+    pxRect(ctx, hx - 18, top - 1, 36, 3, '#3f4d5e');
+    pxRect(ctx, hx - 22, top + 2, 44, 1, '#e6b95c');
+    pxRect(ctx, hx - 25, top + 4, 3, 2, '#33404f');
+    pxRect(ctx, hx + 22, top + 4, 3, 2, '#33404f');
+    pxRect(ctx, hx - 4, top + 9, 8, 8, '#f2c26b');
+    pxRect(ctx, hx - 12, top + 8, 2, 10, '#8a3a2e');
+    pxRect(ctx, hx + 10, top + 8, 2, 10, '#8a3a2e');
+    // 石阶
+    for (let i = 0; i < 7; i++) pxRect(ctx, hx - 30 - i * 5, top + 20 + i * 4, 6, 1, '#3b5878');
+    // 护山大阵：半圆符光，明灭流转
+    const r = 34;
+    for (let a = 0; a <= 24; a++) {
+      const ang = Math.PI * a / 24;
+      const x = hx + Math.cos(ang) * r;
+      const y = top + 16 - Math.sin(ang) * r * 0.7;
+      const on = Math.sin(t * 2.2 - a * 0.5) > 0.3;
+      pxRect(ctx, x, y, 1, 1, on ? 'rgba(124,232,214,0.85)' : 'rgba(124,232,214,0.22)');
     }
-    // 升腾海泡
-    for (let i = 0; i < 10; i++) {
-      const bx = Math.floor((i * 31 + Math.sin(t * 2 + i) * 5 + W) % W);
-      const by = H - ((Math.floor(t * 12 + i * 21)) % H);
-      pxRect(ctx, bx, by, 2, 2, '#9cf5ef');
-      pxRect(ctx, bx, by, 1, 1, '#ffffff');
-    }
-    pxDrawCultivator(ctx, Math.floor(W * 0.34), groundY - 1, { realm, rootId, sectId, petId, pose: 'stand', t });
+    pxRect(ctx, 0, groundY, W, H - groundY, '#111a26');
+    pxRect(ctx, 0, groundY, W, 2, '#3b5878');
+    pxDrawCultivator(ctx, Math.floor(W * 0.3), groundY - 1, { realm, rootId, sectId, petId, pose: 'stand', t });
 
   } else if (kind === 'beihuang') {
-    // 北荒魔域：巨大血月、锯齿黑曜魔峰、熔裂焦土、漫天余烬
-    const mx = Math.floor(W * 0.72);
-    const my = Math.floor(H * 0.28);
-    pxDrawMoon(ctx, mx, my, '#c42d2d', '#e64c3c', 'rgba(220,58,48,0.24)');
-    pxRect(ctx, mx - 3, my - 2, 3, 2, '#8c1c20');
-    pxRect(ctx, mx + 2, my + 1, 2, 2, '#8c1c20');
-
-    // 锯齿黑曜岩山峰
-    pxDrawMountainRange(ctx, W, H, H * 0.72, 32, 0.03, 0.5, '#1c0c12', true);
-    pxDrawMountainRange(ctx, W, H, H * 0.82, 24, 0.045, 2.2, '#12070b', true);
-
-    // 焦土与岩浆裂纹
-    pxRect(ctx, 0, groundY, W, H - groundY, '#170a0f');
-    pxRect(ctx, 0, groundY, W, 2, '#591b22');
-    for (let i = 0; i < 5; i++) {
-      const lx = 24 + i * 54;
-      pxRect(ctx, lx, groundY + 4 + (i % 2) * 3, 16, 2, '#d44d38');
-      pxRect(ctx, lx + 4, groundY + 4 + (i % 2) * 3, 6, 1, '#ffb35c');
+    // 雁门关：灰冷暮色、低垂白日、关城与城楼、烽燧狼烟、枯黄草滩
+    pxDrawMoon(ctx, Math.floor(W * 0.2), Math.floor(H * 0.3), '#d8d2bc', '#f2eedd', 'rgba(220,214,190,0.12)');
+    pxDrawMountainRange(ctx, W, H, H * 0.7, 14, 0.03, 1.2, '#232a36');
+    // 关墙
+    const wallY = groundY - 14;
+    pxRect(ctx, Math.floor(W * 0.42), wallY, W, 14, '#3a3a40');
+    pxRect(ctx, Math.floor(W * 0.42), wallY, W, 1, '#55565e');
+    for (let x = Math.floor(W * 0.42); x < W; x += 5) pxRect(ctx, x, wallY - 3, 3, 3, '#3a3a40');
+    // 城楼
+    const gx = Math.floor(W * 0.7);
+    pxRect(ctx, gx - 14, wallY - 14, 28, 14, '#44444c');
+    pxRect(ctx, gx - 18, wallY - 18, 36, 4, '#26262c');
+    pxRect(ctx, gx - 20, wallY - 17, 3, 2, '#26262c');
+    pxRect(ctx, gx + 17, wallY - 17, 3, 2, '#26262c');
+    pxRect(ctx, gx - 4, wallY - 9, 8, 9, '#141418');
+    pxRect(ctx, gx - 5, wallY + 3, 10, 11, '#121216');
+    // 旗
+    const wave = Math.floor(t * 4) % 2;
+    pxRect(ctx, gx + 10, wallY - 30, 1, 12, '#6b5a45');
+    pxRect(ctx, gx + 11, wallY - 30 + wave, 7, 4, '#b8392c');
+    // 烽燧与狼烟
+    const bx = Math.floor(W * 0.12);
+    pxRect(ctx, bx - 5, groundY - 22, 10, 22, '#4a4438');
+    pxRect(ctx, bx - 6, groundY - 24, 12, 3, '#5d5646');
+    for (let i = 0; i < 9; i++) {
+      const sy = groundY - 26 - ((Math.floor(t * 9) + i * 6) % 54);
+      const sx = bx - 2 + Math.round(Math.sin(t * 1.5 + i) * 2) + Math.floor((groundY - 26 - sy) / 9);
+      pxRect(ctx, sx, sy, 3 + (i % 2), 2, `rgba(170,168,160,${0.5 - i * 0.04})`);
     }
-    // 飘升火星余烬
-    for (let i = 0; i < 16; i++) {
-      const ex = ((i * 23 + Math.floor(t * 14)) % W);
-      const ey = H - ((Math.floor(t * (10 + (i % 3) * 4) + i * 17)) % H);
-      pxRect(ctx, ex, ey, i % 3 === 0 ? 2 : 1, 1, i % 2 ? '#ff7d47' : '#ffcf66');
+    // 草滩
+    pxRect(ctx, 0, groundY, W, H - groundY, '#2b291f');
+    pxRect(ctx, 0, groundY, W, 2, '#6d6234');
+    for (let x = 3; x < W; x += 9) pxRect(ctx, x + (Math.floor(t * 2 + x) % 2), groundY - 2, 1, 2, '#8a7a44');
+    for (let i = 0; i < 8; i++) {
+      const wx = (Math.floor(t * 30) + i * 37) % W;
+      pxRect(ctx, wx, groundY - 8 - (i % 4) * 7, 3, 1, 'rgba(200,190,150,0.35)');
     }
-    pxDrawCultivator(ctx, Math.floor(W * 0.34), groundY - 1, { realm, rootId, sectId, petId, pose: 'stand', t });
-
-  } else if (kind === 'zhongzhou' || kind === 'sect') {
-    // 中州圣域 / 仙门浮峰：悬空剑峰、流瀑云雾、鎏金大殿、飞剑流光
-    pxDrawMountainRange(ctx, W, H, H * 0.78, 22, 0.02, 1.0, '#16253d');
-    // 流动云海带
-    for (let i = 0; i < 6; i++) {
-      const cx = ((i * 58 + Math.floor(t * (4 + (i % 2) * 2))) % (W + 64)) - 32;
-      const cy = Math.floor(H * 0.62) + (i % 3) * 7;
-      pxRect(ctx, cx, cy, 42, 4, 'rgba(224,234,248,0.16)');
-      pxRect(ctx, cx + 8, cy - 2, 24, 2, 'rgba(255,244,214,0.12)');
-    }
-    // 左侧小浮空剑峰
-    const lx = Math.floor(W * 0.16);
-    const lBob = Math.round(Math.sin(t * 1.6) * 2);
-    pxRect(ctx, lx - 12, 34 + lBob, 24, 8, '#28425e');
-    pxRect(ctx, lx - 8, 42 + lBob, 16, 8, '#1b2e45');
-    pxRect(ctx, lx - 4, 50 + lBob, 8, 7, '#142233');
-    pxRect(ctx, lx - 12, 33 + lBob, 24, 2, '#58b98a');
-
-    // 主悬空仙峰 + 鎏金宝殿 + 瀑布
-    const pxPeak = Math.floor(W * 0.72);
-    pxRect(ctx, pxPeak - 24, groundY - 44, 48, 44, '#1b283d');
-    pxRect(ctx, pxPeak - 18, groundY - 56, 36, 12, '#3d2326');
-    pxRect(ctx, pxPeak - 24, groundY - 58, 48, 4, '#b84233');
-    pxRect(ctx, pxPeak - 17, groundY - 64, 34, 4, '#e6b95c');
-    pxRect(ctx, pxPeak - 5, groundY - 52, 10, 8, '#fff0b3');
-    for (let y = groundY - 40; y < groundY; y += 3) {
-      const shift = Math.floor(t * 14 + y) % 4;
-      pxRect(ctx, pxPeak - 15 + (shift % 2), y, 3, 2, '#87d4f0');
-    }
-
-    // 远空飞剑流光
-    const fx = (Math.floor(t * 38) % (W + 44)) - 22;
-    pxRect(ctx, fx, 22, 16, 1, '#f7d882');
-    pxRect(ctx, fx + 13, 22, 4, 1, '#ffffff');
-    const fx2 = W - ((Math.floor(t * 28 + 90) % (W + 44)) - 22);
-    pxRect(ctx, fx2, 34, 12, 1, '#7de0c2');
-
-    pxRect(ctx, 0, groundY, W, H - groundY, '#141e2e');
-    pxRect(ctx, 0, groundY, W, 2, '#436285');
     pxDrawCultivator(ctx, Math.floor(W * 0.36), groundY - 1, { realm, rootId, sectId, petId, pose: 'stand', t });
 
-  } else if (kind === 'kunlun') {
-    // 昆仑墟界：星裂虚空、悬浮断柱、金色太古符文
-    // 对角星辰裂缝
-    for (let i = 0; i < 28; i++) {
-      const rx = Math.floor(W * 0.32 + i * 4);
-      const ry = Math.floor(10 + i * 2 + Math.sin(i * 0.7 + t * 2) * 3);
-      pxRect(ctx, rx - 2, ry - 2, 6, 5, 'rgba(182, 133, 240, 0.28)');
-      pxRect(ctx, rx, ry, 2, 2, i % 2 ? '#e6c2ff' : '#9be7ff');
-      if (i % 4 === 0) pxRect(ctx, rx, ry, 1, 1, '#ffffff');
+  } else if (kind === 'zhongzhou') {
+    // 宁京：夜色里的城墙、远处成片屋舍灯火、宫城大殿、长街灯笼
+    for (let i = 0; i < 14; i++) {
+      const bx = i * Math.ceil(W / 13) - 4;
+      const bh = 10 + ((i * 7) % 9);
+      const by = Math.floor(H * 0.66) - bh;
+      pxRect(ctx, bx, by, Math.ceil(W / 13) - 1, bh + 4, '#18233a');
+      pxRect(ctx, bx - 1, by - 2, Math.ceil(W / 13) + 1, 2, '#121a2c');
+      if (i % 2 === 0) pxRect(ctx, bx + 4, by + 4, 2, 2, Math.sin(t + i) > -0.6 ? '#f2c26b' : '#6b5530');
     }
-    // 悬浮断裂仙柱
-    const broken = [
-      { x: Math.floor(W * 0.2), y: groundY - 26, h: 20 },
-      { x: Math.floor(W * 0.74), y: groundY - 38, h: 28 },
-      { x: Math.floor(W * 0.86), y: groundY - 20, h: 16 },
-    ];
-    broken.forEach((b, idx) => {
-      const dy = Math.round(Math.sin(t * 1.8 + idx * 2) * 2.5);
-      pxRect(ctx, b.x - 5, b.y + dy, 10, b.h, '#373154');
-      pxRect(ctx, b.x - 6, b.y + dy, 12, 3, '#c996ff');
-      pxRect(ctx, b.x - 1, b.y + dy + 5, 2, b.h - 8, '#e6b95c');
-    });
-    // 旋转太古符文
+    // 宫城
+    const px = Math.floor(W * 0.68);
+    const py = groundY - 52;
+    pxRect(ctx, px - 26, py + 20, 52, 16, '#2a2030');
+    pxRect(ctx, px - 32, py + 14, 64, 6, '#20202c');
+    pxRect(ctx, px - 36, py + 15, 4, 2, '#20202c');
+    pxRect(ctx, px + 32, py + 15, 4, 2, '#20202c');
+    pxRect(ctx, px - 32, py + 14, 64, 1, '#e6b95c');
+    pxRect(ctx, px - 18, py + 4, 36, 10, '#2e2234');
+    pxRect(ctx, px - 22, py, 44, 4, '#20202c');
+    pxRect(ctx, px - 22, py, 44, 1, '#e6b95c');
+    for (let k = -2; k <= 2; k++) pxRect(ctx, px + k * 9 - 1, py + 21, 2, 15, '#9e3a2c');
+    pxRect(ctx, px - 3, py + 6, 6, 6, '#f5bf58');
+    // 城墙
+    const wy = groundY - 16;
+    pxRect(ctx, 0, wy, W, 16, '#262b3a');
+    pxRect(ctx, 0, wy, W, 1, '#3d4458');
+    for (let x = 0; x < W; x += 6) pxRect(ctx, x, wy - 3, 4, 3, '#262b3a');
+    // 灯笼
     for (let i = 0; i < 6; i++) {
-      const rx = Math.floor(W * 0.56 + Math.cos(t * 1.2 + i) * 38);
-      const ry = Math.floor(H * 0.42 + Math.sin(t * 1.5 + i * 1.6) * 14);
-      pxRect(ctx, rx, ry, 3, 3, '#e6b95c');
-      pxRect(ctx, rx + 1, ry + 1, 1, 1, '#ffffff');
+      const lx = 10 + i * Math.floor(W / 6);
+      const sw = Math.round(Math.sin(t * 2 + i));
+      pxRect(ctx, lx + sw, wy + 3, 4, 5, '#d94d38');
+      pxRect(ctx, lx + 1 + sw, wy + 4, 2, 3, '#ffd275');
     }
-    // 碎裂悬浮石阶
-    pxRect(ctx, 0, groundY, W, H - groundY, '#141024');
-    pxRect(ctx, 0, groundY, W, 2, '#5e4b8a');
-    pxDrawCultivator(ctx, Math.floor(W * 0.42), groundY - 1, { realm, rootId, sectId, petId, pose: 'stand', t });
+    pxRect(ctx, 0, groundY, W, H - groundY, '#16182a');
+    pxRect(ctx, 0, groundY, W, 2, '#3a4058');
+    pxDrawCultivator(ctx, Math.floor(W * 0.28), groundY - 1, { realm, rootId, sectId, petId, pose: 'stand', t });
 
-  } else if (kind === 'jiuxiao' || kind === 'title' || kind === 'ascend') {
-    // 九霄天门 / 标题 / 飞升：恢弘金色天门 + 滚滚云海 + 紫金天雷
-    const gx = Math.floor(W * 0.64);
-    const gy = Math.floor(H * 0.16);
-    pxDrawHeavenGate(ctx, gx, gy, H, t, kind === 'jiuxiao');
-
-    // 层叠仙云海
-    for (let i = 0; i < 9; i++) {
-      const cx = ((i * 42 + Math.floor(t * (5 + (i % 3) * 2))) % (W + 64)) - 32;
-      const cy = groundY - 8 + (i % 3) * 6;
-      pxRect(ctx, cx, cy, 46, 8, kind === 'jiuxiao' ? 'rgba(255,232,170,0.22)' : 'rgba(235,230,210,0.16)');
-      pxRect(ctx, cx + 10, cy - 3, 26, 3, 'rgba(255,248,225,0.2)');
+  } else if (kind === 'kunlun') {
+    // 玉门与沙州：夜里的沙丘、夯土关城、绿洲水井、卧驼、风卷黄沙
+    pxDrawMoon(ctx, Math.floor(W * 0.78), Math.floor(H * 0.24), '#efe0bc', '#fff6e0', 'rgba(239,224,188,0.14)');
+    pxDrawMountainRange(ctx, W, H, H * 0.7, 12, 0.018, 0.4, '#3a2a2a');
+    pxDrawMountainRange(ctx, W, H, H * 0.8, 10, 0.026, 2.6, '#4d3524');
+    // 玉门关
+    const fx = Math.floor(W * 0.18);
+    pxRect(ctx, fx - 18, groundY - 26, 36, 26, '#7a5a3a');
+    pxRect(ctx, fx - 18, groundY - 26, 36, 2, '#9a7850');
+    for (let x = fx - 18; x < fx + 18; x += 6) pxRect(ctx, x, groundY - 30, 4, 4, '#7a5a3a');
+    pxRect(ctx, fx - 5, groundY - 14, 10, 14, '#2a1c14');
+    // 水井
+    const wx = Math.floor(W * 0.64);
+    pxRect(ctx, wx - 8, groundY - 6, 16, 6, '#6b6258');
+    pxRect(ctx, wx - 7, groundY - 6, 14, 1, '#8c8478');
+    pxRect(ctx, wx - 8, groundY - 18, 2, 12, '#5a4028');
+    pxRect(ctx, wx + 6, groundY - 18, 2, 12, '#5a4028');
+    pxRect(ctx, wx - 9, groundY - 19, 18, 2, '#5a4028');
+    pxRect(ctx, wx, groundY - 17, 1, 6 + (Math.floor(t * 2) % 2), '#a89878');
+    // 卧驼
+    const cx = Math.floor(W * 0.84);
+    pxRect(ctx, cx - 9, groundY - 7, 18, 6, '#8a6a46');
+    pxRect(ctx, cx - 5, groundY - 10, 5, 3, '#8a6a46');
+    pxRect(ctx, cx + 2, groundY - 10, 4, 3, '#8a6a46');
+    pxRect(ctx, cx + 8, groundY - 14, 3, 8, '#8a6a46');
+    pxRect(ctx, cx + 8, groundY - 15, 6, 3, '#8a6a46');
+    // 风沙
+    for (let i = 0; i < 14; i++) {
+      const sx = (Math.floor(t * 40) + i * 29) % W;
+      pxRect(ctx, sx, groundY - 3 - (i % 5) * 6, 2, 1, 'rgba(230,200,150,0.4)');
     }
-    // 前景玉阶悬崖
-    const cliffW = Math.floor(W * 0.36);
-    pxRect(ctx, 0, groundY - 8, cliffW, H - groundY + 8, '#131826');
-    pxRect(ctx, 0, groundY - 8, cliffW, 2, '#e6b95c');
-    pxDrawCultivator(ctx, Math.floor(W * 0.24), groundY - 9, { realm: Math.max(realm, 2), rootId, sectId, petId, pose: 'stand', t });
+    pxRect(ctx, 0, groundY, W, H - groundY, '#5c4128');
+    pxRect(ctx, 0, groundY, W, 2, '#8a6a42');
+    pxDrawCultivator(ctx, Math.floor(W * 0.44), groundY - 1, { realm, rootId, sectId, petId, pose: 'stand', t });
+
+  } else if (kind === 'jiuxiao') {
+    // 白驼与赤霞旧府：残阳、流沙里露出的古府屋脊与断柱、沙下透出的赤光、驼骨
+    const sx = Math.floor(W * 0.7);
+    const sy = Math.floor(H * 0.56);
+    pxDrawMoon(ctx, sx, sy, '#d8643c', '#ef9a5e', 'rgba(240,120,70,0.22)');
+    pxDrawMountainRange(ctx, W, H, H * 0.74, 12, 0.02, 1.1, '#5a2e26');
+    pxDrawMountainRange(ctx, W, H, H * 0.82, 9, 0.03, 3.0, '#6e3c28');
+    // 半埋的屋脊
+    const rx = Math.floor(W * 0.5);
+    pxRect(ctx, rx - 26, groundY - 10, 52, 4, '#3a2420');
+    pxRect(ctx, rx - 30, groundY - 8, 4, 2, '#3a2420');
+    pxRect(ctx, rx + 26, groundY - 8, 4, 2, '#3a2420');
+    pxRect(ctx, rx - 22, groundY - 6, 44, 6, '#2a1a18');
+    // 断柱
+    [[0.16, 30], [0.24, 18], [0.8, 24]].forEach(([fx, h]) => {
+      const x = Math.floor(W * fx);
+      pxRect(ctx, x - 3, groundY - h, 6, h, '#a07a58');
+      pxRect(ctx, x - 4, groundY - h, 8, 2, '#c09670');
+      pxRect(ctx, x - 1, groundY - h + 3, 1, h - 6, '#7d5c42');
+    });
+    // 沙下赤光
+    const glow = 0.35 + 0.3 * Math.sin(t * 2.4);
+    for (let i = 0; i < 5; i++) pxRect(ctx, rx - 18 + i * 9, groundY + 3 + (i % 2) * 3, 6, 1, `rgba(255,80,50,${glow})`);
+    // 驼骨
+    const bx = Math.floor(W * 0.9);
+    for (let i = 0; i < 4; i++) pxRect(ctx, bx - 8 + i * 4, groundY - 5 + (i % 2), 1, 5, '#e8dcc4');
+    pxRect(ctx, bx - 9, groundY - 1, 16, 1, '#e8dcc4');
+    for (let i = 0; i < 12; i++) {
+      const dx = (Math.floor(t * 44) + i * 31) % W;
+      pxRect(ctx, dx, groundY - 2 - (i % 4) * 5, 2, 1, 'rgba(240,190,140,0.4)');
+    }
+    pxRect(ctx, 0, groundY, W, H - groundY, '#6a3e26');
+    pxRect(ctx, 0, groundY, W, 2, '#a0643c');
+    pxDrawCultivator(ctx, Math.floor(W * 0.32), groundY - 1, { realm, rootId, sectId, petId, pose: 'stand', t });
+
+  } else if (kind === 'title' || kind === 'ascend') {
+    // 标题：拂晓的河湾渡口。远山、初升的日头、河面、渡船、柳树
+    const sx = Math.floor(W * 0.68);
+    const sy = Math.floor(H * 0.6);
+    pxDrawMoon(ctx, sx, sy, '#f0a868', '#fbd59a', 'rgba(255,190,120,0.18)');
+    pxDrawMountainRange(ctx, W, H, H * 0.66, 18, 0.024, 0.9, '#2a2a40');
+    pxDrawMountainRange(ctx, W, H, H * 0.72, 12, 0.034, 2.4, '#20223a');
+    const ry = Math.floor(H * 0.72);
+    pxRect(ctx, 0, ry, W, groundY - ry + 6, '#26304a');
+    for (let i = 0; i < 12; i++) {
+      const wx = (i * 41 + Math.floor(t * 8)) % W;
+      pxRect(ctx, wx, ry + 3 + (i % 4) * 3, 10, 1, i % 3 ? 'rgba(240,180,120,0.35)' : 'rgba(200,210,230,0.25)');
+    }
+    // 渡船
+    const bx = Math.floor(W * 0.58) + Math.round(Math.sin(t * 0.6) * 6);
+    const by = ry + 8 + Math.round(Math.sin(t * 1.4));
+    pxRect(ctx, bx - 14, by, 28, 3, '#3a2a22');
+    pxRect(ctx, bx - 16, by - 1, 4, 2, '#3a2a22');
+    pxRect(ctx, bx + 12, by - 1, 4, 2, '#3a2a22');
+    pxRect(ctx, bx + 4, by - 8, 2, 8, '#2a1e1a');
+    pxRect(ctx, bx + 2, by - 10, 6, 2, '#5a4a3a');
+    pxRect(ctx, bx + 10, by - 14, 1, 14, '#6b5a45');
+    // 码头与柳树
+    pxRect(ctx, 0, groundY - 2, Math.floor(W * 0.36), H - groundY + 2, '#1a1a24');
+    pxRect(ctx, 0, groundY - 2, Math.floor(W * 0.36), 2, '#5a4a3a');
+    for (let x = 6; x < W * 0.36; x += 12) pxRect(ctx, x, groundY, 2, 6, '#3a2e26');
+    const tx = Math.floor(W * 0.08);
+    pxRect(ctx, tx, groundY - 36, 3, 34, '#2a2220');
+    pxRect(ctx, tx - 10, groundY - 40, 24, 8, '#2b4a3a');
+    for (let i = 0; i < 6; i++) pxRect(ctx, tx - 9 + i * 4, groundY - 32, 1, 10 + (i % 3) * 4 + Math.round(Math.sin(t * 1.5 + i)), '#355a46');
+    pxRect(ctx, Math.floor(W * 0.36), groundY + 4, W, H, '#1c2238');
+    pxDrawCultivator(ctx, Math.floor(W * 0.24), groundY - 3, { realm, rootId, sectId, petId, pose: 'stand', t });
 
   } else if (kind === 'market' || kind === 'auction') {
     pxDrawMountainRange(ctx, W, H, H * 0.78, 16, 0.025, 1.4, '#1b1420');
@@ -1066,7 +1123,34 @@ export function renderPixelScene(canvas, opts) {
     }
   }
 
-  // 4. 飘升像素灵气微尘
+  // 4. 四季：春落花、秋落叶、冬飘雪（只在外景；沙漠不下花雪）
+  const OUTDOOR = new Set(['qingniu', 'luoxia', 'yaosen', 'guixu', 'beihuang', 'zhongzhou', 'kunlun', 'jiuxiao', 'wild', 'sect']);
+  const season = opts.season;
+  if (season && OUTDOOR.has(kind)) {
+    const desert = kind === 'kunlun' || kind === 'jiuxiao';
+    if (season === '冬' && !desert) {
+      for (let i = 0; i < 26; i++) {
+        const x = ((i * 37 + Math.floor(Math.sin(t * 0.8 + i) * 4 + t * 6)) % W + W) % W;
+        const y = (Math.floor(t * (10 + (i % 3) * 4)) + i * 23) % groundY;
+        pxRect(ctx, x, y, i % 4 === 0 ? 2 : 1, i % 4 === 0 ? 2 : 1, 'rgba(240,244,250,0.85)');
+      }
+      pxRect(ctx, 0, groundY, W, 1, 'rgba(235,240,248,0.55)');
+    } else if (season === '秋') {
+      for (let i = 0; i < 10; i++) {
+        const x = ((i * 53 + Math.floor(t * 9) + Math.round(Math.sin(t * 2 + i) * 6)) % W + W) % W;
+        const y = (Math.floor(t * (7 + (i % 3) * 2)) + i * 29) % groundY;
+        pxRect(ctx, x, y, 2, 1, i % 2 ? '#d98a3a' : '#b8552e');
+      }
+    } else if (season === '春' && !desert) {
+      for (let i = 0; i < 9; i++) {
+        const x = ((i * 61 + Math.floor(t * 7) + Math.round(Math.sin(t * 1.6 + i) * 8)) % W + W) % W;
+        const y = (Math.floor(t * (5 + (i % 3) * 2)) + i * 31) % groundY;
+        pxRect(ctx, x, y, 1, 1, i % 3 ? '#f2b8c6' : '#fbe3ea');
+      }
+    }
+  }
+
+  // 5. 飘升像素灵气微尘
   for (let i = 0; i < 12; i++) {
     const pxX = ((i * 41 + Math.floor(Math.sin(t + i) * 6)) % W + W) % W;
     const pxY = H - ((Math.floor(t * (7 + (i % 4) * 3) + i * 17)) % H);
@@ -1102,6 +1186,29 @@ export function renderPixelPortrait(canvas, char) {
 }
 
 /** 管理主场景与标题画布的动画循环 */
+/** 场景画布随容器变高：宽固定 280 像素，高按容器比例补足（多出来的是天空和地面），不拉伸变形。 */
+function fitSceneCanvas(canvas) {
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  if (!w || !h) return;
+  // 手机上每个像素约放大两倍，颗粒感更足；桌面宽屏仍按 280 宽铺满
+  const W = Math.max(190, Math.min(280, Math.round(w / 2)));
+  const H = Math.max(96, Math.min(260, Math.round(W * h / w)));
+  if (canvas.width !== W) canvas.width = W;
+  if (canvas.height !== H) canvas.height = H;
+}
+
+/** 标题画布：按屏幕比例定尺寸，手机竖屏也能看到整条河与渡船，而不是只截中间一块天。 */
+function fitTitleCanvas(canvas) {
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  if (!w || !h) return;
+  const W = Math.max(150, Math.min(320, Math.round(w / 3)));
+  const H = Math.max(120, Math.min(420, Math.round(W * h / w)));
+  if (canvas.width !== W) canvas.width = W;
+  if (canvas.height !== H) canvas.height = H;
+}
+
 export class PixelStage {
   constructor(titleCanvas, sceneCanvas) {
     this.titleCanvas = titleCanvas;
@@ -1128,10 +1235,14 @@ export class PixelStage {
     const t = Math.max(0, (now - this.t0) / 1000);
     const fxAge = Math.max(0, (now - this.fxStart) / 1000);
     if (this.titleCanvas && !document.getElementById('title-screen')?.hidden) {
+      fitTitleCanvas(this.titleCanvas);
       renderPixelScene(this.titleCanvas, { theme: SCENE_THEMES.title, realm: 4, rootId: 'tianling', t });
     }
     if (this.sceneCanvas && !document.getElementById('game-screen')?.hidden) {
-      renderPixelScene(this.sceneCanvas, { ...this.opts, t, fxKind: this.fxKind, fxAge });
+      fitSceneCanvas(this.sceneCanvas);
+      const age = (typeof window !== 'undefined' && window.__game?.state?.char?.age) || 0;
+      const season = ['春', '春', '春', '夏', '夏', '夏', '秋', '秋', '秋', '冬', '冬', '冬'][((age % 12) + 12) % 12];
+      renderPixelScene(this.sceneCanvas, { ...this.opts, t, fxKind: this.fxKind, fxAge, season });
     }
   }
 

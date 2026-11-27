@@ -27,26 +27,26 @@ export function policy(g) {
     return by('服') || by('凝神冲关') || list[0];
   }
   if (s.scene.id === 'recruit') {
-    const sect = list.find((ch) => !ch.label.includes('暂不入宗') && !ch.label.includes('散修'));
+    const sect = list.find((ch) => ch.id !== 'recruit_later' && !ch.label.includes('散修'));
     return sect || by('暂不入宗') || list[0];
   }
   if (s.scene.id === 'cave') {
-    if (canBreakthrough(c) && bottleneckStatus(s).ok) return by('步出洞府') || list[list.length - 1];
+    if (canBreakthrough(c) && bottleneckStatus(s).ok) return by('出洞府') || list[list.length - 1];
     if (c.demon >= 32 && by('静心涤魔')) return by('静心涤魔');
     const bn = bottleneckStatus(s);
     if (isRealmMaxLayer(c) && !bn.ok && by('参悟')) return by('参悟');
     if (s.turn % 7 === 0 && by('参悟')) return by('参悟');
     if (s.turn % 9 === 0 && by('祭炼法宝') && c.stones >= 500) return by('祭炼法宝');
-    if (c.demon < 30 && by('闭关冲层') && s.turn % 3 !== 0) return by('闭关冲层');
+    if (c.demon < 30 && by('闭关到修为满') && s.turn % 3 !== 0) return by('闭关到修为满');
     if (c.demon < 20 && by('闭关苦修')) return by('闭关苦修');
-    return by('吐纳炼气') || by('步出洞府') || list[0];
+    return by('吐纳炼气') || by('出洞府') || list[0];
   }
   if (s.scene.id === 'sectHall') {
     const prom = list.find((ch) => ch.label.includes('晋升考核'));
     if (prom && s.turn % 11 === 0) return prom;
     const targetTechs = Math.min(4, (c.sectRank || 0) + 1);
     if (c.contribution >= 180 && c.techniques.length < targetTechs && s.turn % 5 === 0) return by('藏经阁') || list[0];
-    if (c.contribution >= 450 && s.turn % 7 === 0) return by('宗门宝库') || list[0];
+    if (c.contribution >= 450 && s.turn % 7 === 0) return byId('sect_treasury') || list[0];
     if (c.contribution >= 200 && s.turn % 3 === 0 && by('灵脉聚灵阵')) return by('灵脉聚灵阵');
     if (c.contribution < 800 + (c.sectRank || 0) * 1500 && s.turn % 2 === 0) return by('任务堂') || list[0];
     return by('离开山门') || list[list.length - 1];
@@ -61,14 +61,14 @@ export function policy(g) {
   }
   if (s.scene.id === 'sectMissions') {
     if (s.turn % 3 === 0) return by('返回大殿') || list[list.length - 1];
-    return by('常规宗门杂务') || list[0];
+    return byId('sect_daily') || list[0];
   }
   if (s.scene.id === 'sectPromote') {
     return by('登台应考') || by('改日再来') || list[0];
   }
   if (s.scene.id === 'regionHub') {
     if (s.turn % 8 === 0 && byId('open_map')) return byId('open_map');
-    return by('探索') || by('返回洞府') || list[0];
+    return by('探索') || by('回主界') || list[0];
   }
   if (s.scene.id === 'regionMap') {
     const higher = list.filter((ch) => !ch.label.includes('返回'));

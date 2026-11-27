@@ -467,11 +467,11 @@ test('网文系统：金手指（绿瓶/剑老）、拍卖会、本命法宝祭�
   g.state.char.stones = 200000;
   g.act_auction();
   assert.equal(g.state.scene.id, 'auction');
-  const bid = g.choices().find((c) => c.label.includes('举牌竞价'));
+  const bid = g.choices().find((c) => c.label.startsWith('出价'));
   assert.ok(bid);
   let tries = 0;
   while (g.state.scene.id === 'auction' && tries++ < 6) {
-    const b = g.choices().find((c) => c.label.includes('举牌竞价'));
+    const b = g.choices().find((c) => c.label.startsWith('出价'));
     if (!b) break;
     g.choose(b.index);
     if (g.state.scene.result?.text?.includes('抬价')) g.proceed();
@@ -609,7 +609,7 @@ test('v5.0 大千世界规模与古籍秘阁/道友传艺校验', async () => {
   // 红尘道友高好感传授绝学
   g.state.char.relations[SU] = 40;
   g.act_openNpc({ params: { npcId: 'npc_su' } });
-  const teach = g.choices().find((c) => c.label.includes('请教唯一绝学'));
+  const teach = g.choices().find((c) => c.label.includes('求教独门功法'));
   assert.ok(teach && !teach.disabled);
   g.choose(teach.index);
   assert.ok(g.state.char.techniques.some((t) => t.id === 'wt_hanmei_jian'));

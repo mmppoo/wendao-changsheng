@@ -169,8 +169,8 @@ button { cursor: pointer; }
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 70% 62% at 50% 48%, rgba(10, 14, 22, 0.12), rgba(10, 14, 22, 0.78) 88%),
-    linear-gradient(180deg, rgba(10, 14, 22, 0.28) 0%, rgba(10, 14, 22, 0.1) 40%, rgba(10, 14, 22, 0.88) 100%);
+    radial-gradient(ellipse 80% 70% at 50% 50%, rgba(10, 14, 22, 0.04), rgba(10, 14, 22, 0.5) 92%),
+    linear-gradient(180deg, rgba(10, 14, 22, 0.2) 0%, rgba(10, 14, 22, 0) 45%, rgba(10, 14, 22, 0.55) 100%);
 }
 
 .title-inner {
@@ -179,7 +179,7 @@ button { cursor: pointer; }
   text-align: center;
   max-width: 660px;
   padding: clamp(1.5rem, 3.8vw, 2.5rem) clamp(1.2rem, 3.8vw, 2.3rem);
-  background-color: rgba(14, 19, 30, 0.92);
+  background-color: rgba(14, 19, 30, 0.86);
   animation: rise 0.55s steps(8) both;
 }
 
@@ -1677,3 +1677,112 @@ button { cursor: pointer; }
 .origin-card.is-locked, .gf-card.is-locked { opacity: 0.45; cursor: not-allowed; }
 .origin-card.is-locked .origin-hook, .gf-card.is-locked .gf-perk { color: var(--paper-faint); }
 #jieshu-range { width: 100%; accent-color: var(--cinnabar); }
+
+/* ======================= v8 界面重排（手机）=======================
+ * 1. 像素场景吃掉空余高度：文字少时场景大，文字多时场景让位（最矮 96px）
+ * 2. 文字框按内容伸缩，不再留一大块空框
+ * 3. 顶栏只留年份与菜单；提示框落在场景上，不挡血条
+ */
+.menu-mobile-only { display: none; }
+@media (max-width: 1099px) {
+  .menu-mobile-only { display: block; }
+  #btn-sound, #btn-save, #btn-load { display: none; }
+  .scene-banner {
+    flex: 1 1 0;
+    height: auto;
+    min-height: 96px;
+  }
+  .story-scroll {
+    flex: 0 1 auto;
+    min-height: 0;
+  }
+  .story-dock { flex-shrink: 0; }
+  .toast-stack { top: 9.2rem; }
+}
+
+/* 建角页：出身、机缘改成一排名字，选中的那个在下面展开介绍；天赋默认收起 */
+.pick-row {
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 0.36rem;
+  max-height: none !important;
+  grid-template-columns: none !important;
+}
+.pick-chip {
+  flex: 0 0 auto;
+  min-height: 0;
+  padding: 0.34rem 0.6rem !important;
+  border: 2px solid var(--line);
+  background: var(--ink-2);
+  color: var(--paper);
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  text-align: center;
+  border-radius: var(--radius);
+  box-shadow: 0 2px 0 #05070c;
+}
+.pick-chip.is-active {
+  border-color: var(--gold);
+  background: rgba(230, 185, 92, 0.16);
+  color: var(--gold);
+}
+.pick-chip.is-locked { color: var(--paper-faint); border-style: dashed; opacity: 0.6; }
+.pick-chip.is-locked::before { content: "锁 "; font-size: 0.7em; }
+.pick-detail {
+  margin: 0.5rem 0 0.9rem;
+  padding: 0.6rem 0.75rem;
+  border-left: 3px solid var(--gold);
+  background: rgba(230, 185, 92, 0.06);
+  font-size: 0.82rem;
+  line-height: 1.65;
+}
+.pick-detail b { color: var(--gold); font-weight: 400; letter-spacing: 0.06em; }
+.pick-detail p { margin: 0.2rem 0; color: var(--paper-dim, var(--paper)); }
+.pick-detail span { color: var(--jade); font-size: 0.78rem; }
+.pick-detail.is-locked { border-left-color: var(--line); }
+.talent-fold > summary { cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+.talent-fold > summary::-webkit-details-marker { display: none; }
+.talent-fold > summary h3::after { content: " ▸"; color: var(--gold); }
+.talent-fold[open] > summary h3::after { content: " ▾"; }
+.create-panel .field-row { display: flex !important; flex-direction: row !important; gap: 0.6rem; align-items: flex-end; }
+.create-panel .field-row .field-grow { flex: 1; min-width: 0; }
+.create-panel .segmented { width: auto !important; display: inline-flex; }
+.create-panel .segmented .seg { min-width: 2.6rem; }
+.choices.is-hub-grid .choice.is-quick.is-urgent { border-color: var(--cinnabar-bright); background-color: rgba(212, 77, 56, 0.26); }
+.choices.is-hub-grid .choice.is-quick.is-urgent .label { color: #ffd2b8; }
+.story-scroll.is-empty { display: none; }
+
+/* 弹窗不再被内容撑出屏幕（图鉴的分页条可横向滑动） */
+.modal, .overlay-card { min-width: 0; max-width: 100%; }
+.overlay > * { min-width: 0; }
+@media (max-width: 560px) {
+  .overlay { padding: 0.5rem; }
+  .modal-wide { width: 100%; max-height: 94dvh; height: 94dvh; }
+  .tab { padding: 0.62rem 0.7rem; letter-spacing: 0.08em; }
+}
+
+/* 电脑：同样让场景吃掉空余高度，文字框按内容伸缩 */
+@media (min-width: 1100px) {
+  .story { display: flex; flex-direction: column; min-height: 0; }
+  .scene-banner { flex: 1 1 0; height: auto; min-height: 170px; }
+  .story-scroll { flex: 0 1 auto; min-height: 0; }
+  .story-dock { flex-shrink: 0; }
+}
+/* 格子按钮的说明最多两行，不再用省略号截断 */
+.choices.is-hub-grid .choice .hint {
+  white-space: normal !important;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: clip;
+}
+/* 按钮超过八个（洞府等）：手机上只显示名字，格子更矮 */
+@media (max-width: 1099px) {
+  .story-dock { max-height: 64%; }
+  .choices.is-hub-grid.is-dense .choice { min-height: 40px; padding: 0.3rem 0.5rem; }
+  .choices.is-hub-grid.is-dense .choice .hint { display: none; }
+  .choices.is-hub-grid.is-dense .choice .label { font-size: 0.82rem; }
+}
+.rumor-bar[hidden] { display: none !important; }

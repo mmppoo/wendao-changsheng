@@ -124,8 +124,7 @@ export function pickEvent(state, rng, game, kind = 'wild', regionId = null) {
 }
 
 /**
- * 零重叠主界面六大支柱（v4.0）：
- * [冲击境界(修为满时)] / [再临天门(渡劫)] / 洞府修行 / 五域行走 / 仙门大殿(或拜入仙门) / 市集坊间 / 红尘道友 / 此生履历
+ * 主界：两个直达（修炼或闭关或冲关 / 在本地走走）+ 六个入口（洞府、五域、门户、市集、故人、此生）。
  */
 export function buildHub(game) {
   const { state } = game;
@@ -137,36 +136,18 @@ export function buildHub(game) {
   const bn = bottleneckStatus(state);
   const choices = [];
 
-  if (canBreakthrough(c)) {
-    choices.push({
-      id: 'breakthrough',
-      label: bn.ok ? '冲击境界' : '冲击境界（瓶颈未解）',
-      hint: bn.ok ? '修为圆满，即刻叩关破境' : bn.missing[0] || '大境瓶颈未满',
-      action: 'breakthrough',
-      effect: 'primary',
-    });
+  // 第一个直达按钮按时机变：修为满且无瓶颈→冲击境界；炼气以上→闭关到下一件大事；否则修炼半年。
+  // 主界始终八个按钮，小屏也放得下。
+  let first;
+  if (canBreakthrough(c) && bn.ok) {
+    first = { id: 'breakthrough', label: '冲击境界', hint: '修为已满，可以冲关', action: 'breakthrough', effect: 'quick', urgent: true };
+  } else if (c.realm >= 1) {
+    first = { id: 'long_seclusion', label: '闭关至下一件大事', hint: canBreakthrough(c) ? '等瓶颈解开，有事出关' : '跳过平淡岁月，有事出关', action: 'longSeclusion', effect: 'quick' };
+  } else {
+    first = { id: 'quick_cultivate', label: canBreakthrough(c) ? '修炼半年（瓶颈未解）' : '修炼半年', hint: '吐纳炼气，攒修为', action: 'cultivate', params: { months: 6 }, effect: 'quick' };
   }
-
-  // v8：结丹以上，跨越岁月的主入口——闭关到下一件身边大事（遇大事、新篇章、修为圆满、寿元告急即出关）
-  if (c.realm >= 1 && !(canBreakthrough(c) && bottleneckStatus(state).ok)) {
-    choices.push({
-      id: 'long_seclusion',
-      label: '闭关至下一件大事',
-      hint: '至多百年 · 遇身边大事、修为圆满或寿元告急即出关',
-      action: 'longSeclusion',
-      effect: 'primary',
-    });
-  }
-  // 最常用的两件事放在主界直接点，不用先进子菜单
   choices.push(
-    {
-      id: 'quick_cultivate',
-      label: '修炼半年',
-      hint: '吐纳炼气，攒修为',
-      action: 'cultivate',
-      params: { months: 6 },
-      effect: 'quick',
-    },
+    first,
     {
       id: 'quick_explore',
       label: `在${region.name}走走`,
@@ -180,14 +161,14 @@ export function buildHub(game) {
     {
       id: 'open_cave',
       label: '洞府修行',
-      hint: '闭关 · 法则 · 丹器',
+      hint: '闭关、参悟、炼丹',
       action: 'openCave',
       effect: 'quiet',
     },
     {
       id: 'open_region',
       label: '五域行走',
-      hint: `${region.name} ${progress}% · 探险迁徙`,
+      hint: `秘境、远行 · 已走 ${progress}%`,
       action: 'openRegion',
     },
   );
@@ -203,14 +184,14 @@ export function buildHub(game) {
     choices.push({
       id: 'open_sect',
       label: '门户',
-      hint: `${c.playerSectName} · 祖师（${c.playerSectLevel || 1}品）`,
+      hint: `${c.playerSectName} · 祖师 · ${c.playerSectLevel || 1}阶`,
       action: 'openSectHall',
     });
   } else {
     choices.push({
       id: 'find_sect',
       label: '投身门户',
-      hint: '玄衡、青崖、边军、商会……',
+      hint: '学功法、领差事',
       action: 'sectRecruit',
     });
   }
@@ -219,19 +200,19 @@ export function buildHub(game) {
     {
       id: 'open_city',
       label: '市集坊间',
-      hint: '商行 · 秘阁 · 暗拍',
+      hint: '买卖、功法、拍卖',
       action: 'openCity',
     },
     {
       id: 'open_npc',
       label: '故人',
-      hint: '十二名修 · 论道结缘',
+      hint: '论道、切磋、送礼',
       action: 'openNpcHub',
     },
     {
       id: 'fate',
       label: '此生履历',
-      hint: '战力 · 法则 · 终章',
+      hint: '这一世走到了哪里',
       action: 'fate',
     },
   );
@@ -262,7 +243,8 @@ export function buildHub(game) {
       if (c.playerSectName) notes.push(`你的门户「${c.playerSectName}」门下 ${c.playerSectDisciples || 0} 人。`);
       const goal = activeDaoGoal(state);
       // 近来：最近听到的三条消息（世事在走，主界就该看得见）
-      const recent = (state.rumors || []).slice(1, 4).map((r) => `· ${r}`);
+      const freshNews = state.rumorAt != null && c.age - state.rumorAt <= 36;
+      const recent = freshNews ? (state.rumors || []).slice(1, 4).map((r) => `· ${r}`) : [];
       return `${sceneLine}${notes.length ? `\n\n${notes.join('\n')}` : ''}${recent.length ? `\n\n近来\n${recent.join('\n')}` : ''}\n\n眼下 · ${goal.label}：${goal.detail}`;
     },
     choices,
