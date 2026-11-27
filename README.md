@@ -8,7 +8,7 @@
 
 ## 在线游玩与离线版
 
-- **在线畅玩（GitHub Pages · 手机 / 电脑自适应）**：<https://mmppoo.github.io/wendao-changsheng-v2/>
+- **在线畅玩（GitHub Pages · 手机 / 电脑自适应）**：<https://mmppoo.github.io/wendao-changsheng/>
 - **直接运行源码**：`npm run serve` → 打开 <http://127.0.0.1:4173>
 - **单文件离线版**：下载 [`dist/wendao-changsheng.html`](dist/wendao-changsheng.html)（内置所有代码、样式与 10 幅 WebP 插画），双击浏览器即可离线畅玩。
 - **GitHub Pages 自动部署**：已内置 `.github/workflows/pages.yml`，每次推送 `main` 分支自动构建部署。
@@ -56,9 +56,10 @@ npm run test:ui        # 桌面 + 移动端端到端自动化测试（基于 Chr
 npm run build          # 纯 Node 零依赖打包单文件 dist/wendao-changsheng.html
 ```
 
-## 致谢
+## 变更记录
 
-本项目在 [mmppoo/wendao-changsheng](https://github.com/mmppoo/wendao-changsheng) 的基础上进行了全面引擎修复、内容扩展、视觉绘卷重绘、动效系统及双端适配升级。
+- **v2.0.0**：全面重制水墨金箔绘卷与动效系统、手机/电脑双端适配、三大秘境与苏晚晴道侣 ink 织网剧情、储物袋直接服丹/功法参悟、开炉炼丹、灵根实装与 30+ 处事件战斗/飞升/表达式引擎修复。
+- **v1.0.0**：初版 ink 节点叙事引擎与核心修仙框架。
 
 ## License
 
