@@ -58,12 +58,14 @@ test('修炼推进时间并累积修为', () => {
   const g = fresh();
   const before = g.state.char.exp;
   const ageBefore = g.state.char.age;
-  g.choose(0); // 打坐
+  g.act_openCave();
+  assert.equal(g.state.scene.id, 'cave');
+  g.choose(0); // 洞府吐纳炼气
   assert.ok(g.state.char.exp > before);
   assert.ok(g.state.char.age > ageBefore);
   assert.ok(g.state.scene.result);
   g.proceed();
-  assert.equal(g.state.scene.id, 'hub');
+  assert.equal(g.state.scene.id, 'cave');
 });
 
 test('修为满时可冲击境界，成功则升层', () => {
@@ -195,13 +197,20 @@ test('成就：条件满足后解锁且不重复', () => {
   assert.equal(Object.keys(g.state.meta.achievements).length, count);
 });
 
-test('宗门：可加入并累积贡献、晋升', () => {
+test('宗门：可加入并累积贡献、通过试炼晋升', () => {
   const g = fresh();
   g.state.char.sectId = 'qingyun';
+  g.state.char.realm = 1;
+  g.state.char.attrs.悟性 = 25;
+  g.state.char.attrs.根骨 = 80;
   g.state.char.contribution = 600;
   g.state.char.sectRank = 0;
   g.act_sectTask({});
   assert.ok(g.state.char.contribution > 600);
+  g.act_sectPromote();
+  assert.equal(g.state.scene.id, 'combat');
+  let rounds = 0;
+  while (g.state.scene.id === 'combat' && rounds++ < 40) g.choose(0);
   assert.ok(g.state.char.sectRank >= 1);
 });
 
@@ -278,12 +287,24 @@ test('剧情触发：同名玉牌引出玉牌链', () => {
   assert.ok(g.state.flags['story:story_jade_1']);
 });
 
-test('宗门贡献晋升：贡献达标后 rank 提升', () => {
+test('宗门藏经阁与宝库：消耗贡献习得绝学与兑换破境灵丹', () => {
   const g = fresh();
-  g.state.char.sectId = 'qingyun';
-  g.state.char.contribution = 2100;
-  g.act_sectTask({});
-  assert.ok(g.state.char.sectRank >= 2, 'rank=' + g.state.char.sectRank);
+  g.state.char.sectId = 'taixuan';
+  g.state.char.sectRank = 1;
+  g.state.char.contribution = 2500;
+  g.act_openSectLibrary();
+  const libChoices = g.choices();
+  const m1 = libChoices.find((c) => c.label.includes('青锋养剑诀'));
+  assert.ok(m1 && !m1.disabled);
+  g.choose(m1.index);
+  assert.ok(g.state.char.techniques.some((t) => t.id === 'tx_lib_1' && t.artName === '青锋破空斩'));
+  assert.equal(g.bestSignatureArt(), '青锋破空斩');
+
+  g.act_openSectTreasury();
+  const tr = g.choices().find((c) => c.label.includes('筑基丹'));
+  assert.ok(tr && !tr.disabled);
+  g.choose(tr.index);
+  assert.ok(g.state.char.inventory.some((i) => i.id === 'zhuji_dan'));
 });
 
 test('轮回天赋：点亮后下一世生效', () => {
@@ -433,4 +454,86 @@ test('网文系统：金手指（绿瓶/剑老）、拍卖会、本命法宝祭�
   assert.ok(elderChoice && !elderChoice.disabled);
   g2.choose(elderChoice.index);
   assert.equal(g2.state.flags['剑震林昊'], true);
+});
+
+test('v4.0 指数战力跃迁：跨境界伤害呈指数倍增且高阶碾压低阶妖兽', async () => {
+  const { recomputeDerived } = await import('../src/engine/state.js');
+  const g = fresh();
+  const atk0 = g.playerAtk();
+  g.state.char.realm = 4; // 化神 (powerMult = 55)
+  recomputeDerived(g.state.char);
+  const atk4 = g.playerAtk();
+  g.state.char.realm = 8; // 渡劫 (powerMult = 3500)
+  recomputeDerived(g.state.char);
+  const atk8 = g.playerAtk();
+  assert.ok(atk4 > atk0 * 40, `化神攻击(${atk4})应远超炼气(${atk0})`);
+  assert.ok(atk8 > atk0 * 2500, `渡劫攻击(${atk8})应超炼气2500倍以上`);
+
+  // 筑基期一剑秒杀炼气青背狼
+  const g2 = fresh();
+  g2.state.char.realm = 1;
+  g2.state.char.daoBaseQuality = 'tiandao';
+  recomputeDerived(g2.state.char);
+  g2.state.char.hp = g2.state.char.maxHp;
+  g2.startCombat('wolf');
+  g2.choose(0);
+  assert.notEqual(g2.state.scene.id, 'combat', '天道筑基应一剑斩杀青背狼');
+  assert.equal(g2.state.stats.kills, 1);
+});
+
+test('v4.0 大境瓶颈、道基品质与百分比疗伤丹药', async () => {
+  const { recomputeDerived, bottleneckStatus, gainLawExp } = await import('../src/engine/state.js');
+  const g = fresh();
+  const c = g.state.char;
+  // 元婴圆满必须领悟法则初窥门径方可破入化神
+  c.realm = 3;
+  c.layer = 3;
+  c.exp = needExp(c);
+  c.attrs.道心 = 50;
+  assert.equal(bottleneckStatus(g.state).ok, false);
+  gainLawExp(g.state, 100, 'sword');
+  assert.equal(bottleneckStatus(g.state).ok, true);
+
+  // 筑基评定天道筑基品质
+  const g2 = fresh();
+  g2.state.char.realm = 0;
+  g2.state.char.layer = 8;
+  g2.state.char.attrs.道心 = 50;
+  g2.state.char.attrs.根骨 = 40;
+  g2.state.char.exp = needExp(g2.state.char);
+  g2.resolveBreakthrough(1, '', 28);
+  assert.equal(g2.state.char.realm, 1);
+  assert.equal(g2.state.char.daoBaseQuality, 'tiandao');
+
+  // 高境界使用疗伤丹按百分比回复（非固定 60 点）
+  const g3 = fresh();
+  g3.state.char.realm = 5;
+  recomputeDerived(g3.state.char);
+  g3.state.char.hp = 100;
+  g3.state.char.inventory.push({ id: 'liaoshang_dan', qty: 1 });
+  g3.startCombat('wolf');
+  g3.act_combatPill();
+  assert.ok(g3.state.char.hp > 5000, `炼虚境服疗伤丹应按百分比恢复，当前 hp=${g3.state.char.hp}`);
+});
+
+test('v4.0 九州八大灵域迁徙探索与红尘道友羁绊', () => {
+  const g = fresh();
+  g.state.char.realm = 2;
+  g.act_openRegionMap();
+  const guixu = g.choices().find((c) => c.label.includes('东海归墟'));
+  assert.ok(guixu && !guixu.disabled);
+  g.choose(guixu.index);
+  assert.equal(g.state.char.regionId, 'guixu');
+  assert.equal(g.state.char.location, '东海归墟');
+
+  // 拜访苏晚晴、赠礼、结为道侣
+  g.state.scene = { id: 'hub', result: null };
+  g.state.char.inventory.push({ id: 'lingcao', qty: 3 });
+  g.act_openNpc({ params: { npcId: 'npc_su' } });
+  assert.equal(g.state.scene.id, 'npcDetail');
+  g.act_npcGift({ params: { npcId: 'npc_su', itemId: 'lingcao' } });
+  assert.equal(g.state.char.relations['苏晚晴'], 14);
+  g.state.char.relations['苏晚晴'] = 42;
+  g.act_npcBond({ params: { npcId: 'npc_su' } });
+  assert.equal(g.state.flags['道侣'], true);
 });

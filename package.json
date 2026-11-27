@@ -1,7 +1,7 @@
 {
   "name": "wendao-changsheng",
-  "version": "3.0.0",
-  "description": "《问道长生》v3.0 HD-2D 像素仙侠重制版——参考 inkle/ink 的互动叙事修仙模拟器，全双端适配、实时像素实景画布、伴生金手指与网文深度玩法。",
+  "version": "4.0.0",
+  "description": "《问道长生》v4.0 百小时严谨修仙重制版——参考 inkle/ink 的 HD-2D 像素互动叙事修仙模拟器：十境指数战力跃迁、八大九州灵域、十三宗完整大殿、十道天地法则、六位红尘道友与 376 叙事节点。",
   "type": "module",
   "private": false,
   "scripts": {

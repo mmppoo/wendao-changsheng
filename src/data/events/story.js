@@ -170,5 +170,5 @@ export const STORY_TRIGGERS = [
   { id: 'story_mother_1', when: 'char.originId === "demon_child" && realm >= 1 && !flag("story:story_mother_1")' },
   { id: 'story_cave_1', when: 'realm >= 2 && age >= 60 && !flag("story:story_cave_1")' },
   { id: 'story_lover_1', when: 'flag("道侣") && realm >= 2 && !flag("story:story_lover_1")' },
-  { id: 'story_ascend_1', when: 'realm >= 8 && !flag("story:story_ascend_1")' },
+  { id: 'story_ascend_1', when: 'realm >= 8 && layer >= 2 && !flag("story:story_ascend_1")' },
 ];

@@ -267,17 +267,44 @@ async function main() {
     });
 
     const before = await state();
-    await click('#choices .choice:not([disabled])');
+    await click('#choices .choice:not([disabled])'); // 进入洞府修行
     await finishTyping();
-    await check('选择推进、数值反馈与自动存档', async () => {
+    await click('#choices .choice:not([disabled])'); // 洞府吐纳炼气
+    await finishTyping();
+    await check('六大支柱导航（洞府修行→吐纳）、数值反馈与自动存档', async () => {
       const s = await state();
       const saved = await client.eval('Boolean(localStorage.getItem("wendao.v3.slot.0"))');
-      if (s.text === before.text || !saved) throw new Error('状态未更新或未自动存档');
-      return `scene=${s.scene} · exp=${s.char.exp}`;
+      if (s.char.exp <= before.char.exp || !saved) throw new Error(`状态未更新 exp=${s.char.exp} saved=${saved}`);
+      return `scene=${s.scene} · exp=${s.char.exp} · atk=${s.char.atk}`;
     });
 
-    await click('#choices .choice:not([disabled])');
+    await click('#choices .choice:not([disabled])'); // 继续前行回洞府
     await finishTyping();
+
+    await check('v4.0 仙门大殿（藏经阁/宝库/任务堂）、九州历练与红尘道友', async () => {
+      await client.eval(`(() => {
+        const g = window.__game;
+        g.state.char.sectId = 'taixuan';
+        g.state.char.contribution = 500;
+        g.act_openSectHall();
+        window.__render();
+      })()`);
+      await sleep(150);
+      await client.screenshot(path.join(ART, '03b-sect-desktop.jpg'));
+      const sectState = await state();
+      if (sectState.scene !== 'sectHall' || !sectState.choices.some((c) => c.label.includes('藏经阁'))) {
+        throw new Error('仙门大殿渲染异常: ' + JSON.stringify(sectState.choices));
+      }
+      await client.eval('window.__game.act_openRegion(); window.__render();');
+      const regState = await state();
+      await client.eval('window.__game.act_openNpcHub(); window.__render();');
+      const npcState = await state();
+      if (regState.scene !== 'regionHub' || npcState.scene !== 'npcHub') {
+        throw new Error(`subhub error reg=${regState.scene} npc=${npcState.scene}`);
+      }
+      await client.eval('window.__game.act_backHub(); window.__render();');
+      return `仙门大殿(${sectState.choices.length}项) · 九州历练 · 红尘道友(${npcState.choices.length}项)`;
+    });
 
     await check('储物袋直接服丹互动', async () => {
       const beforeExp = (await state()).char.exp;

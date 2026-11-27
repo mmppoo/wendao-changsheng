@@ -9,6 +9,8 @@ import { HIGH_EXPANSION } from './expansion_high.js';
 import { ENDGAME_EXPANSION } from './expansion_endgame.js';
 import { INK_EXPANSION } from './expansion_ink.js';
 import { WEBNOVEL_EXPANSION, WEBNOVEL_TRIGGERS } from './expansion_webnovel.js';
+import { REGION_EXPANSION } from './expansion_regions.js';
+import { SECT_DEEP_EXPANSION } from './expansion_sects_deep.js';
 
 export const ALL_EVENTS = [
   ...WILD_EVENTS,
@@ -22,6 +24,8 @@ export const ALL_EVENTS = [
   ...ENDGAME_EXPANSION,
   ...INK_EXPANSION,
   ...WEBNOVEL_EXPANSION,
+  ...REGION_EXPANSION,
+  ...SECT_DEEP_EXPANSION,
 ];
 
 export const ALL_STORY_TRIGGERS = [...STORY_TRIGGERS, ...WEBNOVEL_TRIGGERS];

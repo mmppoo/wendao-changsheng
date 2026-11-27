@@ -1,64 +1,110 @@
 /**
- * 平衡与时长模拟：用不同策略跑完整人生，统计回合数、耗时年份、境界进度、事件覆盖。
+ * 平衡与百小时时长模拟（v4.0）：
+ * 驱动智能策略走完整六大支柱（洞府吐纳/参悟法则、宗门任务/藏经阁/晋升、九州迁徙/探索、坊市/突破）。
  * 运行：node tests/simulate.mjs [runs]
  */
 import { Game } from '../src/engine/game.js';
-import { REALMS, realmLabel } from '../src/data/realms.js';
-import { canBreakthrough } from '../src/engine/state.js';
-import { ALL_EVENTS } from '../src/data/events/index.js';
+import { realmLabel } from '../src/data/realms.js';
+import { canBreakthrough, bottleneckStatus, isRealmMaxLayer } from '../src/engine/state.js';
 
-const RUNS = Number(process.argv[2] || 12);
+const RUNS = Number(process.argv[2] || 10);
 
 function policy(g) {
   const s = g.state;
-  const list = g.choices().filter((c) => !c.disabled);
-  const by = (kw) => list.find((c) => c.label.includes(kw));
-  if (s.scene.result) return { action: 'continue' };
+  const c = s.char;
+  const list = g.choices().filter((ch) => !ch.disabled);
+  const by = (kw) => list.find((ch) => ch.label.includes(kw));
+  if (s.scene.result) return { index: 0 };
+
   if (s.scene.id === 'combat') {
-    const atk = by('出剑');
-    if (s.char.hp < s.char.maxHp * 0.3) {
+    if (c.hp < c.maxHp * 0.32) {
       const pill = by('服丹');
       if (pill) return pill;
       const flee = by('遁走');
       if (flee) return flee;
     }
-    return atk || list[0];
+    const art = by('绝招');
+    if (art && c.mp > c.maxMp * 0.45) return art;
+    return by('出剑') || list[0];
   }
-  if (s.scene.id === 'tribulation') return by('祭出法器') || by('以肉身硬接') || list[0];
+  if (s.scene.id === 'tribulation') return by('吞服天劫丹') || by('本命法宝') || by('肉身硬抗') || list[0];
   if (s.scene.id === 'breakthrough') {
-    if (by('服丹辅助')) return by('服丹辅助');
-    return by('凝神冲关') || list[0];
+    const bn = bottleneckStatus(s);
+    if (!bn.ok) return by('暂缓破境') || list[list.length - 1];
+    return by('服') || by('凝神冲关') || list[0];
   }
-  if (s.scene.id === 'market') return by('离开坊市') || list[0];
   if (s.scene.id === 'recruit') {
-    const sect = list.find((c) => !c.label.includes('再想想') && !c.label.includes('散修'));
-    return sect || by('再想想') || list[0];
+    const sect = list.find((ch) => !ch.label.includes('暂不入宗') && !ch.label.includes('散修'));
+    return sect || by('暂不入宗') || list[0];
   }
+  if (s.scene.id === 'cave') {
+    if (canBreakthrough(c) && bottleneckStatus(s).ok) return by('步出洞府') || list[list.length - 1];
+    if (c.demon >= 32 && by('静心涤魔')) return by('静心涤魔');
+    const bn = bottleneckStatus(s);
+    if (isRealmMaxLayer(c) && !bn.ok && by('参悟')) return by('参悟');
+    if (s.turn % 7 === 0 && by('参悟')) return by('参悟');
+    if (s.turn % 9 === 0 && by('祭炼法宝') && c.stones >= 500) return by('祭炼法宝');
+    if (c.demon < 20 && by('闭关苦修')) return by('闭关苦修');
+    return by('吐纳炼气') || by('步出洞府') || list[0];
+  }
+  if (s.scene.id === 'sectHall') {
+    const prom = list.find((ch) => ch.label.includes('晋升考核'));
+    if (prom && s.turn % 11 === 0) return prom;
+    const targetTechs = Math.min(4, (c.sectRank || 0) + 1);
+    if (c.contribution >= 180 && c.techniques.length < targetTechs && s.turn % 5 === 0) return by('藏经阁') || list[0];
+    if (c.contribution >= 450 && s.turn % 7 === 0) return by('宗门宝库') || list[0];
+    if (c.contribution >= 200 && s.turn % 3 === 0 && by('灵脉聚灵阵')) return by('灵脉聚灵阵');
+    if (c.contribution < 800 + (c.sectRank || 0) * 1500 && s.turn % 2 === 0) return by('任务堂') || list[0];
+    return by('离开山门') || list[list.length - 1];
+  }
+  if (s.scene.id === 'sectLibrary') {
+    const book = list.find((ch) => !ch.label.includes('离开'));
+    return book || by('离开') || list[0];
+  }
+  if (s.scene.id === 'sectTreasury') {
+    const item = list.find((ch) => ch.label.includes('丹') && !ch.label.includes('返回'));
+    return item || by('返回') || list[0];
+  }
+  if (s.scene.id === 'sectMissions') {
+    if (s.turn % 3 === 0) return by('返回大殿') || list[list.length - 1];
+    return by('常规宗门杂务') || list[0];
+  }
+  if (s.scene.id === 'sectPromote') {
+    return by('登台应考') || by('改日再来') || list[0];
+  }
+  if (s.scene.id === 'regionHub') {
+    if (s.turn % 8 === 0 && by('九州舆图')) return by('九州舆图');
+    return by('探索') || by('返回洞府') || list[0];
+  }
+  if (s.scene.id === 'regionMap') {
+    const higher = list.filter((ch) => !ch.label.includes('返回'));
+    return higher[higher.length - 1] || by('返回') || list[0];
+  }
+  if (s.scene.id === 'cityHub') return by('离开坊市') || list[list.length - 1];
+  if (s.scene.id === 'market' || s.scene.id === 'auction' || s.scene.id === 'sell') return list[list.length - 1];
   if (s.scene.id !== 'hub') return list[0];
 
-  if (canBreakthrough(s.char)) return by('冲击境界') || list[0];
-  if (!s.char.sectId && by('仙门')) return by('仙门');
-  if (s.char.demon > 40 && by('涤魔')) return by('涤魔');
-  if (s.char.hp < s.char.maxHp * 0.4 && by('涤魔')) return by('涤魔');
-  // 交替：修炼、历练、宗门差事
-  const cycle = s.turn % 5;
-  if (cycle === 0 && by('历练')) return by('历练');
-  if (cycle === 1 && by('宗门')) return by('宗门');
-  if (cycle === 2 && by('坊市')) return by('坊市');
-  return by('打坐') || list[0];
+  // 主界面策略
+  if (canBreakthrough(c) && bottleneckStatus(s).ok && by('冲击境界')) return by('冲击境界');
+  if (!c.sectId && by('拜入仙门')) return by('拜入仙门');
+  if (canBreakthrough(c) && !bottleneckStatus(s).ok && by('洞府修行')) return by('洞府修行');
+  const mod = s.turn % 10;
+  if (mod === 0 && by('九州历练')) return by('九州历练');
+  if ((mod === 3 || mod === 6) && by('仙门大殿')) return by('仙门大殿');
+  return by('洞府修行') || list[0];
 }
 
 function run(seed) {
   const g = new Game();
-  g.newRun({ seed, name: '模拟', gender: '男', originId: 'scholar', rootId: 'shuangling' });
+  g.newRun({ seed, name: '模拟', gender: '男', originId: 'scholar', rootId: 'shuangling', goldenFingerId: 'gf_bottle' });
   const seen = new Set();
+  const uiScenes = new Set(['hub', 'cave', 'regionHub', 'regionMap', 'sectHall', 'sectMissions', 'sectLibrary', 'sectTreasury', 'sectPromote', 'cityHub', 'tianji', 'npcHub', 'npcDetail', 'market', 'auction', 'sell', 'recruit', 'combat', 'tribulation', 'breakthrough']);
   let guard = 0;
-  let first = {};
-  while (guard++ < 6000) {
+  const first = {};
+  while (guard++ < 12000) {
     const s = g.state;
     if (s.scene.id === 'ending' || s.flags.finished) break;
-    const before = s.scene.id;
-    if (before !== 'hub' && before !== 'combat' && before !== 'tribulation' && before !== 'breakthrough') seen.add(before);
+    if (!uiScenes.has(s.scene.id)) seen.add(s.scene.id);
     const ch = policy(g);
     if (!ch) break;
     g.choose(ch.index);
@@ -73,25 +119,22 @@ function run(seed) {
     years: Math.floor(s.char.age / 12),
     realm: realmLabel(s.char),
     realmIndex: s.char.realm,
+    atk: g.playerAtk(),
+    sectRank: s.char.sectRank,
+    techs: s.char.techniques.length,
+    daoBase: s.char.daoBaseQuality,
+    goldCore: s.char.goldenCoreQuality,
     ending: s.flags.endingId || null,
     events: seen.size,
     achievements: Object.keys(s.meta.achievements).length,
-    first: first,
-    hp: Math.round(s.char.hp),
-    demon: Math.round(s.char.demon),
-    stones: s.char.stones,
+    first,
   };
 }
 
 const out = [];
 for (let i = 0; i < RUNS; i++) {
   const seed = 1000 + i * 7919;
-  try {
-    out.push(run(seed));
-  } catch (e) {
-    console.error('seed', seed, 'failed:', e.message);
-    throw e;
-  }
+  out.push(run(seed));
 }
 
 const avg = (arr, k) => Math.round(arr.reduce((a, b) => a + b[k], 0) / arr.length);
@@ -107,9 +150,10 @@ console.log(JSON.stringify({
   avgYears: avg(out, 'years'),
   avgEvents: avg(out, 'events'),
   avgAchievements: avg(out, 'achievements'),
+  avgTechs: avg(out, 'techs'),
   maxRealm: Math.max(...out.map((r) => r.realmIndex)),
+  maxAtk: Math.max(...out.map((r) => r.atk)),
   endings: out.reduce((acc, r) => { acc[r.ending || 'none'] = (acc[r.ending || 'none'] || 0) + 1; return acc; }, {}),
   milestoneYears: Object.fromEntries(Object.entries(milestones).map(([k, v]) => [k, Math.round(v.reduce((a, b) => a + b, 0) / v.length)])),
   sample: out.slice(0, 3),
-  uniqueEvents: new Set(out.flatMap((r) => r.events)).size,
 }, null, 2));

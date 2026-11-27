@@ -1,13 +1,17 @@
 import { RNG, clamp } from './rng.js';
-import { REALMS, expToNext, realmLabel } from '../data/realms.js';
+import {
+  REALMS, expToNext, realmLabel, LAWS, LAW_BY_ID, LAW_STAGES,
+  DAO_BASE_QUALITIES, GOLDEN_CORE_QUALITIES,
+} from '../data/realms.js';
 import { ROOT_BY_ID } from '../data/roots.js';
 import { ORIGIN_BY_ID } from '../data/origins.js';
 import { ITEM_BY_ID } from '../data/items.js';
-import { SECT_BY_ID, sectRank } from '../data/sects.js';
+import { SECT_BY_ID, SECT_RANKS, sectRank } from '../data/sects.js';
 import { TALENT_BY_ID } from '../data/talents.js';
-import { GOLDEN_FINGER_BY_ID, PET_BY_ID } from '../data/golden_fingers.js';
+import { GOLDEN_FINGER_BY_ID } from '../data/golden_fingers.js';
+import { REGION_BY_ID } from '../data/regions.js';
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 export const START_AGE_MONTHS = 16 * 12;
 
 const ATTR_KEYS = ['悟性', '根骨', '神识', '道心', '气运', '魅力'];
@@ -24,7 +28,6 @@ export function createRun({ seed, name, gender, originId, rootId, goldenFingerId
   if (root.id === 'hundun') for (const k of ATTR_KEYS) attrs[k] += 15;
   if (root.id === 'shui') attrs.神识 += 10;
   if (root.id === 'bing') attrs.道心 += 8;
-  if (origin.id === 'hunter') attrs.根骨 += 0; // 已在 origin.attrs 中计入气血
 
   const char = {
     name: name || '无名',
@@ -41,6 +44,11 @@ export function createRun({ seed, name, gender, originId, rootId, goldenFingerId
     realm: 0,
     layer: 0,
     exp: 0,
+    daoBaseQuality: null,
+    goldenCoreQuality: null,
+    laws: {},
+    mainLawId: null,
+    lawExp: 0,
     age: START_AGE_MONTHS,
     lifespan: Math.round((80 + root.lifespan) * 12),
     hp: 0,
@@ -55,8 +63,10 @@ export function createRun({ seed, name, gender, originId, rootId, goldenFingerId
     inventory: [],
     techniques: [],
     titles: [],
-    location: '青牛村',
-    visitedLocations: ['青牛村'],
+    regionId: 'qingniu',
+    location: '青牛山脉',
+    regionProgress: { qingniu: 0 },
+    visitedLocations: ['青牛山脉'],
     injuries: 0,
     relations: {},
   };
@@ -66,7 +76,6 @@ export function createRun({ seed, name, gender, originId, rootId, goldenFingerId
 
   const buffs = {};
   const talentFlags = {};
-  // 应用伴生金手指开局效果
   if (gf?.apply) {
     const ap = gf.apply;
     if (ap.attrs) for (const [k, v] of Object.entries(ap.attrs)) attrs[k] = (attrs[k] || 0) + v;
@@ -79,6 +88,7 @@ export function createRun({ seed, name, gender, originId, rootId, goldenFingerId
     if (ap.title && !char.titles.includes(ap.title)) char.titles.push(ap.title);
     if (ap.flag) Object.assign(talentFlags, ap.flag);
   }
+
   for (const tid of meta.talents || []) {
     const t = TALENT_BY_ID[tid];
     if (!t?.apply) continue;
@@ -116,6 +126,7 @@ export function createRun({ seed, name, gender, originId, rootId, goldenFingerId
     combat: null,
     scene: { id: 'hub', result: null },
     log: [],
+    rumors: [],
     stats: {
       actions: 0, breakthroughs: 0, failures: 0, encounters: 0, kills: 0,
       deaths: 0, tribulations: 0, pills: 0, years: 0, events: 0, goldSpent: 0,
@@ -172,22 +183,88 @@ export function itemCount(state, id) {
   return state.char.inventory.filter((it) => it.id === id).reduce((a, b) => a + b.qty, 0);
 }
 
+export function qualityMultiplier(char) {
+  const dao = DAO_BASE_QUALITIES.find((q) => q.id === char.daoBaseQuality)?.mult || 1;
+  const core = GOLDEN_CORE_QUALITIES.find((q) => q.id === char.goldenCoreQuality)?.mult || 1;
+  return dao * core;
+}
+
+export function lawBonusSum(char, key) {
+  let sum = 0;
+  for (const [lid, lvl] of Object.entries(char.laws || {})) {
+    const def = LAW_BY_ID[lid];
+    if (def?.bonus?.[key] && lvl > 0) sum += def.bonus[key] * lvl;
+  }
+  return sum;
+}
+
+export function maxLawLevel(char) {
+  const vals = Object.values(char.laws || {}).map(Number);
+  return vals.length ? Math.max(0, ...vals) : 0;
+}
+
+export function defaultLawFor(char) {
+  if (char.mainLawId && LAW_BY_ID[char.mainLawId]) return char.mainLawId;
+  const rootMap = {
+    jin: 'sword', huo: 'pill', lei: 'thunder', kongjian: 'space',
+    xingchen: 'star', xue: 'blood', hundun: 'chaos', bing: 'time',
+  };
+  if (rootMap[char.rootId]) return rootMap[char.rootId];
+  const sectMap = {
+    taixuan: 'sword', qingyun: 'thunder', danxia: 'pill', tianyin: 'karma',
+    wanxiang: 'array', hanshan: 'time', wanbao: 'space', xuemo: 'blood',
+  };
+  if (sectMap[char.sectId]) return sectMap[char.sectId];
+  return 'sword';
+}
+
+export function gainLawExp(state, amount, preferredLawId = null) {
+  const c = state.char;
+  c.laws = c.laws || {};
+  const lid = preferredLawId && LAW_BY_ID[preferredLawId] ? preferredLawId : defaultLawFor(c);
+  if (!c.mainLawId) c.mainLawId = lid;
+  const curLvl = c.laws[lid] || 0;
+  if (curLvl >= LAW_STAGES.length - 1) return [`${LAW_BY_ID[lid].name}法则已臻圆满`];
+  c.lawExp = (c.lawExp || 0) + Math.max(1, Math.round(amount));
+  const out = [`${LAW_BY_ID[lid].name}法则感悟 +${Math.round(amount)}`];
+  let need = 60 * (curLvl + 1) * (curLvl + 1);
+  while (c.lawExp >= need && (c.laws[lid] || 0) < LAW_STAGES.length - 1) {
+    c.lawExp -= need;
+    c.laws[lid] = (c.laws[lid] || 0) + 1;
+    out.push(`【法则突破】${LAW_BY_ID[lid].name}法则迈入「${LAW_STAGES[c.laws[lid]]}」！`);
+    recomputeDerived(c);
+    need = 60 * (c.laws[lid] + 1) * (c.laws[lid] + 1);
+  }
+  return out;
+}
+
 export function recomputeDerived(char) {
   const root = ROOT_BY_ID[char.rootId];
-  const realm = REALMS[char.realm];
-  const bodyBonus = root?.tags?.includes('体修') ? 1.6 : 1;
+  const realm = REALMS[char.realm] || REALMS[0];
+  const pm = realm.powerMult || 1;
+  const layerMult = 1 + (char.layer || 0) * 0.1;
+  const qMult = qualityMultiplier(char);
+  const bodyBonus = root?.tags?.includes('体修') ? 1.55 : 1;
   const equipMp = (char.inventory || []).reduce((acc, it) => acc + (ITEM_BY_ID[it.id]?.equip?.mp || 0), 0);
   const techLifespan = (char.techniques || []).reduce((acc, t) => acc + (t.lifespan || 0), 0);
-  char.maxHp = Math.round((100 + char.attrs.根骨 * 28 + char.realm * 420) * bodyBonus);
-  char.maxMp = Math.round(60 + char.attrs.神识 * 18 + char.realm * 260 + equipMp);
-  char.lifespanBase = Math.round((80 + (root?.lifespan || 0) + (realm?.lifespan || 0) + techLifespan) * 12);
+  const lawLifespan = lawBonusSum(char, 'lifespan');
+  const lawHpMult = 1 + lawBonusSum(char, 'hp');
+  const lawMpMult = 1 + lawBonusSum(char, 'mp');
+
+  char.maxHp = Math.round((120 + char.attrs.根骨 * 16) * pm * layerMult * qMult * bodyBonus * lawHpMult);
+  char.maxMp = Math.round((80 + char.attrs.神识 * 14) * pm * layerMult * qMult * lawMpMult + equipMp * Math.sqrt(pm));
+  char.lifespanBase = Math.round((80 + (root?.lifespan || 0) + (realm?.lifespan || 0) + techLifespan + lawLifespan) * 12);
   if (!char.lifespan || char.lifespan < char.lifespanBase) char.lifespan = char.lifespanBase;
   char.hp = clamp(char.hp, 0, char.maxHp);
   char.mp = clamp(char.mp, 0, char.maxMp);
   if (char.sectId) {
-    const rank = sectRank(char.contribution);
-    char.sectRank = rank.index;
+    char.sectRank = clamp(char.sectRank || 0, 0, SECT_RANKS.length - 1);
+  } else {
+    char.sectRank = 0;
   }
+  if (!char.regionId) char.regionId = 'qingniu';
+  if (!char.regionProgress) char.regionProgress = { [char.regionId]: 0 };
+  if (REGION_BY_ID[char.regionId]) char.location = REGION_BY_ID[char.regionId].name;
   return char;
 }
 
@@ -207,18 +284,32 @@ export function canBreakthrough(char) {
   return char.exp >= needExp(char) && char.realm < REALMS.length - 1;
 }
 
+export function bottleneckStatus(state) {
+  const c = state.char;
+  if (!isRealmMaxLayer(c)) return { ok: true, missing: [], bottleneck: null };
+  const bn = REALMS[c.realm]?.bottleneck;
+  if (!bn) return { ok: true, missing: [], bottleneck: null };
+  const missing = [];
+  if (bn.minDaoxin && c.attrs.道心 < bn.minDaoxin) missing.push(`道心需达 ${bn.minDaoxin}（当前 ${Math.round(c.attrs.道心)}）`);
+  if (bn.minLawLevel && maxLawLevel(c) < bn.minLawLevel) {
+    missing.push(`至少一道法则达「${LAW_STAGES[bn.minLawLevel]}」（当前 ${LAW_STAGES[maxLawLevel(c)]}）`);
+  }
+  return { ok: missing.length === 0, missing, bottleneck: bn };
+}
+
 export function breakthroughChance(state) {
   const char = state.char;
   const root = ROOT_BY_ID[char.rootId];
-  const base = 0.92 - char.realm * 0.062;
+  const base = 0.9 - char.realm * 0.058;
   let p = base
     + (root?.breakBonus || 0) / 100
-    + char.attrs.道心 * 0.0032
+    + char.attrs.道心 * 0.003
     + char.attrs.气运 * 0.0016
+    + lawBonusSum(char, 'breakBonus') / 100
     + (state.buffs?.breakBonus || 0) / 100
     - char.demon * 0.0045
-    - (char.injuries || 0) * 0.01;
-  if (canBreakthrough(char) && isRealmMaxLayer(char)) p -= 0.08; // 大境界更难
+    - (char.injuries || 0) * 0.015;
+  if (canBreakthrough(char) && isRealmMaxLayer(char)) p -= 0.1;
   if (char.rootId === 'hundun') p -= 0.05;
   return clamp(p, 0.05, 0.97);
 }
@@ -237,10 +328,11 @@ export function monthlyExp(state) {
   const char = state.char;
   const realm = REALMS[char.realm];
   const perks = sectPerks(char);
-  const techniques = char.techniques.reduce((acc, t) => acc + (t.speed || 0), 0);
+  const techniques = (char.techniques || []).reduce((acc, t) => acc + (t.speed || 0), 0);
+  const lawSpd = lawBonusSum(char, 'speed');
   const buff = state.buffs?.speed || 0;
-  const base = 5 + char.attrs.悟性 * 0.16 + char.attrs.根骨 * 0.05;
-  const speed = rootSpeed(char) * (1 + (perks.speed || 0)) * (1 + techniques) * (1 + buff);
+  const base = 4.2 + char.attrs.悟性 * 0.14 + char.attrs.根骨 * 0.04;
+  const speed = rootSpeed(char) * (1 + (perks.speed || 0)) * (1 + techniques) * (1 + lawSpd) * (1 + buff);
   const demonPenalty = 1 - clamp(char.demon / 260, 0, 0.7);
   return Math.max(1, Math.round(base * speed * realm.monthly * demonPenalty));
 }
@@ -263,14 +355,16 @@ export function advanceMonths(state, months, rng) {
   char.mp = clamp(char.mp + Math.round(char.maxMp * 0.2 * months), 0, char.maxMp);
   const perks = sectPerks(char);
   if (char.sectId) {
-    const stipend = Math.round((perks.stones || 0) * months);
-    if (stipend) { char.stones += stipend; notes.push(`宗门月例 +${stipend} 灵石`); }
-    char.contribution += Math.round(state.char.sectRank * 2 * months);
+    const pm = REALMS[char.realm]?.powerMult || 1;
+    const stipend = Math.round(((perks.stones || 0) + (char.sectRank || 0) * 15) * Math.sqrt(pm) * months * 0.5);
+    if (stipend) { char.stones += stipend; notes.push(`宗门月俸 +${stipend} 灵石`); }
+    char.contribution += Math.round((char.sectRank || 0) * 2 * months);
   }
-  const demonChance = 0.02 * months * (1 - (perks.demonResist || 0));
+  const demonResist = clamp((perks.demonResist || 0) + lawBonusSum(char, 'demonResist'), 0, 0.85);
+  const demonChance = 0.02 * months * (1 - demonResist);
   if (char.demon > 0 && rng && rng.chance(demonChance)) {
     char.demon = Math.min(100, char.demon + 1);
-    notes.push('夜里又做了那个梦。心魔 +1');
+    notes.push('夜半梦魇惊魂，心魔 +1');
   }
   if (char.injuries > 0 && months >= 3) char.injuries = Math.max(0, char.injuries - 1);
   recomputeDerived(char);

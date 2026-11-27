@@ -3,6 +3,8 @@
  * 无任何 AI 光栅贴图，100% 锐利像素美学（280×120 低分缓冲 + image-rendering: pixelated）。
  */
 
+import { REGION_BY_ID } from '../data/regions.js';
+
 const ASCEND_ENDINGS = new Set([
   'e_ascend', 'e_sword_ascend', 'e_dan_ascend', 'e_lover_ascend', 'e_ascend_demon', 'e_outsider',
 ]);
@@ -26,23 +28,28 @@ export function sceneThemeFor(node, state) {
   const id = node.id || state.scene?.id;
   if (id === 'combat') return SCENE_THEMES.combat;
   if (id === 'tribulation') return SCENE_THEMES.tribulation;
-  if (id === 'breakthrough') return SCENE_THEMES.breakthrough;
+  if (id === 'breakthrough' || id === 'cave') return SCENE_THEMES.breakthrough;
   if (id === 'auction') return SCENE_THEMES.auction;
-  if (id === 'market' || id === 'sell') return SCENE_THEMES.market;
-  if (id === 'recruit') return SCENE_THEMES.sect;
+  if (id === 'market' || id === 'sell' || id === 'cityHub' || id === 'tianji') return SCENE_THEMES.market;
+  if (id === 'recruit' || id === 'sectHall' || id === 'sectMissions' || id === 'sectLibrary' || id === 'sectTreasury' || id === 'sectPromote') {
+    return SCENE_THEMES.sect;
+  }
+  if (id === 'npcHub' || id === 'npcDetail') return SCENE_THEMES.village;
   if (id === 'story_ascend_1') return SCENE_THEMES.ascend;
   if (id === 'ending') {
     return ASCEND_ENDINGS.has(state.flags?.endingId) ? SCENE_THEMES.ascend : SCENE_THEMES.fall;
   }
   if (node.pool === 'sect') return SCENE_THEMES.sect;
   if (node.pool === 'inner') return SCENE_THEMES.breakthrough;
-  if (node.pool === 'wild' || node.pool === 'world' || node.pool === 'branch' || node.pool === 'story') {
-    return node.pool === 'world' && state.char?.location === '万宝坊市' ? SCENE_THEMES.market : SCENE_THEMES.wild;
+  const regTheme = REGION_BY_ID[state.char?.regionId]?.theme;
+  if (id === 'regionHub' || id === 'regionMap') {
+    return SCENE_THEMES[regTheme] || SCENE_THEMES.wild;
   }
-  const loc = state.char?.location || '';
-  if (loc.includes('坊市') || loc.includes('落霞')) return SCENE_THEMES.market;
-  if (loc.includes('北荒') || loc.includes('南疆') || loc.includes('东海') || loc.includes('乱葬岗')) return SCENE_THEMES.wild;
-  if (state.char?.sectId && state.char.sectId !== 'sanxiu' && loc === '青牛村') return SCENE_THEMES.sect;
+  if (node.pool === 'wild' || node.pool === 'world' || node.pool === 'branch' || node.pool === 'story') {
+    return SCENE_THEMES[regTheme] || SCENE_THEMES.wild;
+  }
+  if (regTheme && SCENE_THEMES[regTheme]) return SCENE_THEMES[regTheme];
+  if (state.char?.sectId && state.char.sectId !== 'sanxiu') return SCENE_THEMES.sect;
   return SCENE_THEMES.village;
 }
 
@@ -179,8 +186,8 @@ function drawEnemy(ctx, ex, ey, enemyId, t, hitFlash = 0) {
   const c = (col) => (flash ? '#ffffff' : col);
 
   px(ctx, ex - 9, ey + 2, 18, 2, 'rgba(0,0,0,0.45)');
-  if (enemyId === 'wolf' || enemyId === 'beast') {
-    const body = enemyId === 'beast' ? '#5e4b45' : '#4a5766';
+  if (enemyId === 'wolf' || enemyId === 'beast' || enemyId === 'spirit_ape' || enemyId === 'poison_python' || enemyId === 'abyss_leviathan') {
+    const body = enemyId === 'beast' ? '#5e4b45' : enemyId === 'poison_python' ? '#2c6b4f' : enemyId === 'abyss_leviathan' ? '#244b66' : '#4a5766';
     px(ctx, ex - 9, y - 8, 16, 7, c(body));
     px(ctx, ex - 13, y - 11, 6, 5, c(body));
     px(ctx, ex - 12, y - 13, 2, 2, c('#2c3440'));
@@ -188,8 +195,8 @@ function drawEnemy(ctx, ex, ey, enemyId, t, hitFlash = 0) {
     px(ctx, ex - 8, y - 1, 3, 3, c('#2d3540'));
     px(ctx, ex + 3, y - 1, 3, 3, c('#2d3540'));
     px(ctx, ex + 7, y - 10, 4, 2, c('#6a7b8f'));
-  } else if (enemyId === 'ghost' || enemyId === 'ghost_king' || enemyId === 'heart_demon') {
-    const col = enemyId === 'heart_demon' ? '#8c3b5e' : '#58a8a0';
+  } else if (enemyId === 'ghost' || enemyId === 'ghost_king' || enemyId === 'heart_demon' || enemyId === 'void_fiend' || enemyId === 'sword_phantom' || enemyId === 'ancient_corpse') {
+    const col = enemyId === 'heart_demon' ? '#8c3b5e' : enemyId === 'void_fiend' ? '#5d438c' : enemyId === 'sword_phantom' ? '#8fbde6' : '#58a8a0';
     px(ctx, ex - 6, y - 17, 12, 13, c(col));
     px(ctx, ex - 4, y - 20, 8, 4, c(col));
     px(ctx, ex - 4, y - 14, 2, 2, '#ff6464');
@@ -197,15 +204,17 @@ function drawEnemy(ctx, ex, ey, enemyId, t, hitFlash = 0) {
     px(ctx, ex - 7, y - 4, 3, 4, c('#2a4d4c'));
     px(ctx, ex, y - 4, 3, 5, c('#2a4d4c'));
     px(ctx, ex + 4, y - 4, 3, 3, c('#2a4d4c'));
-  } else if (enemyId === 'demon_king' || enemyId === 'demon_general' || enemyId === 'old_monster') {
-    // 巨型妖王 / 老怪
-    px(ctx, ex - 10, y - 22, 20, 20, c('#471923'));
-    px(ctx, ex - 7, y - 28, 14, 7, c('#6b2232'));
-    px(ctx, ex - 10, y - 31, 3, 4, c('#d9c29c')); // 角
-    px(ctx, ex + 7, y - 31, 3, 4, c('#d9c29c'));
-    px(ctx, ex - 4, y - 25, 3, 2, '#ff4d3d');
-    px(ctx, ex + 2, y - 25, 3, 2, '#ff4d3d');
-    px(ctx, ex - 14, y - 18, 4, 14, c('#c43b3b')); // 血斧/魔气
+  } else if (enemyId === 'demon_king' || enemyId === 'demon_general' || enemyId === 'old_monster' || enemyId === 'chaos_beast' || enemyId === 'sky_arbiter' || enemyId === 'heaven_envoy' || enemyId === 'blood_elder') {
+    // 巨型妖王 / 老怪 / 天门裁决者
+    const armor = enemyId === 'sky_arbiter' || enemyId === 'heaven_envoy' ? '#3d4766' : '#471923';
+    const helm = enemyId === 'sky_arbiter' || enemyId === 'heaven_envoy' ? '#7b8db5' : '#6b2232';
+    px(ctx, ex - 10, y - 22, 20, 20, c(armor));
+    px(ctx, ex - 7, y - 28, 14, 7, c(helm));
+    px(ctx, ex - 10, y - 31, 3, 4, c('#e6b95c')); // 角/冠
+    px(ctx, ex + 7, y - 31, 3, 4, c('#e6b95c'));
+    px(ctx, ex - 4, y - 25, 3, 2, enemyId === 'sky_arbiter' ? '#fff099' : '#ff4d3d');
+    px(ctx, ex + 2, y - 25, 3, 2, enemyId === 'sky_arbiter' ? '#fff099' : '#ff4d3d');
+    px(ctx, ex - 14, y - 18, 4, 14, c(enemyId === 'sky_arbiter' ? '#e6b95c' : '#c43b3b')); // 兵刃/魔气
   } else {
     // 敌对修士 / 血魔弟子 / 金丹长老
     const robe = enemyId === 'blood_cult' ? '#631a25' : '#362d47';

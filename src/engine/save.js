@@ -28,7 +28,7 @@ export class SaveStore {
   save(slot, game) {
     if (!this.storage) return false;
     const payload = {
-      version: 3,
+      version: 4,
       savedAt: Date.now(),
       state: game.serialize(),
       meta: game.state.meta,
@@ -79,7 +79,7 @@ export class SaveStore {
   }
 
   exportToFile(game) {
-    const payload = { version: 3, savedAt: Date.now(), state: game.serialize(), meta: game.state.meta };
+    const payload = { version: 4, savedAt: Date.now(), state: game.serialize(), meta: game.state.meta };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

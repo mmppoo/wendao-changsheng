@@ -6,6 +6,10 @@ import { ITEM_BY_ID } from '../src/data/items.js';
 import { ENEMY_BY_ID } from '../src/data/enemies.js';
 import { ROOTS } from '../src/data/roots.js';
 import { SECTS } from '../src/data/sects.js';
+import { REGIONS, REGION_BY_ID } from '../src/data/regions.js';
+import { LAW_BY_ID } from '../src/data/realms.js';
+import { SECT_LIBRARIES, SECT_TREASURY, SECT_MISSIONS, SECT_PROMOTION_TRIALS } from '../src/data/sectContent.js';
+import { NPCS } from '../src/data/npcs.js';
 import { parseExpression } from '../src/engine/expr.js';
 
 const errors = [];
@@ -95,7 +99,35 @@ for (const t of STORY_TRIGGERS) {
   if (!ids.has(t.id)) errors.push(`剧情触发目标不存在: ${t.id}`);
   checkExpr(t.when, `[触发 ${t.id}]`);
 }
-for (const s of SECTS) checkExpr(s.requireExpr, `[宗门 ${s.id}]`);
+for (const s of SECTS) {
+  checkExpr(s.requireExpr, `[宗门 ${s.id}]`);
+  if (!SECT_LIBRARIES[s.id]?.length) errors.push(`宗门 ${s.id} 缺藏经阁`);
+  if (!SECT_TREASURY[s.id]?.length) errors.push(`宗门 ${s.id} 缺宗门宝库`);
+  if (!SECT_MISSIONS[s.id]?.length) errors.push(`宗门 ${s.id} 缺任务堂`);
+  for (const m of SECT_LIBRARIES[s.id] || []) {
+    if (m.lawId && !LAW_BY_ID[m.lawId]) errors.push(`藏经阁 ${m.id} lawId 不存在: ${m.lawId}`);
+  }
+  for (const t of SECT_TREASURY[s.id] || []) {
+    if (!ITEM_BY_ID[t.itemId]) errors.push(`宗门宝库 ${s.id} itemId 不存在: ${t.itemId}`);
+  }
+  for (const m of SECT_MISSIONS[s.id] || []) {
+    if (m.enemy && !ENEMY_BY_ID[m.enemy]) errors.push(`宗门任务 ${m.id} enemy 不存在: ${m.enemy}`);
+  }
+}
+for (const tr of SECT_PROMOTION_TRIALS) {
+  if (tr.enemy && !ENEMY_BY_ID[tr.enemy]) errors.push(`晋升试炼 ${tr.title} enemy 不存在: ${tr.enemy}`);
+}
+for (const r of REGIONS) {
+  for (const e of r.enemies || []) if (!ENEMY_BY_ID[e]) errors.push(`州域 ${r.id} enemy 不存在: ${e}`);
+  for (const it of [...(r.marketItems || []), ...(r.exploreRewards || [])]) {
+    if (!ITEM_BY_ID[it]) errors.push(`州域 ${r.id} item 不存在: ${it}`);
+  }
+}
+for (const npc of NPCS) {
+  if (!REGION_BY_ID[npc.region]) errors.push(`道友 ${npc.id} region 不存在: ${npc.region}`);
+  if (npc.sparEnemy && !ENEMY_BY_ID[npc.sparEnemy]) errors.push(`道友 ${npc.id} sparEnemy 不存在: ${npc.sparEnemy}`);
+  for (const it of npc.likeItems || []) if (!ITEM_BY_ID[it]) errors.push(`道友 ${npc.id} likeItem 不存在: ${it}`);
+}
 
 const totalWeight = ROOTS.reduce((a, r) => a + r.weight, 0);
 const pools = {};

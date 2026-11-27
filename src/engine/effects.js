@@ -1,4 +1,4 @@
-import { addItem, removeItem, gainExp, needExp, recomputeDerived, advanceMonths } from './state.js';
+import { addItem, removeItem, gainExp, needExp, recomputeDerived, advanceMonths, gainLawExp } from './state.js';
 import { ITEM_BY_ID } from '../data/items.js';
 import { SECT_BY_ID } from '../data/sects.js';
 import { REALMS } from '../data/realms.js';
@@ -26,14 +26,19 @@ export function applyEffects(state, effects = {}, ctx = {}) {
     c.stones = Math.max(0, c.stones + effects.stones);
     out.push(`灵石 ${effects.stones > 0 ? '+' : ''}${effects.stones}`);
   }
-  if (effects.hp) {
-    const delta = effects.hp > 0 && c.rootId === 'mu' ? Math.round(effects.hp * 1.5) : effects.hp;
+  if (effects.hp || effects.hpPct) {
+    const raw = (effects.hp || 0) + Math.round(c.maxHp * (effects.hpPct || 0));
+    const delta = raw > 0 && c.rootId === 'mu' ? Math.round(raw * 1.5) : raw;
     c.hp = clamp(c.hp + delta, 0, c.maxHp);
-    out.push(`气血 ${delta > 0 ? '+' : ''}${delta}`);
+    if (delta) out.push(`气血 ${delta > 0 ? '+' : ''}${delta}`);
   }
-  if (effects.mp) {
-    c.mp = clamp(c.mp + effects.mp, 0, c.maxMp);
-    out.push(`灵力 ${effects.mp > 0 ? '+' : ''}${effects.mp}`);
+  if (effects.mp || effects.mpPct) {
+    const raw = (effects.mp || 0) + Math.round(c.maxMp * (effects.mpPct || 0));
+    c.mp = clamp(c.mp + raw, 0, c.maxMp);
+    if (raw) out.push(`灵力 ${raw > 0 ? '+' : ''}${raw}`);
+  }
+  if (effects.lawExp) {
+    out.push(...gainLawExp(state, effects.lawExp, effects.lawId || null));
   }
   if (effects.attrs) {
     for (const [k, v] of Object.entries(effects.attrs)) {

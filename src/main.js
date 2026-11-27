@@ -1,9 +1,13 @@
 import { Game } from './engine/game.js';
 import { SaveStore } from './engine/save.js';
+import { recomputeDerived, qualityMultiplier } from './engine/state.js';
 import { ROOTS, ROOT_BY_ID, GRADE_ORDER, ROOT_WEIGHT_TOTAL } from './data/roots.js';
 import { ORIGINS } from './data/origins.js';
-import { REALMS, realmLabel } from './data/realms.js';
-import { SECTS, SECT_BY_ID, sectRank } from './data/sects.js';
+import {
+  REALMS, realmLabel, LAW_BY_ID, LAW_STAGES, DAO_BASE_QUALITIES, GOLDEN_CORE_QUALITIES,
+} from './data/realms.js';
+import { SECTS, SECT_BY_ID, SECT_RANKS } from './data/sects.js';
+import { REGION_BY_ID } from './data/regions.js';
 import { ACHIEVEMENTS } from './data/achievements.js';
 import { ENDINGS } from './data/endings.js';
 import { ITEM_BY_ID } from './data/items.js';
@@ -11,6 +15,14 @@ import { TALENTS } from './data/talents.js';
 import { GOLDEN_FINGERS, GOLDEN_FINGER_BY_ID, PET_BY_ID } from './data/golden_fingers.js';
 import { SpiritCanvas, SoundFX, triggerScreenFx } from './ui/fx.js';
 import { PixelStage, sceneThemeFor, renderPixelPortrait } from './ui/pixelScene.js';
+
+function formatNum(n) {
+  if (!Number.isFinite(n)) return '∞';
+  const abs = Math.abs(n);
+  if (abs >= 1e8) return `${(n / 1e8).toFixed(2)}亿`;
+  if (abs >= 1e4) return `${(n / 1e4).toFixed(1)}万`;
+  return String(Math.round(n));
+}
 
 const $ = (id) => document.getElementById(id);
 const store = new SaveStore();
@@ -68,7 +80,7 @@ function seedTitleMeta() {
   }
   const counts = meta
     ? `第 ${meta.cycle || 1} 世轮回 · 结局 ${(meta.unlockedEndings || []).length}/${ENDINGS.length} · 成就 ${Object.keys(meta.achievements || {}).length}/${ACHIEVEMENTS.length}`
-    : '初次踏入仙途？择一出身与金手指，开启测灵阵。';
+    : '初次踏入仙途？择一出身与伴生机缘，开启测灵阵。';
   $('title-meta').textContent = counts;
 }
 
@@ -405,10 +417,11 @@ function renderMobileHud() {
   const remain = Math.max(0, Math.floor((c.lifespan - c.age) / 12));
   $('mobile-hud').innerHTML = `
     <div class="mhud-pills">
-      <span class="c-hp">血 <b>${Math.round(c.hp)}/${c.maxHp}</b></span>
-      <span class="c-mp">灵 <b>${Math.round(c.mp)}/${c.maxMp}</b></span>
-      <span class="c-gold">石 <b>${c.stones}</b></span>
-      <span>余寿 <b>${remain}年</b></span>
+      <span class="c-hp">血 <b>${formatNum(c.hp)}/${formatNum(c.maxHp)}</b></span>
+      <span class="c-mp">灵 <b>${formatNum(c.mp)}/${formatNum(c.maxMp)}</b></span>
+      <span class="c-gold">石 <b>${formatNum(c.stones)}</b></span>
+      <span>攻 <b>${formatNum(game.playerAtk())}</b></span>
+      <span>寿 <b>${remain}年</b></span>
       ${c.demon > 0 ? `<span class="c-demon">魔 <b>${Math.round(c.demon)}</b></span>` : ''}
     </div>
     <div class="mhud-exp">
@@ -477,15 +490,21 @@ function renderSceneBanner() {
 }
 
 function kickerFor(node) {
-  if (!node) return '人间';
-  if (node.id === 'hub') return game.state.char.location;
-  if (node.id === 'combat') return '斗法';
-  if (node.id === 'tribulation') return '天劫';
-  if (node.id === 'breakthrough') return '叩关';
-  if (node.id === 'auction') return '拍卖会';
-  if (node.id === 'market' || node.id === 'sell') return '坊市';
-  if (node.id === 'recruit') return '仙门';
-  if (node.id === 'ending') return '此生终章';
+  if (!node) return '九州';
+  const id = node.id;
+  if (id === 'hub') return game.state.char.location;
+  if (id === 'cave') return '洞府修行';
+  if (id === 'regionHub' || id === 'regionMap') return '九州历练';
+  if (id === 'sectHall' || id === 'sectMissions' || id === 'sectLibrary' || id === 'sectTreasury' || id === 'sectPromote') return '仙门大殿';
+  if (id === 'cityHub' || id === 'tianji') return '仙城坊市';
+  if (id === 'npcHub' || id === 'npcDetail') return '红尘道友';
+  if (id === 'combat') return '斗法';
+  if (id === 'tribulation') return '九霄天劫';
+  if (id === 'breakthrough') return '叩关破境';
+  if (id === 'auction') return '万宝暗拍';
+  if (id === 'market' || id === 'sell') return '灵材商行';
+  if (id === 'recruit') return '寻访仙门';
+  if (id === 'ending') return '此生终章';
   return node.pool === 'sect' ? '宗门' : node.pool === 'inner' ? '内景' : node.pool === 'story' ? '宿命因果' : '机缘奇遇';
 }
 
@@ -516,7 +535,9 @@ function renderCharPanel() {
   const root = ROOT_BY_ID[c.rootId];
   const realm = REALMS[c.realm];
   const sect = c.sectId ? SECT_BY_ID[c.sectId] : null;
-  const rank = sectRank(c.contribution);
+  const rankName = sect ? (SECT_RANKS[c.sectRank || 0]?.name || '外门弟子') : '散修';
+  const region = REGION_BY_ID[c.regionId] || REGION_BY_ID.qingniu;
+  const regionProg = Math.min(100, Math.round(c.regionProgress?.[region.id] || 0));
   const gf = c.goldenFingerId ? GOLDEN_FINGER_BY_ID[c.goldenFingerId] : null;
   const pet = c.petId ? PET_BY_ID[c.petId] : null;
   const expNeed = Number.isFinite(realm.exp) ? Math.round(realm.exp * Math.pow(realm.growth, c.layer)) : Infinity;
@@ -525,6 +546,13 @@ function renderCharPanel() {
 
   const attrs = Object.entries(c.attrs)
     .map(([k, v]) => `<div class="attr"><span>${k}</span><b>${Math.round(v)}</b></div>`)
+    .join('');
+
+  const daoBase = DAO_BASE_QUALITIES.find((q) => q.id === c.daoBaseQuality);
+  const goldCore = GOLDEN_CORE_QUALITIES.find((q) => q.id === c.goldenCoreQuality);
+  const lawTags = Object.entries(c.laws || {})
+    .filter(([, lvl]) => lvl > 0)
+    .map(([id, lvl]) => `<span class="tag gold">${escapeHtml(LAW_BY_ID[id]?.name || id)} · ${LAW_STAGES[lvl]}</span>`)
     .join('');
 
   const titles = (c.titles || []).slice(-6).map((t) => `<span class="tag gold">${escapeHtml(t)}</span>`).join('');
@@ -545,20 +573,20 @@ function renderCharPanel() {
       <canvas id="char-portrait" class="char-portrait" width="44" height="44" aria-label="像素角色像"></canvas>
       <div>
         <h2 class="char-name">${escapeHtml(c.name)}</h2>
-        <div class="char-sub">${realmLabel(c)}<span class="dot">·</span><span style="color:${gradeColor(root?.grade)}">${root?.name || '凡体'}</span><span class="dot">·</span>${sect ? `${sect.name}·${rank.name}` : '散修'}</div>
+        <div class="char-sub">${realmLabel(c)}<span class="dot">·</span><span style="color:${gradeColor(root?.grade)}">${root?.name || '凡体'}</span><span class="dot">·</span>${sect ? `${sect.name}·${rankName}` : '散修'}</div>
       </div>
     </div>
 
     <div class="meter">
-      <div class="meter-top"><span>修为</span><b>${Math.floor(c.exp)} / ${expNeed === Infinity ? '∞' : expNeed}</b></div>
+      <div class="meter-top"><span>修为</span><b>${formatNum(c.exp)} / ${formatNum(expNeed)}</b></div>
       <div class="bar exp"><i style="width:${expPct}%"></i></div>
     </div>
     <div class="meter">
-      <div class="meter-top"><span>气血</span><b>${Math.round(c.hp)} / ${c.maxHp}</b></div>
+      <div class="meter-top"><span>气血</span><b>${formatNum(c.hp)} / ${formatNum(c.maxHp)}</b></div>
       <div class="bar hp"><i style="width:${Math.max(0, (c.hp / c.maxHp) * 100)}%"></i></div>
     </div>
     <div class="meter">
-      <div class="meter-top"><span>灵力</span><b>${Math.round(c.mp)} / ${c.maxMp}</b></div>
+      <div class="meter-top"><span>灵力</span><b>${formatNum(c.mp)} / ${formatNum(c.maxMp)}</b></div>
       <div class="bar mp"><i style="width:${Math.max(0, (c.mp / c.maxMp) * 100)}%"></i></div>
     </div>
     ${c.demon > 0 ? `
@@ -569,6 +597,15 @@ function renderCharPanel() {
     <div class="meter">
       <div class="meter-top"><span>寿元</span><b>${Math.floor(c.age / 12)} / ${Math.floor(c.lifespan / 12)} 岁</b></div>
       <div class="bar life"><i style="width:${lifePct}%"></i></div>
+    </div>
+
+    <div class="panel-block">
+      <h4>战力与根基</h4>
+      <div class="stat-line"><span>攻 / 术 / 防</span><b style="color:var(--gold)">${formatNum(game.playerAtk())} / ${formatNum(game.playerSpellAtk())} / ${formatNum(game.playerDef())}</b></div>
+      <div class="stat-line"><span>境界倍率</span><b>×${realm.powerMult} · 根基 ×${qualityMultiplier(c).toFixed(2)}</b></div>
+      ${daoBase ? `<div class="stat-line"><span>道基品质</span><b style="color:var(--jade)">${daoBase.name}</b></div>` : ''}
+      ${goldCore ? `<div class="stat-line"><span>金丹品阶</span><b style="color:var(--gold)">${goldCore.name}</b></div>` : ''}
+      <div class="stat-line"><span>所在州域</span><b>${escapeHtml(region.name)}（${regionProg}%）</b></div>
     </div>
 
     ${gf ? `<div class="panel-block"><h4>伴生机缘</h4><div class="gf-pill-card"><b>${escapeHtml(gf.name)}（${escapeHtml(gf.tag)}）</b><span>${escapeHtml(gf.perk)}</span></div></div>` : ''}
@@ -582,15 +619,16 @@ function renderCharPanel() {
       <h4>身家法宝</h4>
       <div class="stat-line"><span>本命法宝</span><b style="color:var(--gold)">${escapeHtml(c.artifactName || '无名青锋')} (+${c.artifactLevel || 0})</b></div>
       ${pet ? `<div class="stat-line"><span>伴生灵兽</span><b style="color:var(--jade)">${escapeHtml(pet.name)}</b></div>` : ''}
-      <div class="stat-line"><span>灵石</span><b>${c.stones}</b></div>
+      <div class="stat-line"><span>灵石</span><b>${c.stones.toLocaleString()}</b></div>
       <div class="stat-line"><span>声望</span><b>${c.reputation}</b></div>
       <div class="stat-line"><span>业力</span><b>${c.karma}</b></div>
-      ${sect ? `<div class="stat-line"><span>宗门贡献</span><b>${c.contribution}</b></div>` : ''}
+      ${sect ? `<div class="stat-line"><span>宗门贡献</span><b>${c.contribution.toLocaleString()}</b></div>` : ''}
       ${c.injuries ? `<div class="stat-line"><span>伤势</span><b style="color:#f28c7b">${c.injuries}</b></div>` : ''}
     </div>
 
+    ${lawTags ? `<div class="panel-block"><h4>天地法则</h4><div class="tag-row">${lawTags}</div></div>` : ''}
     ${buffs.length ? `<div class="panel-block"><h4>护持</h4><div class="tag-row">${buffs.join('')}</div></div>` : ''}
-    ${techs ? `<div class="panel-block"><h4>功法</h4><div class="tag-row">${techs}</div></div>` : ''}
+    ${techs ? `<div class="panel-block"><h4>功法传承</h4><div class="tag-row">${techs}</div></div>` : ''}
     ${rels ? `<div class="panel-block"><h4>红尘羁绊</h4>${rels}</div>` : ''}
     ${titles ? `<div class="panel-block"><h4>名号</h4><div class="tag-row">${titles}</div></div>` : ''}
   `;
@@ -650,7 +688,8 @@ function renderChoices() {
   const wrap = $('choices');
   wrap.innerHTML = '';
   const list = game.choices();
-  const isHubGrid = game.state.scene.id === 'hub' && !game.state.scene.result && list.length > 3;
+  const gridScenes = new Set(['hub', 'cave', 'regionHub', 'sectHall', 'cityHub', 'npcHub']);
+  const isHubGrid = gridScenes.has(game.state.scene.id) && !game.state.scene.result && list.length > 3;
   wrap.classList.toggle('is-hub-grid', isHubGrid);
   list.forEach((ch, i) => {
     const btn = document.createElement('button');
@@ -887,19 +926,22 @@ function wireOverlays() {
   });
   $('menu-help').addEventListener('click', () => {
     $('menu-body').innerHTML = `
-      <h4>金手指与网文流派</h4>
-      <p>建角时可任选 6 种伴生机缘：掌天小绿瓶（催熟灵药）、残剑老祖魂（打脸指点）、天机因果镜（坊市捡漏）、龟息藏锋诀（苟道稳健）、万界道碑（云游打卡）或纯凡骨硬核挑战。</p>
-      <h4>拍卖、本命法宝与灵兽</h4>
-      <p>积攒灵石后可入万宝拍卖会竞拍稀世重宝（切记财不露白）；收集玄铁/雷击木可祭炼本命法宝，在斗法中施展「本命神通 · 绝招」；荒谷奇遇可孵化玄龟/青鸾/噬金虫/白狐。</p>
+      <h4>六大支柱 · 百小时长生路</h4>
+      <p><b>洞府修行</b>：吐纳炼气、闭关苦修、参悟十道天地法则、开炉炼丹与祭炼本命法宝。<br>
+      <b>九州历练</b>：八大梯度灵域（青牛山脉→九霄天门），探索州域进度、猎妖历战、闯古境。<br>
+      <b>仙门大殿</b>：十三宗皆设独立任务堂、藏经阁（四阶功法与专属战斗神通）、宗门宝库、灵脉聚灵阵与五阶晋升考核。<br>
+      <b>仙城坊市与红尘道友</b>：随州域进化的灵材商行、万宝阁暗拍、天机阁潜龙榜，以及六位常驻名修论道赠礼与结侣。</p>
+      <h4>境界瓶颈与战力跃迁</h4>
+      <p>十重境界战力指数跃迁（1× 至 10,000×），筑基道基与九纹金丹品质永久铭刻；元婴之后须领悟天地法则方可叩开化神至真仙大门。</p>
       <h4>双端操作</h4>
-      <p>电脑支持 1–9 选择、空格跳过打字、S/L 存读档、C 图鉴；手机底部五栏一键切换问道、道躯、储物、行止与图鉴。</p>
+      <p>电脑支持 1–9 选择、空格继续、S/L 存读档、C 图鉴；手机固定单屏布局，底部五栏切换问道、道躯、储物、行止与图鉴。</p>
     `;
   });
   $('menu-about').addEventListener('click', () => {
     $('menu-body').innerHTML = `
-      <h4>关于《问道长生》v3.0</h4>
-      <p>HD-2D 国风像素仙侠 × inkle/ink 织网叙事引擎，实时像素实景画布随境界、灵根、宗门与伴生灵兽动态演化。</p>
-      <p>内置 300+ 叙事节点、6 大伴生金手指、21 种灵根、13 座仙门、24 重结局、177 项成就（含 63 项隐藏）与 12 项轮回天赋。</p>
+      <h4>关于《问道长生》v4.0</h4>
+      <p>HD-2D 国风像素仙侠 × inkle/ink 互动叙事引擎，实时像素实景画布随州域、境界、灵根、宗门与伴生灵兽动态演化。</p>
+      <p>内置 376 个叙事节点、八大州域、十三宗完整大殿（52 部藏经阁功法 / 76 件宝库奇珍 / 39 项宗门悬赏）、十道天地法则、25 类特性敌手、24 重结局与 177 项成就。</p>
     `;
   });
 }
@@ -1048,6 +1090,11 @@ function exposeDebug() {
       age: Math.floor(game.state.char.age / 12),
       root: game.state.char.rootId,
       sect: game.state.char.sectId,
+      sectRank: game.state.char.sectRank || 0,
+      regionId: game.state.char.regionId || 'qingniu',
+      atk: game.playerAtk(),
+      def: game.playerDef(),
+      laws: game.state.char.laws || {},
       goldenFinger: game.state.char.goldenFingerId,
       pet: game.state.char.petId,
       artifactLevel: game.state.char.artifactLevel || 0,
@@ -1077,6 +1124,9 @@ function exposeDebug() {
     c.layer = layer;
     c.exp = 0;
     c.lifespan = Math.max(c.lifespan, Math.round((80 + REALMS[realm].lifespan) * 12));
+    recomputeDerived(c);
+    c.hp = c.maxHp;
+    c.mp = c.maxMp;
     renderAll();
     return realmLabel(c);
   };
