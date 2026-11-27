@@ -1,52 +1,6 @@
 /**
- * 视觉动效、场景绘卷映射与轻量 Web Audio 拟音引擎（零外部依赖）。
+ * 视觉动效与轻量 Web Audio 拟音引擎（零外部依赖）。
  */
-
-const ASCEND_ENDINGS = new Set([
-  'e_ascend', 'e_sword_ascend', 'e_dan_ascend', 'e_lover_ascend', 'e_ascend_demon', 'e_outsider',
-]);
-
-export const SCENE_ART = {
-  title: { src: 'assets/art/title-hero.webp', mood: 'gold', caption: '山海问仙' },
-  village: { src: 'assets/art/scene-village.webp', mood: 'gold', caption: '青牛幽居' },
-  wild: { src: 'assets/art/scene-wild.webp', mood: 'jade', caption: '荒野秘境' },
-  sect: { src: 'assets/art/scene-sect.webp', mood: 'gold', caption: '仙门问道' },
-  market: { src: 'assets/art/scene-market.webp', mood: 'amber', caption: '云桥坊市' },
-  combat: { src: 'assets/art/scene-combat.webp', mood: 'crimson', caption: '剑气斗法' },
-  tribulation: { src: 'assets/art/scene-tribulation.webp', mood: 'violet', caption: '九重天劫' },
-  breakthrough: { src: 'assets/art/scene-breakthrough.webp', mood: 'inner', caption: '丹田内景' },
-  ascend: { src: 'assets/art/scene-ascend.webp', mood: 'ascend', caption: '天门洞开' },
-  fall: { src: 'assets/art/scene-ending-fall.webp', mood: 'fall', caption: '尘世一梦' },
-};
-
-export function sceneArtFor(node, state) {
-  if (!state || !node) return SCENE_ART.village;
-  const id = node.id || state.scene?.id;
-  if (id === 'combat') return SCENE_ART.combat;
-  if (id === 'tribulation') return SCENE_ART.tribulation;
-  if (id === 'breakthrough') return SCENE_ART.breakthrough;
-  if (id === 'market' || id === 'sell') return SCENE_ART.market;
-  if (id === 'recruit') return SCENE_ART.sect;
-  if (id === 'story_ascend_1') return SCENE_ART.ascend;
-  if (id === 'ending') {
-    const eid = state.flags?.endingId;
-    return ASCEND_ENDINGS.has(eid) ? SCENE_ART.ascend : SCENE_ART.fall;
-  }
-  if (node.pool === 'sect') return SCENE_ART.sect;
-  if (node.pool === 'inner') return SCENE_ART.breakthrough;
-  if (node.pool === 'wild' || node.pool === 'world' || node.pool === 'branch' || node.pool === 'story') {
-    if (String(id).includes('kunlun') || String(id).includes('guixu') || String(id).includes('jianzhong')) {
-      return SCENE_ART.wild;
-    }
-    return node.pool === 'world' && state.char?.location === '万宝坊市' ? SCENE_ART.market : SCENE_ART.wild;
-  }
-  // Hub: 按当前地点或宗门切换绘卷
-  const loc = state.char?.location || '';
-  if (loc.includes('坊市') || loc.includes('落霞')) return SCENE_ART.market;
-  if (loc.includes('北荒') || loc.includes('南疆') || loc.includes('东海') || loc.includes('乱葬岗')) return SCENE_ART.wild;
-  if (state.char?.sectId && state.char.sectId !== 'sanxiu' && loc === '青牛村') return SCENE_ART.sect;
-  return SCENE_ART.village;
-}
 
 const MOOD_PALETTES = {
   gold: ['rgba(200,164,92,0.55)', 'rgba(232,223,204,0.35)', 'rgba(178,58,42,0.3)'],

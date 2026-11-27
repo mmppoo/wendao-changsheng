@@ -2,6 +2,7 @@ import { addItem, removeItem, gainExp, needExp, recomputeDerived, advanceMonths 
 import { ITEM_BY_ID } from '../data/items.js';
 import { SECT_BY_ID } from '../data/sects.js';
 import { REALMS } from '../data/realms.js';
+import { PET_BY_ID } from '../data/golden_fingers.js';
 import { clamp } from './rng.js';
 
 /**
@@ -49,6 +50,7 @@ export function applyEffects(state, effects = {}, ctx = {}) {
     let rep = effects.reputation;
     if (rep > 0 && c.rootId === 'taiyang') rep = Math.round(rep * 1.5);
     if (rep > 0 && c.rootId === 'an') rep = Math.max(1, Math.round(rep * 0.5));
+    if (rep > 0 && c.goldenFingerId === 'gf_none') rep = Math.round(rep * 1.25);
     c.reputation += rep;
     out.push(`声望 ${rep > 0 ? '+' : ''}${rep}`);
   }
@@ -61,8 +63,14 @@ export function applyEffects(state, effects = {}, ctx = {}) {
     out.push(`业力 ${effects.karma > 0 ? '+' : ''}${effects.karma}`);
   }
   if (effects.demon) {
-    c.demon = clamp(c.demon + effects.demon, 0, 100);
-    out.push(`心魔 ${effects.demon > 0 ? '+' : ''}${effects.demon}`);
+    let dm = effects.demon;
+    if (dm > 0 && c.goldenFingerId === 'gf_stealth') dm = Math.max(1, Math.round(dm * 0.5));
+    c.demon = clamp(c.demon + dm, 0, 100);
+    out.push(`心魔 ${dm > 0 ? '+' : ''}${dm}`);
+  }
+  if (effects.pet && PET_BY_ID[effects.pet]) {
+    c.petId = effects.pet;
+    out.push(`伴生灵兽「${PET_BY_ID[effects.pet].name}」认主`);
   }
   if (effects.injury) {
     c.injuries = Math.max(0, (c.injuries || 0) + effects.injury);

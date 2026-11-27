@@ -3,6 +3,7 @@ import { REALMS, realmLabel } from '../data/realms.js';
 import { ROOT_BY_ID } from '../data/roots.js';
 import { SECT_BY_ID, sectRank } from '../data/sects.js';
 import { ITEM_BY_ID } from '../data/items.js';
+import { GOLDEN_FINGER_BY_ID, PET_BY_ID } from '../data/golden_fingers.js';
 import { canBreakthrough, needExp } from './state.js';
 
 export const EVENTS = [];
@@ -137,10 +138,31 @@ export function buildHub(game) {
     });
   }
 
+  if (c.goldenFingerId === 'gf_bottle') {
+    choices.push({
+      id: 'bottle_ripen', label: '绿瓶催熟灵药', hint: '两月 · 掌天小绿瓶专属，催熟灵草成丹',
+      action: 'bottleRipen',
+    });
+  }
+
+  if (c.realm >= 1 || c.stones >= 300) {
+    choices.push({
+      id: 'auction', label: '万宝拍卖会', hint: '一月 · 竞拍洗髓丹/古经/雷击木，切记财不露白',
+      action: 'auction',
+    });
+  }
+
   if (c.realm >= 1) {
     choices.push({
-      id: 'secret_realm', label: '探索秘境', hint: '半年 · 深入上古遗迹，机缘与杀劫并存',
+      id: 'secret_realm', label: '探索秘境', hint: '半年 · 血色禁地/昆仑残墟/归墟海眼/太古剑冢',
       action: 'secretRealm',
+    });
+  }
+
+  if (c.inventory.some((i) => (i.id === 'xuantie' || i.id === 'leimu') && i.qty > 0) || c.stones >= 350) {
+    choices.push({
+      id: 'refine', label: `祭炼本命法宝（${c.artifactName || '无名青锋'}）`, hint: '三月 · 耗玄铁/雷击木或灵石升阶本命神兵',
+      action: 'refine',
     });
   }
 
@@ -193,15 +215,22 @@ export function buildHub(game) {
     title: `${c.location} · ${realmLabel(c)}`,
     text: () => {
       const hours = [
-        '风从山门吹进来，带着松针和旧香灰的味道。',
-        '夜雨敲窗，你听见自己的心跳比雨点慢。',
-        '远处有人在打铁，一锤一锤，像在敲你的骨头。',
-        '云压得很低，山下的灯火一盏一盏亮起来。',
-        '你睁开眼，丹田里的灵气像一尾鱼，转了一圈又沉下去。',
+        '山风掠过洞府禁制，远处天际偶尔划过两道剑修遁光。',
+        '灯下擦拭法剑，灵气顺着经脉周天流转，丹田微微发烫。',
+        '坊市茶楼里都在议论秘境将开的消息，散修们个个磨刀霍霍。',
+        '暮云低垂，灵泉雾气缭绕，正是闭关苦修或外出碰机缘的好时辰。',
+        '你睁开双目，吐出一口浊气——修仙路长，一步稳、步步稳。',
       ];
       const idx = (state.turn + state.char.realm) % hours.length;
       const remain = Math.max(0, Math.floor((c.lifespan - c.age) / 12));
-      return `${hours[idx]}\n\n你今年${Math.floor(c.age / 12)}岁，${realmLabel(c)}。寿元还剩${remain}年。\n修为${Math.floor(c.exp)} / ${Number.isFinite(needExp(c)) ? needExp(c) : '∞'}。`;
+      const notes = [];
+      const gf = c.goldenFingerId ? GOLDEN_FINGER_BY_ID[c.goldenFingerId] : null;
+      if (gf && state.turn % 3 === 0) notes.push(`【${gf.name}】隐隐共鸣。`);
+      if (c.petId && PET_BY_ID[c.petId]) notes.push(`伴生灵兽「${PET_BY_ID[c.petId].name}」正乖巧伏在你身侧吐纳。`);
+      if (state.flags['宿敌林昊'] && !state.flags['败林昊']) notes.push('【三年之约】林昊之辱犹在眼前，突破筑基后便将迎来问道台宿命对决！');
+      const rankNum = Math.max(1, 108 - c.realm * 11 - Math.floor(c.reputation / 25) - state.stats.kills * 2);
+      const rankLine = c.reputation >= 50 || c.realm >= 1 ? ` · 天机阁潜龙榜：第 ${rankNum} 位` : '';
+      return `${hours[idx]}${notes.length ? `\n${notes.join('')}` : ''}\n\n你今年 ${Math.floor(c.age / 12)} 岁，${realmLabel(c)}（余寿 ${remain} 年）${rankLine}。\n当前修为 ${Math.floor(c.exp)} / ${Number.isFinite(needExp(c)) ? needExp(c) : '∞'}。`;
     },
     choices,
     hub: true,

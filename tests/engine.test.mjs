@@ -397,3 +397,40 @@ test('ink 织网扩展：昆仑残墟秘境与苏晚晴道侣链', () => {
   g.proceed();
   assert.equal(g.state.scene.id, 'ink_kunlun_3');
 });
+
+test('网文系统：金手指（绿瓶/剑老）、拍卖会、本命法宝祭炼、灵兽与三年之约', () => {
+  // 掌天小绿瓶：开局灵草 + 绿瓶催熟
+  const g = fresh({ goldenFingerId: 'gf_bottle' });
+  assert.equal(g.state.char.goldenFingerId, 'gf_bottle');
+  assert.ok(g.state.char.inventory.some((i) => i.id === 'lingcao'));
+  g.act_bottleRipen();
+  assert.ok(g.state.char.inventory.some((i) => i.id === 'yinqi_dan'));
+
+  // 祭炼本命法宝提升战力
+  g.state.char.stones = 2000;
+  const atkBefore = g.playerAtk();
+  g.act_refine();
+  assert.equal(g.state.char.artifactLevel, 1);
+  assert.ok(g.playerAtk() > atkBefore);
+
+  // 万宝拍卖会竞拍
+  g.act_auction();
+  assert.equal(g.state.scene.id, 'auction');
+  const bid = g.choices().find((c) => c.label.includes('筑基丹'));
+  assert.ok(bid);
+  g.choose(bid.index);
+  assert.ok(g.state.char.inventory.some((i) => i.id === 'zhuji_dan'));
+
+  // 伴生灵兽孵化
+  g.openScene('wn_pet_egg_1');
+  g.choose(0);
+  assert.equal(g.state.char.petId, 'pet_turtle');
+
+  // 残剑老祖魂解锁退婚当众震慑选项
+  const g2 = fresh({ goldenFingerId: 'gf_sword_elder' });
+  g2.openScene('wn_oath_1');
+  const elderChoice = g2.choices().find((c) => c.label.includes('剑老'));
+  assert.ok(elderChoice && !elderChoice.disabled);
+  g2.choose(elderChoice.index);
+  assert.equal(g2.state.flags['剑震林昊'], true);
+});

@@ -1,7 +1,7 @@
 {
   "name": "wendao-changsheng",
-  "version": "2.0.0",
-  "description": "《问道长生》v2.0 水墨绘卷重制版——参考 inkle/ink 的互动叙事修仙模拟器，全双端适配、原创水墨插画与灵气动效。",
+  "version": "3.0.0",
+  "description": "《问道长生》v3.0 HD-2D 像素仙侠重制版——参考 inkle/ink 的互动叙事修仙模拟器，全双端适配、实时像素实景画布、伴生金手指与网文深度玩法。",
   "type": "module",
   "private": false,
   "scripts": {

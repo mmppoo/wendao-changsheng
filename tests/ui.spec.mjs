@@ -208,25 +208,27 @@ async function main() {
     await sleep(300);
     await client.screenshot(path.join(ART, '01-title-desktop.jpg'));
 
-    await check('桌面标题页与水墨背景图渲染', async () => {
+    await check('桌面标题页与实时像素山海画布渲染', async () => {
       const info = await client.eval(`(() => ({
         title: document.querySelector('.game-title')?.textContent?.trim(),
-        imgW: document.querySelector('.title-bg-img')?.naturalWidth || 0,
+        canvasW: document.getElementById('title-pixel-canvas')?.width || 0,
         overflow: document.documentElement.scrollWidth > window.innerWidth
       }))()`);
       if (info.title !== '问道长生') throw new Error('标题错误 ' + info.title);
-      if (info.imgW < 400) throw new Error('标题图未加载 width=' + info.imgW);
+      if (info.canvasW < 200) throw new Error('像素标题画布缺失 width=' + info.canvasW);
       if (info.overflow) throw new Error('标题页横向溢出');
-      return `${info.title} · hero=${info.imgW}px`;
+      return `${info.title} · pixelCanvas=${info.canvasW}px`;
     });
 
     await click('#btn-new');
     await sleep(200);
-    await check('建角页出身卡与按钮状态', async () => {
+    await check('建角页出身卡、6大伴生金手指与按钮状态', async () => {
       const n = await client.eval('document.querySelectorAll(".origin-card").length');
+      const gfs = await client.eval('document.querySelectorAll(".gf-card").length');
       const disabled = await client.eval('document.getElementById("btn-roll").disabled');
-      if (n < 10 || !disabled) throw new Error(`n=${n}, disabled=${disabled}`);
-      return `${n} 个出身`;
+      if (n < 10 || gfs < 6 || !disabled) throw new Error(`n=${n}, gfs=${gfs}, disabled=${disabled}`);
+      await click('.gf-card[data-gf="gf_sword_elder"]');
+      return `${n}出身 · ${gfs}金手指`;
     });
 
     await click('.origin-card[data-origin="fallen_clan"]');
@@ -252,14 +254,16 @@ async function main() {
     await sleep(300);
     await client.screenshot(path.join(ART, '03-game-desktop.jpg'));
 
-    await check('主界面绘卷、属性栏与行动按钮', async () => {
+    await check('主界面实时像素实景、像素头像、风闻条与行动按钮', async () => {
       const s = await state();
-      const artW = await client.eval('document.getElementById("scene-art")?.naturalWidth || 0');
+      const canvasW = await client.eval('document.getElementById("scene-pixel-canvas")?.width || 0');
+      const portraitW = await client.eval('document.getElementById("char-portrait")?.width || 0');
+      const rumor = await client.eval('document.getElementById("rumor-bar")?.textContent?.trim() || ""');
       const overflow = await client.eval('document.documentElement.scrollWidth > window.innerWidth');
       if (s.char.name !== '沈砚' || !s.choices.length) throw new Error('主界面初始化异常');
-      if (artW < 400) throw new Error('场景绘卷未加载');
+      if (canvasW < 200 || portraitW < 32 || !rumor) throw new Error(`canvas=${canvasW} portrait=${portraitW}`);
       if (overflow) throw new Error('桌面端横向溢出');
-      return `${s.char.name} · ${s.choices.length}项行动 · art=${artW}px`;
+      return `${s.char.name} · ${s.choices.length}项行动 · 像素实景=${canvasW}px`;
     });
 
     const before = await state();
@@ -395,14 +399,14 @@ async function main() {
     // ---------------- 单文件离线版验证 ----------------
     await setViewport(1440, 900, false);
     await goto(`${url}/dist/wendao-changsheng.html`);
-    await check('单文件版 dist/wendao-changsheng.html 离线带图加载', async () => {
+    await check('单文件版 dist/wendao-changsheng.html 离线像素画布加载', async () => {
       const ok = await client.eval(`(() => ({
         title: document.querySelector('.game-title')?.textContent?.trim(),
-        imgW: document.querySelector('.title-bg-img')?.naturalWidth || 0,
+        canvasW: document.getElementById('title-pixel-canvas')?.width || 0,
         hasDebug: typeof window.render_game_to_text === 'function'
       }))()`);
-      if (ok.title !== '问道长生' || ok.imgW < 400 || !ok.hasDebug) throw new Error(JSON.stringify(ok));
-      return `离线单文件图宽=${ok.imgW}px`;
+      if (ok.title !== '问道长生' || ok.canvasW < 200 || !ok.hasDebug) throw new Error(JSON.stringify(ok));
+      return `离线单文件像素画布=${ok.canvasW}px`;
     });
 
     await check('全程零控制台错误', async () => {

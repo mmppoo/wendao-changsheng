@@ -5,16 +5,18 @@ import { ORIGIN_BY_ID } from '../data/origins.js';
 import { ITEM_BY_ID } from '../data/items.js';
 import { SECT_BY_ID, sectRank } from '../data/sects.js';
 import { TALENT_BY_ID } from '../data/talents.js';
+import { GOLDEN_FINGER_BY_ID, PET_BY_ID } from '../data/golden_fingers.js';
 
 export const SAVE_VERSION = 3;
 export const START_AGE_MONTHS = 16 * 12;
 
 const ATTR_KEYS = ['悟性', '根骨', '神识', '道心', '气运', '魅力'];
 
-export function createRun({ seed, name, gender, originId, rootId, meta = {} }) {
+export function createRun({ seed, name, gender, originId, rootId, goldenFingerId = null, meta = {} }) {
   const rng = new RNG(seed);
   const origin = ORIGIN_BY_ID[originId] || ORIGIN_BY_ID.farmer;
   const root = ROOT_BY_ID[rootId] || ROOT_BY_ID.wuling;
+  const gf = goldenFingerId ? (GOLDEN_FINGER_BY_ID[goldenFingerId] || null) : null;
 
   const attrs = { 悟性: 10, 根骨: 10, 神识: 10, 道心: 10, 气运: 5, 魅力: 5 };
   for (const k of ATTR_KEYS) if (origin.attrs?.[k]) attrs[k] += origin.attrs[k];
@@ -29,6 +31,10 @@ export function createRun({ seed, name, gender, originId, rootId, meta = {} }) {
     gender: gender || '女',
     originId: origin.id,
     rootId: root.id,
+    goldenFingerId: gf?.id || null,
+    petId: null,
+    artifactLevel: 0,
+    artifactName: '无名青锋',
     sectId: null,
     sectRank: 0,
     contribution: 0,
@@ -50,6 +56,7 @@ export function createRun({ seed, name, gender, originId, rootId, meta = {} }) {
     techniques: [],
     titles: [],
     location: '青牛村',
+    visitedLocations: ['青牛村'],
     injuries: 0,
     relations: {},
   };
@@ -59,6 +66,19 @@ export function createRun({ seed, name, gender, originId, rootId, meta = {} }) {
 
   const buffs = {};
   const talentFlags = {};
+  // 应用伴生金手指开局效果
+  if (gf?.apply) {
+    const ap = gf.apply;
+    if (ap.attrs) for (const [k, v] of Object.entries(ap.attrs)) attrs[k] = (attrs[k] || 0) + v;
+    if (ap.stones) char.stones += ap.stones;
+    if (ap.lifespan) char.lifespan += ap.lifespan * 12;
+    for (const id of ap.items || []) addItemRaw(char, id, 1);
+    for (const tech of ap.techniques || []) {
+      if (!char.techniques.some((x) => x.id === tech.id)) char.techniques.push({ ...tech });
+    }
+    if (ap.title && !char.titles.includes(ap.title)) char.titles.push(ap.title);
+    if (ap.flag) Object.assign(talentFlags, ap.flag);
+  }
   for (const tid of meta.talents || []) {
     const t = TALENT_BY_ID[tid];
     if (!t?.apply) continue;

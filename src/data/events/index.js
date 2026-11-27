@@ -8,6 +8,7 @@ import { SECT_EXPANSION } from './expansion_sect.js';
 import { HIGH_EXPANSION } from './expansion_high.js';
 import { ENDGAME_EXPANSION } from './expansion_endgame.js';
 import { INK_EXPANSION } from './expansion_ink.js';
+import { WEBNOVEL_EXPANSION, WEBNOVEL_TRIGGERS } from './expansion_webnovel.js';
 
 export const ALL_EVENTS = [
   ...WILD_EVENTS,
@@ -20,9 +21,11 @@ export const ALL_EVENTS = [
   ...HIGH_EXPANSION,
   ...ENDGAME_EXPANSION,
   ...INK_EXPANSION,
+  ...WEBNOVEL_EXPANSION,
 ];
 
-export { STORY_TRIGGERS };
+export const ALL_STORY_TRIGGERS = [...STORY_TRIGGERS, ...WEBNOVEL_TRIGGERS];
+export { ALL_STORY_TRIGGERS as STORY_TRIGGERS };
 
 export const POOL_COUNTS = ALL_EVENTS.reduce((acc, ev) => {
   acc[ev.pool] = (acc[ev.pool] || 0) + 1;

@@ -8,13 +8,16 @@ import { ACHIEVEMENTS } from './data/achievements.js';
 import { ENDINGS } from './data/endings.js';
 import { ITEM_BY_ID } from './data/items.js';
 import { TALENTS } from './data/talents.js';
-import { SpiritCanvas, SoundFX, sceneArtFor, triggerScreenFx } from './ui/fx.js';
+import { GOLDEN_FINGERS, GOLDEN_FINGER_BY_ID, PET_BY_ID } from './data/golden_fingers.js';
+import { SpiritCanvas, SoundFX, triggerScreenFx } from './ui/fx.js';
+import { PixelStage, sceneThemeFor, renderPixelPortrait } from './ui/pixelScene.js';
 
 const $ = (id) => document.getElementById(id);
 const store = new SaveStore();
 const game = new Game({ meta: store.meta() || {} });
 const fxCanvas = new SpiritCanvas($('fx-canvas'));
 const sfx = new SoundFX();
+const pixelStage = new PixelStage($('title-pixel-canvas'), $('scene-pixel-canvas'));
 
 const SPEED_MODES = [
   { id: 'normal', label: '墨', title: '文字速度：从容（点此切换）', ms: 16, div: 220 },
@@ -24,6 +27,7 @@ const SPEED_MODES = [
 
 const ui = {
   originId: null,
+  goldenFingerId: 'gf_bottle',
   gender: '女',
   rolledRoot: null,
   rerollUsed: false,
@@ -31,7 +35,6 @@ const ui = {
   codexTab: 'achievements',
   saveMode: 'save',
   mobileTab: 'story',
-  lastArtSrc: '',
   lastAchCount: null,
   lastSnapshot: null,
   speedIdx: 0,
@@ -85,7 +88,7 @@ function seedTitleMeta() {
   }
   const counts = meta
     ? `第 ${meta.cycle || 1} 世轮回 · 结局 ${(meta.unlockedEndings || []).length}/${ENDINGS.length} · 成就 ${Object.keys(meta.achievements || {}).length}/${ACHIEVEMENTS.length}`
-    : '初次踏入仙途？选一出身，开阵测灵根。';
+    : '初次踏入仙途？择一出身与金手指，开启测灵阵。';
   $('title-meta').textContent = counts;
 }
 
@@ -112,6 +115,24 @@ function initCreate() {
     btn.innerHTML = `<h4>${o.name}</h4><p>${o.desc}</p><span class="origin-hook">${o.hook}</span>`;
     btn.addEventListener('click', () => { sfx.play('click'); selectOrigin(o.id); });
     grid.appendChild(btn);
+  });
+
+  const gfGrid = $('gf-grid');
+  gfGrid.innerHTML = '';
+  GOLDEN_FINGERS.forEach((gf) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'gf-card' + (gf.id === ui.goldenFingerId ? ' is-active' : '');
+    btn.dataset.gf = gf.id;
+    btn.setAttribute('role', 'radio');
+    btn.setAttribute('aria-checked', String(gf.id === ui.goldenFingerId));
+    btn.innerHTML = `
+      <div class="gf-top"><b>${gf.name}</b><span class="gf-tag">${gf.tag}</span></div>
+      <p>${gf.desc}</p>
+      <span class="gf-perk">${gf.perk}</span>
+    `;
+    btn.addEventListener('click', () => { sfx.play('click'); selectGoldenFinger(gf.id); });
+    gfGrid.appendChild(btn);
   });
 
   document.querySelectorAll('.seg').forEach((seg) => {
@@ -141,6 +162,26 @@ function initCreate() {
     if (btn.dataset.act === 'accept') acceptRoot();
     if (btn.dataset.act === 'reroll') rerollRoot();
   });
+}
+
+function selectGoldenFinger(id) {
+  ui.goldenFingerId = id;
+  document.querySelectorAll('.gf-card').forEach((c) => {
+    const on = c.dataset.gf === id;
+    c.classList.toggle('is-active', on);
+    c.setAttribute('aria-checked', String(on));
+  });
+  updateCreateHint();
+}
+
+function updateCreateHint() {
+  const o = ORIGINS.find((x) => x.id === ui.originId);
+  const gf = GOLDEN_FINGER_BY_ID[ui.goldenFingerId];
+  if (!o) {
+    $('create-hint').textContent = `已择伴生机缘「${gf?.name || '掌天小绿瓶'}」，请再选中一个出身。`;
+    return;
+  }
+  $('create-hint').textContent = `${o.name} × ${gf?.name || ''} — 点击开启测灵阵。`;
 }
 
 function renderTalents() {
@@ -180,9 +221,8 @@ function selectOrigin(id) {
     c.classList.toggle('is-active', on);
     c.setAttribute('aria-checked', String(on));
   });
-  const o = ORIGINS.find((x) => x.id === id);
   $('btn-roll').disabled = false;
-  $('create-hint').textContent = `${o.name}：${o.hook}`;
+  updateCreateHint();
 }
 
 function openRoll() {
@@ -278,14 +318,20 @@ function weightedRoot() {
 }
 
 function gradeColor(grade) {
-  return { 凡: '#a09585', 黄: '#d4c39e', 玄: '#8ab585', 地: '#84b4cf', 天: '#e0b762', 仙: '#e06c55' }[grade] || '#cfa95e';
+  return { 凡: '#a6acb8', 黄: '#d9c698', 玄: '#58b98a', 地: '#6cb4db', 天: '#e6b95c', 仙: '#f0715b' }[grade] || '#e6b95c';
 }
 
 function acceptRoot() {
   if (!ui.rolledRoot) return;
   $('roll-overlay').hidden = true;
   const name = $('input-name').value.trim() || '无名';
-  startRun({ name, gender: ui.gender, originId: ui.originId, rootId: ui.rolledRoot.id });
+  startRun({
+    name,
+    gender: ui.gender,
+    originId: ui.originId,
+    rootId: ui.rolledRoot.id,
+    goldenFingerId: ui.goldenFingerId,
+  });
 }
 
 function startRun(opts) {
@@ -296,7 +342,8 @@ function startRun(opts) {
   setMobileTab('story');
   showScreen('game');
   renderAll();
-  toast(`灵根觉醒：${ROOT_BY_ID[opts.rootId].name}`, 'gold');
+  const gf = GOLDEN_FINGER_BY_ID[opts.goldenFingerId];
+  toast(`觉醒：${ROOT_BY_ID[opts.rootId].name}${gf ? ` · ${gf.name}` : ''}`, 'gold');
   store.save(0, game);
 }
 
@@ -354,12 +401,20 @@ function renderAll(deltas = []) {
   renderMobileHud();
   renderCharPanel();
   renderSceneBanner();
+  renderRumorBar();
   renderStory(deltas);
   renderRightPanel();
   const c = game.state.char;
   $('top-realm').textContent = `${c.name} · ${realmLabel(c)}`;
   $('brand-mark').textContent = REALMS[c.realm]?.name?.[0] || '道';
   $('turn-line').textContent = `第 ${game.state.turn} 回合 · ${Math.floor(c.age / 12)}岁`;
+}
+
+function renderRumorBar() {
+  const rumors = game.state.rumors || [];
+  const bar = $('rumor-bar');
+  const fallback = `【天机阁风闻】${game.state.char.location}灵气微动，四方散修云集。`;
+  bar.textContent = rumors[0] || fallback;
 }
 
 function renderMobileHud() {
@@ -369,14 +424,12 @@ function renderMobileHud() {
   const expPct = expNeed === Infinity ? 100 : Math.min(100, Math.floor((c.exp / expNeed) * 100));
   const remain = Math.max(0, Math.floor((c.lifespan - c.age) / 12));
   $('mobile-hud').innerHTML = `
-    <div class="mhud-row">
-      <div class="mhud-pills">
-        <span class="c-hp">血 <b>${Math.round(c.hp)}/${c.maxHp}</b></span>
-        <span class="c-mp">灵 <b>${Math.round(c.mp)}/${c.maxMp}</b></span>
-        <span class="c-gold">石 <b>${c.stones}</b></span>
-        <span>余寿 <b>${remain}年</b></span>
-        ${c.demon > 0 ? `<span class="c-demon">魔 <b>${Math.round(c.demon)}</b></span>` : ''}
-      </div>
+    <div class="mhud-pills">
+      <span class="c-hp">血 <b>${Math.round(c.hp)}/${c.maxHp}</b></span>
+      <span class="c-mp">灵 <b>${Math.round(c.mp)}/${c.maxMp}</b></span>
+      <span class="c-gold">石 <b>${c.stones}</b></span>
+      <span>余寿 <b>${remain}年</b></span>
+      ${c.demon > 0 ? `<span class="c-demon">魔 <b>${Math.round(c.demon)}</b></span>` : ''}
     </div>
     <div class="mhud-exp">
       <div class="bar exp"><i style="width:${expPct}%"></i></div>
@@ -386,20 +439,24 @@ function renderMobileHud() {
 
 function renderSceneBanner() {
   const node = game.currentNode();
-  const art = sceneArtFor(node, game.state);
-  const img = $('scene-art');
-  if (art.src !== ui.lastArtSrc) {
-    ui.lastArtSrc = art.src;
-    img.classList.add('is-switching');
-    setTimeout(() => {
-      img.src = art.src;
-      img.onload = () => img.classList.remove('is-switching');
-      setTimeout(() => img.classList.remove('is-switching'), 180);
-    }, 90);
-  }
-  fxCanvas.setMood(art.mood);
+  const theme = sceneThemeFor(node, game.state);
+  const c = game.state.char;
+  pixelStage.setScene({
+    theme,
+    realm: c.realm,
+    rootId: c.rootId,
+    sectId: c.sectId,
+    petId: c.petId,
+    enemyId: game.state.combat?.enemy?.id || null,
+    tribStage: game.state.tribulation?.stage || 1,
+  });
+  const moodMap = {
+    combat: 'crimson', tribulation: 'violet', wild: 'jade',
+    market: 'amber', auction: 'amber', breakthrough: 'inner', ascend: 'ascend', fall: 'fall',
+  };
+  fxCanvas.setMood(moodMap[theme.kind] || 'gold');
   $('scene-kicker').textContent = kickerFor(node);
-  $('scene-banner-loc').textContent = `${game.state.char.location} · ${art.caption}`;
+  $('scene-banner-loc').textContent = `${c.location} · ${theme.caption}`;
 
   const hud = $('scene-combat-hud');
   if (game.state.scene.id === 'combat' && game.state.combat) {
@@ -418,7 +475,7 @@ function renderSceneBanner() {
     hud.hidden = false;
     hud.innerHTML = `
       <div class="combat-hud-row">
-        <b>九霄雷阵 · ${REALMS[game.state.char.realm]?.name || ''}之劫</b>
+        <b>九霄雷阵 · ${REALMS[c.realm]?.name || ''}之劫</b>
         <span>第 ${t.stage} / ${t.total} 重天雷</span>
       </div>
       <div class="trib-steps">
@@ -441,6 +498,7 @@ function kickerFor(node) {
   if (node.id === 'combat') return '斗法';
   if (node.id === 'tribulation') return '天劫';
   if (node.id === 'breakthrough') return '叩关';
+  if (node.id === 'auction') return '拍卖会';
   if (node.id === 'market' || node.id === 'sell') return '坊市';
   if (node.id === 'recruit') return '仙门';
   if (node.id === 'ending') return '此生终章';
@@ -450,7 +508,7 @@ function kickerFor(node) {
 function renderBagMarkup() {
   const c = game.state.char;
   if (!c.inventory.length) {
-    return '<p class="empty-tip">储物袋空空如也。去坊市置办些丹药，或外出历练寻些机缘吧。</p>';
+    return '<p class="empty-tip">储物袋空空如也。去坊市/拍卖会置办丹药，或历练摸尸寻些机缘吧。</p>';
   }
   return `<div class="bag-list">${c.inventory.map((it) => {
     const def = ITEM_BY_ID[it.id];
@@ -475,6 +533,8 @@ function renderCharPanel() {
   const realm = REALMS[c.realm];
   const sect = c.sectId ? SECT_BY_ID[c.sectId] : null;
   const rank = sectRank(c.contribution);
+  const gf = c.goldenFingerId ? GOLDEN_FINGER_BY_ID[c.goldenFingerId] : null;
+  const pet = c.petId ? PET_BY_ID[c.petId] : null;
   const expNeed = Number.isFinite(realm.exp) ? Math.round(realm.exp * Math.pow(realm.growth, c.layer)) : Infinity;
   const expPct = expNeed === Infinity ? 100 : Math.min(100, Math.floor((c.exp / expNeed) * 100));
   const lifePct = Math.min(100, Math.floor((c.age / c.lifespan) * 100));
@@ -498,7 +558,7 @@ function renderCharPanel() {
   $('char-panel').innerHTML = `
     <div class="rail-head"><h3>道躯</h3><span class="rail-sub">${c.gender} · ${c.originId ? originName(c.originId) : ''} · 第${game.state.meta.cycle || 1}世</span></div>
     <div class="char-header">
-      <div class="realm-emblem" style="border-color:${gradeColor(root?.grade)}">${realm.name}</div>
+      <canvas id="char-portrait" class="char-portrait" width="44" height="44" aria-label="像素角色像"></canvas>
       <div>
         <h2 class="char-name">${escapeHtml(c.name)}</h2>
         <div class="char-sub">${realmLabel(c)}<span class="dot">·</span><span style="color:${gradeColor(root?.grade)}">${root?.name || '凡体'}</span><span class="dot">·</span>${sect ? `${sect.name}·${rank.name}` : '散修'}</div>
@@ -527,18 +587,22 @@ function renderCharPanel() {
       <div class="bar life"><i style="width:${lifePct}%"></i></div>
     </div>
 
+    ${gf ? `<div class="panel-block"><h4>伴生机缘</h4><div class="gf-pill-card"><b>${escapeHtml(gf.name)}（${escapeHtml(gf.tag)}）</b><span>${escapeHtml(gf.perk)}</span></div></div>` : ''}
+
     <div class="panel-block">
       <h4>根骨六维</h4>
       <div class="attr-grid">${attrs}</div>
     </div>
 
     <div class="panel-block">
-      <h4>身家因果</h4>
+      <h4>身家法宝</h4>
+      <div class="stat-line"><span>本命法宝</span><b style="color:var(--gold)">${escapeHtml(c.artifactName || '无名青锋')} (+${c.artifactLevel || 0})</b></div>
+      ${pet ? `<div class="stat-line"><span>伴生灵兽</span><b style="color:var(--jade)">${escapeHtml(pet.name)}</b></div>` : ''}
       <div class="stat-line"><span>灵石</span><b>${c.stones}</b></div>
       <div class="stat-line"><span>声望</span><b>${c.reputation}</b></div>
       <div class="stat-line"><span>业力</span><b>${c.karma}</b></div>
       ${sect ? `<div class="stat-line"><span>宗门贡献</span><b>${c.contribution}</b></div>` : ''}
-      ${c.injuries ? `<div class="stat-line"><span>伤势</span><b style="color:#e08878">${c.injuries}</b></div>` : ''}
+      ${c.injuries ? `<div class="stat-line"><span>伤势</span><b style="color:#f28c7b">${c.injuries}</b></div>` : ''}
     </div>
 
     ${buffs.length ? `<div class="panel-block"><h4>护持</h4><div class="tag-row">${buffs.join('')}</div></div>` : ''}
@@ -546,13 +610,15 @@ function renderCharPanel() {
     ${rels ? `<div class="panel-block"><h4>红尘羁绊</h4>${rels}</div>` : ''}
     ${titles ? `<div class="panel-block"><h4>名号</h4><div class="tag-row">${titles}</div></div>` : ''}
   `;
+
+  renderPixelPortrait($('char-portrait'), c);
 }
 
 function renderRightPanel() {
   const c = game.state.char;
   const bagWrap = $('right-bag-wrap');
   bagWrap.innerHTML = `
-    <div class="rail-head" style="margin-bottom:0.6rem">
+    <div class="rail-head" style="margin-bottom:0.55rem">
       <h3>储物袋</h3>
       <span class="rail-sub">${c.inventory.length} 种</span>
     </div>
@@ -636,7 +702,7 @@ function renderChoices() {
     btn.className = 'choice' + (ch.effect === 'primary' || ch.effect === 'highlight' ? ' is-primary' : '');
     btn.disabled = Boolean(ch.disabled);
     btn.dataset.index = String(i);
-    btn.style.animationDelay = `${Math.min(i * 35, 210)}ms`;
+    btn.style.animationDelay = `${Math.min(i * 30, 180)}ms`;
     const reason = ch.disabled && ch.reason ? ` <span class="reason">（${escapeHtml(ch.reason)}）</span>` : '';
     btn.innerHTML = `
       <span class="num">${i + 1}</span>
@@ -644,7 +710,7 @@ function renderChoices() {
         <span class="label">${escapeHtml(ch.label)}</span>
         ${ch.hint ? `<span class="hint">${escapeHtml(ch.hint)}${reason}</span>` : reason ? `<span class="hint">${reason}</span>` : ''}
       </span>
-      <span class="arrow" aria-hidden="true">›</span>`;
+      <span class="arrow" aria-hidden="true">▶</span>`;
     btn.addEventListener('click', () => pick(i));
     wrap.appendChild(btn);
   });
@@ -679,10 +745,12 @@ function handleResult(res, prev = null) {
   if (fx) {
     triggerScreenFx(fx);
     fxCanvas.burst(fx);
+    pixelStage.triggerFx(fx);
     sfx.play(fx);
   } else if (curr && prev && (curr.realm > prev.realm || curr.layer > prev.layer)) {
     triggerScreenFx('breakthrough');
     fxCanvas.burst('breakthrough');
+    pixelStage.triggerFx('breakthrough');
     sfx.play('breakthrough');
   } else {
     sfx.play('click');
@@ -723,7 +791,7 @@ function startReincarnation(meta) {
   ui.lastSnapshot = null;
   $('btn-roll').disabled = true;
   document.querySelectorAll('.origin-card').forEach((c) => c.classList.remove('is-active'));
-  $('create-hint').textContent = `第 ${meta.cycle || 1} 世 · 轮回点 ${meta.karmaPoints || 0}。择一出身，再问仙途。`;
+  $('create-hint').textContent = `第 ${meta.cycle || 1} 世 · 轮回点 ${meta.karmaPoints || 0}。择一出身与金手指，再问仙途。`;
   renderTalents();
   seedTitleMeta();
   showScreen('create');
@@ -734,10 +802,7 @@ function startReincarnation(meta) {
 /* ---------------------------------- 移动端导航 / 储物使用 ---------------------------------- */
 
 function setMobileTab(tab) {
-  if (tab === 'codex') {
-    openCodex();
-    return;
-  }
+  if (tab === 'codex') { openCodex(); return; }
   ui.mobileTab = tab;
   $('game-screen').dataset.mobileTab = tab;
   document.querySelectorAll('#mobile-nav .mnav-btn').forEach((b) => {
@@ -754,16 +819,12 @@ function wireMobileNav() {
     setMobileTab(btn.dataset.mtab);
   });
 
-  // 储物袋物品点击使用（桌面右栏 & 移动储物页共用）
   $('right-bag-wrap').addEventListener('click', (e) => {
     const btn = e.target.closest('button[data-use-item]');
     if (!btn || !game.state) return;
     const prev = snapshotChar();
     const res = game.useInventoryItem(btn.dataset.useItem);
-    if (res?.error) {
-      toast(res.error);
-      return;
-    }
+    if (res?.error) { toast(res.error); return; }
     const curr = snapshotChar();
     const deltas = computeDeltas(prev, curr);
     ui.lastSnapshot = curr;
@@ -884,22 +945,19 @@ function wireOverlays() {
   });
   $('menu-help').addEventListener('click', () => {
     $('menu-body').innerHTML = `
-      <h4>修仙与突破</h4>
-      <p>每回合选择行动推进光阴。修为满后点击高亮的「冲击境界」叩关；大境界关口将引动三重天劫。</p>
-      <h4>储物与丹药</h4>
-      <p>桌面右侧或手机底部「储物」页可直接服用丹药、激活护心符/神行符或研读古经功法。</p>
-      <h4>快捷操作</h4>
-      <p>桌面支持数字键 1–9 选择、空格/回车跳过打字或继续、S 存档、L 读档、C 图鉴、Esc 关闭弹窗；手机底部五栏一键切换。</p>
-      <h4>存档与轮回</h4>
-      <p>每回合自动保存，另有 4 个手动槽与 JSON 导入/导出。所有随机数状态一并序列化，读档后卦象一致。</p>
+      <h4>金手指与网文流派</h4>
+      <p>建角时可任选 6 种伴生机缘：掌天小绿瓶（催熟灵药）、残剑老祖魂（打脸指点）、天机因果镜（坊市捡漏）、龟息藏锋诀（苟道稳健）、万界道碑（云游打卡）或纯凡骨硬核挑战。</p>
+      <h4>拍卖、本命法宝与灵兽</h4>
+      <p>积攒灵石后可入万宝拍卖会竞拍稀世重宝（切记财不露白）；收集玄铁/雷击木可祭炼本命法宝，在斗法中施展「本命神通 · 绝招」；荒谷奇遇可孵化玄龟/青鸾/噬金虫/白狐。</p>
+      <h4>双端操作</h4>
+      <p>电脑支持 1–9 选择、空格跳过打字、S/L 存读档、C 图鉴；手机底部五栏一键切换问道、道躯、储物、行止与图鉴。</p>
     `;
   });
   $('menu-about').addEventListener('click', () => {
     $('menu-body').innerHTML = `
-      <h4>关于《问道长生》</h4>
-      <p>参考 inkle/ink 节点叙事（knot / stitch / choice / divert / weave）构建的水墨修仙模拟器。</p>
-      <p>内置 290+ 叙事节点、21 种灵根、13 座仙门、24 重结局、177 项成就（含 63 项隐藏）与 12 项跨世轮回天赋。</p>
-      <p>纯静态前端运行，零后端依赖，适配手机与电脑双端游玩。</p>
+      <h4>关于《问道长生》v3.0</h4>
+      <p>HD-2D 国风像素仙侠 × inkle/ink 织网叙事引擎，实时像素实景画布随境界、灵根、宗门与伴生灵兽动态演化。</p>
+      <p>内置 300+ 叙事节点、6 大伴生金手指、21 种灵根、13 座仙门、24 重结局、177 项成就（含 63 项隐藏）与 12 项轮回天赋。</p>
     `;
   });
 }
@@ -1064,6 +1122,9 @@ function exposeDebug() {
       age: Math.floor(game.state.char.age / 12),
       root: game.state.char.rootId,
       sect: game.state.char.sectId,
+      goldenFinger: game.state.char.goldenFingerId,
+      pet: game.state.char.petId,
+      artifactLevel: game.state.char.artifactLevel || 0,
       hp: Math.round(game.state.char.hp),
       exp: Math.round(game.state.char.exp),
       stones: game.state.char.stones,
@@ -1079,6 +1140,7 @@ function exposeDebug() {
       name: opts.name || '测试', gender: '女',
       originId: opts.originId || 'farmer',
       rootId: opts.rootId || 'shuangling',
+      goldenFingerId: opts.goldenFingerId || 'gf_bottle',
     });
     return window.render_game_to_text();
   };

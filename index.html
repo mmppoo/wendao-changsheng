@@ -3,53 +3,52 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<meta name="theme-color" content="#0d0b09" />
-<title>问道长生 · 修仙模拟器</title>
-<meta name="description" content="一款参考 inkle/ink 架构的中文互动叙事修仙模拟器：水墨绘卷、灵根抽取、境界突破、天劫斗法、秘境奇遇、宗门晋升与多结局轮回。" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2314120f'/%3E%3Ctext x='32' y='44' font-size='36' text-anchor='middle' fill='%23c8a45c' font-family='serif'%3E道%3C/text%3E%3C/svg%3E" />
+<meta name="theme-color" content="#0d111a" />
+<title>问道长生 · 像素修仙模拟器</title>
+<meta name="description" content="一款参考 inkle/ink 架构的 HD-2D 像素国风修仙模拟器：掌天小绿瓶、残剑老祖、三年之约、血色禁地、万宝拍卖、本命法宝、伴生灵兽与百小时多结局轮回。" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%230d111a'/%3E%3Crect x='1' y='1' width='14' height='14' fill='none' stroke='%23e6b95c' stroke-width='1'/%3E%3Crect x='7' y='3' width='2' height='10' fill='%23e6b95c'/%3E%3Crect x='5' y='10' width='6' height='1' fill='%23d44d38'/%3E%3C/svg%3E" />
 <link rel="stylesheet" href="styles/main.css" />
 </head>
 <body>
   <canvas id="fx-canvas" class="fx-canvas" aria-hidden="true"></canvas>
   <div id="fx-flash" class="fx-flash" aria-hidden="true"></div>
-  <div class="grain" aria-hidden="true"></div>
 
-  <!-- 标题 / 启动 -->
+  <!-- 标题 / 启动（全屏实时 16-bit 像素山海天门） -->
   <section id="title-screen" class="screen title-screen">
     <div class="title-bg" aria-hidden="true">
-      <img src="assets/art/title-hero.webp" alt="" class="title-bg-img" />
+      <canvas id="title-pixel-canvas" class="pixel-bg-canvas" width="320" height="180"></canvas>
       <div class="title-bg-vignette"></div>
     </div>
-    <div class="title-inner">
+    <div class="title-inner px-frame">
       <div class="title-seal" aria-hidden="true">问<br>道</div>
-      <p class="eyebrow">INK 互动叙事 · 水墨修仙绘卷</p>
+      <p class="eyebrow">HD-2D 像素仙侠 · INK 互动叙事</p>
       <h1 class="game-title">问道长生</h1>
-      <p class="title-sub">一条命，一条道。抽灵根、渡天劫、历百世因果，走到哪里算哪里。</p>
+      <p class="title-sub">掌天绿瓶、残剑老祖、三年之约、血色禁地——在有限寿元里走出你的长生大道。</p>
       <div class="title-actions">
         <button id="btn-continue" class="btn btn-primary" hidden>继续今生</button>
         <button id="btn-new" class="btn btn-primary-outline">踏入仙途</button>
         <button id="btn-gallery" class="btn btn-ghost">命途图鉴</button>
       </div>
       <div class="title-highlights" aria-label="游戏特性">
+        <span>6 大伴生金手指</span>
         <span>21 种灵根</span>
         <span>13 座仙门</span>
-        <span>290+ 叙事节点</span>
+        <span>300+ 叙事节点</span>
         <span>24 重结局</span>
-        <span>177 项成就</span>
       </div>
       <p class="title-meta" id="title-meta"></p>
     </div>
-    <div class="title-vertical" aria-hidden="true">道可道，非常道</div>
+    <div class="title-vertical" aria-hidden="true">一粒金丹吞入腹，我命由我不由天</div>
   </section>
 
-  <!-- 建角 -->
+  <!-- 建角：道号 + 出身 + 伴生金手指 + 轮回天赋 -->
   <section id="create-screen" class="screen create-screen" hidden>
-    <div class="create-panel">
+    <div class="create-panel px-frame">
       <header class="create-head">
         <div>
-          <p class="create-kicker">入世之始</p>
-          <h2>择一出身</h2>
-          <p>出身决定你从哪里出发，灵根决定你能走多远。二者相合，便成一世命数。</p>
+          <p class="create-kicker">入世之始 · 命格构筑</p>
+          <h2>择一出身与伴生机缘</h2>
+          <p>先定出身与金手指流派，再开八卦测灵阵。每一世皆可走出截然不同的爽文仙途。</p>
         </div>
         <button id="btn-back-title" class="btn btn-ghost btn-sm">返回卷首</button>
       </header>
@@ -68,22 +67,27 @@
         </div>
       </div>
 
-      <div class="section-label">选择出身</div>
+      <div class="section-label">一、选择出身</div>
       <div class="origin-grid" id="origin-grid" role="radiogroup" aria-label="出身"></div>
+
+      <div class="gf-block">
+        <div class="section-label">二、伴生金手指（核心流派）</div>
+        <div class="gf-grid" id="gf-grid" role="radiogroup" aria-label="伴生金手指"></div>
+      </div>
 
       <div class="talent-block">
         <div class="talent-head">
-          <h3>轮回天赋</h3>
+          <h3>三、轮回天赋</h3>
           <span id="karma-points">轮回点 0</span>
         </div>
-        <p class="talent-sub">每历一世可得轮回点。点亮的天赋将永镌神魂，此后每一世皆生效。</p>
+        <p class="talent-sub">每历一世可得轮回点，点亮后此后每一世永久生效。</p>
         <div class="talent-grid" id="talent-grid"></div>
       </div>
 
       <div class="create-foot">
-        <p class="hint" id="create-hint">选中一个出身，然后测灵根。</p>
+        <p class="hint" id="create-hint">选中一个出身，然后开启测灵阵。</p>
         <div class="create-actions">
-          <button id="btn-roll" class="btn btn-primary" disabled>抽取灵根</button>
+          <button id="btn-roll" class="btn btn-primary" disabled>开启测灵阵</button>
         </div>
       </div>
     </div>
@@ -93,14 +97,14 @@
   <main id="game-screen" class="screen game-screen" hidden data-mobile-tab="story">
     <header class="topbar">
       <div class="brand">
-        <span class="brand-mark" id="brand-mark">道</span>
+        <span class="brand-mark" id="brand-mark">炼</span>
         <div class="brand-text">
           <strong>问道长生</strong>
           <span id="top-realm">炼气一层</span>
         </div>
       </div>
       <div class="topbar-actions">
-        <button id="btn-speed" class="icon-btn" title="切换文字速度">速</button>
+        <button id="btn-speed" class="icon-btn" title="切换文字速度">墨</button>
         <button id="btn-sound" class="icon-btn" title="音效开关">静</button>
         <button id="btn-save" class="icon-btn" title="存档 (S)">存</button>
         <button id="btn-load" class="icon-btn" title="读档 (L)">读</button>
@@ -113,14 +117,14 @@
     <div class="mobile-hud" id="mobile-hud" aria-label="角色概览"></div>
 
     <div class="layout">
-      <!-- 左侧：角色道躯与储物袋 -->
+      <!-- 左侧：像素道躯与属性 -->
       <aside class="rail rail-left" id="char-panel" aria-label="角色属性"></aside>
 
-      <!-- 中央：绘卷与叙事交互舞台 -->
+      <!-- 中央：实时像素实景 + 风闻条 + 叙事交互舞台 -->
       <section class="story" aria-live="polite">
         <div class="story-scroll" id="story-scroll">
           <figure class="scene-banner" id="scene-banner">
-            <img id="scene-art" src="assets/art/scene-village.webp" alt="当前场景水墨绘卷" loading="eager" />
+            <canvas id="scene-pixel-canvas" class="scene-pixel-canvas" width="280" height="118" aria-label="当前场景像素实景"></canvas>
             <div class="scene-banner-grad"></div>
             <div class="scene-banner-meta">
               <span class="scene-kicker" id="scene-kicker">人间</span>
@@ -128,6 +132,9 @@
             </div>
             <div class="scene-combat-hud" id="scene-combat-hud" hidden></div>
           </figure>
+
+          <!-- 天机阁修真界风闻滚动栏 -->
+          <div class="rumor-bar" id="rumor-bar" aria-label="修真界风闻"></div>
 
           <div class="scene-body">
             <div class="scene-head">
@@ -140,12 +147,12 @@
           </div>
         </div>
         <footer class="story-foot">
-          <span id="hint-line">按 1–9 选择 · 空格/点击正文跳过打字</span>
+          <span id="hint-line">按 1–9 选择 · 空格/点击正文跳过打字 · S 存档 · L 读档</span>
           <span id="turn-line"></span>
         </footer>
       </section>
 
-      <!-- 右侧：行止录与储物/道缘 -->
+      <!-- 右侧：储物袋与行止录 -->
       <aside class="rail rail-right" id="log-panel" aria-label="行止录">
         <div class="rail-head">
           <h3>行止录</h3>
@@ -176,21 +183,20 @@
     </nav>
   </main>
 
-  <!-- 抽灵根（八卦五行测灵盘） -->
+  <!-- 抽灵根（像素八卦五行测灵盘） -->
   <div class="overlay" id="roll-overlay" hidden>
-    <div class="roll-box">
+    <div class="roll-box px-frame">
       <p class="roll-kicker">测灵阵 · 五行问道</p>
       <div class="bagua-stage" id="bagua-stage">
         <svg class="bagua-wheel" viewBox="0 0 220 220" aria-hidden="true">
-          <circle cx="110" cy="110" r="102" fill="none" stroke="rgba(200,164,92,0.28)" stroke-width="1" stroke-dasharray="4 6" />
-          <circle cx="110" cy="110" r="88" fill="none" stroke="rgba(200,164,92,0.45)" stroke-width="1.2" />
-          <polygon points="110,16 176,44 204,110 176,176 110,204 44,176 16,110 44,44" fill="none" stroke="rgba(200,164,92,0.22)" stroke-width="1" />
-          <circle cx="110" cy="110" r="64" fill="none" stroke="rgba(178,58,42,0.35)" stroke-width="1" stroke-dasharray="2 8" />
-          <g fill="rgba(200,164,92,0.55)" font-family="serif" font-size="11" text-anchor="middle">
-            <text x="110" y="34">乾</text><text x="168" y="56">兑</text>
-            <text x="190" y="114">离</text><text x="168" y="170">震</text>
-            <text x="110" y="194">坤</text><text x="52" y="170">艮</text>
-            <text x="30" y="114">坎</text><text x="52" y="56">巽</text>
+          <rect x="16" y="16" width="188" height="188" fill="none" stroke="rgba(230,185,92,0.22)" stroke-width="2" stroke-dasharray="6 6" />
+          <polygon points="110,12 180,40 208,110 180,180 110,208 40,180 12,110 40,40" fill="none" stroke="rgba(230,185,92,0.48)" stroke-width="2" />
+          <polygon points="110,34 164,56 186,110 164,164 110,186 56,164 34,110 56,56" fill="none" stroke="rgba(88,185,138,0.38)" stroke-width="1.5" />
+          <g fill="rgba(230,185,92,0.72)" font-family="monospace, serif" font-size="11" text-anchor="middle">
+            <text x="110" y="30">乾</text><text x="171" y="54">兑</text>
+            <text x="195" y="114">离</text><text x="171" y="173">震</text>
+            <text x="110" y="198">坤</text><text x="49" y="173">艮</text>
+            <text x="25" y="114">坎</text><text x="49" y="54">巽</text>
           </g>
         </svg>
         <div class="bagua-core">
@@ -199,16 +205,16 @@
         </div>
       </div>
       <div class="roll-stats" id="roll-stats"></div>
-      <p class="roll-desc" id="roll-desc">天意难测，灵气正聚。</p>
+      <p class="roll-desc" id="roll-desc">八卦轮转，测灵石正聚气……</p>
       <div class="roll-actions" id="roll-actions"></div>
     </div>
   </div>
 
   <!-- 存档 -->
   <div class="overlay" id="save-overlay" hidden>
-    <div class="modal">
+    <div class="modal px-frame">
       <header class="modal-head">
-        <h3 id="save-title">存档</h3>
+        <h3 id="save-title">玉简存档</h3>
         <button class="icon-btn" data-close="save-overlay" aria-label="关闭">×</button>
       </header>
       <div class="slots" id="slot-list"></div>
@@ -221,7 +227,7 @@
 
   <!-- 图鉴 -->
   <div class="overlay" id="codex-overlay" hidden>
-    <div class="modal modal-wide">
+    <div class="modal modal-wide px-frame">
       <header class="modal-head">
         <h3>命途图鉴</h3>
         <button class="icon-btn" data-close="codex-overlay" aria-label="关闭">×</button>
@@ -239,7 +245,7 @@
 
   <!-- 菜单 -->
   <div class="overlay" id="menu-overlay" hidden>
-    <div class="modal modal-narrow">
+    <div class="modal modal-narrow px-frame">
       <header class="modal-head">
         <h3>暂歇</h3>
         <button class="icon-btn" data-close="menu-overlay" aria-label="关闭">×</button>
