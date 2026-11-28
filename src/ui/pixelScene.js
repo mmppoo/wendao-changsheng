@@ -345,6 +345,12 @@ export function sceneThemeFor(node, state) {
   if (id === 'market' || id === 'sell' || id === 'cityHub' || id === 'tianji' || id === 'techShop') {
     return state.char?.regionId === 'luoxia' ? SCENE_THEMES.luoxia : SCENE_THEMES.market;
   }
+  if (id === 'faceSlap') {
+    if (state.faceSlap?.context === 'city') return state.char?.regionId === 'luoxia' ? SCENE_THEMES.luoxia : SCENE_THEMES.market;
+    if (state.faceSlap?.context === 'sect') return SCENE_THEMES.sect;
+    const fsReg = state.char?.regionId;
+    return (fsReg && SCENE_THEMES[fsReg]) || SCENE_THEMES.wild;
+  }
   if (id === 'recruit' || id === 'sectHall' || id === 'sectMissions' || id === 'sectLibrary' || id === 'sectTreasury' || id === 'sectPromote') {
     return SCENE_THEMES.sect;
   }

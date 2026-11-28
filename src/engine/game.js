@@ -6,7 +6,11 @@ import {
   maxTechSlots, activeTechniques, techCollectionBonus, techAlignmentConflict, techAlign,
   equipTechnique, unequipTechnique, autoEquipBestTechniques, titleBonuses, petBonuses,
   lifespanAlert, sectPerks, currentWorldEra, activeDaoGoal, SAVE_VERSION, lingqiAt, lingqiWord,
+  perceivedRealmLabel,
 } from './state.js';
+import {
+  startFaceSlapEncounter, buildFaceSlapNode, resolveFaceSlapChoice, AURA_STANCES,
+} from './faceSlap.js';
 import { applyEffects } from './effects.js';
 import {
   EVENTS, buildRegistry, buildHub, choiceAvailable, markChoiceTaken, pickEvent,
@@ -121,6 +125,9 @@ export class Game {
       state.meta.techniquesSeen = (c.techniques || []).map((t) => t.id);
     }
     if (state.delve === undefined) state.delve = null;
+    if (state.faceSlap === undefined) state.faceSlap = null;
+    if (!Array.isArray(state.faceSlapRecent)) state.faceSlapRecent = [];
+    if (!c.auraStance) c.auraStance = c.goldenFingerId === 'gf_stealth' ? 'hide' : 'normal';
     if (!state.world) state.world = freshCentury1World();
     if (!state.history) state.history = {};
     if (state.buffs && (state.meta?.talents || []).includes('t_niming') && !state.buffs.permBreakBonus) {
@@ -154,6 +161,7 @@ export class Game {
       case 'regionHub': return this.buildRegionNode();
       case 'regionMap': return this.buildRegionMapNode();
       case 'delve': return this.buildDelveNode();
+      case 'faceSlap': return buildFaceSlapNode(this) || buildHub(this);
       case 'sectHall': return this.buildSectHallNode();
       case 'sectMissions': return this.buildSectMissionsNode();
       case 'sectLibrary': return this.buildSectLibraryNode();
@@ -330,6 +338,12 @@ export class Game {
     if (outcome.delveEscape && s.delve) {
       lines.push(...this.bankDelveHaul(0.5, false));
     }
+    if (outcome.faceSlapEscalate && s.faceSlap) {
+      s.faceSlap.stage = 'elder';
+      lines.push('【风波升级】打了小的来了老的，对方的靠山闻讯杀到。');
+    } else if (outcome.faceSlapClear) {
+      s.faceSlap = null;
+    }
     if (outcome.ending) {
       if (effects && Object.keys(effects).length) {
         lines.push(...applyEffects(s, effects, this.effectCtx()));
@@ -478,6 +492,16 @@ export class Game {
         label: `功法（${active.length}/${slots}）`,
         hint: conflict.conflict ? '正邪相冲，需要调整' : `已学 ${c.techniques.length} 部 · 选哪几部在用`,
         action: 'openTechEquip',
+      },
+      {
+        id: 'aura_stance',
+        label: `气机姿态 · ${AURA_STANCES[c.auraStance || 'normal']?.name || '顺其自然'}`,
+        hint: c.auraStance === 'hide'
+          ? `对外仅显「${perceivedRealmLabel(c)}」· 点此切换（扮猪吃虎/如常/威压外放）`
+          : c.auraStance === 'show'
+            ? '修为威压外放，宵小不敢轻犯 · 点此切换'
+            : '如实显露当前境界 · 点此切换为敛息藏锋或威压外放',
+        action: 'cycleAuraStance',
       },
       { id: 'open_alchemy', label: '开炉炼丹', hint: '照丹方炼破境、疗伤丹', action: 'openAlchemy' },
     ];
@@ -1036,6 +1060,14 @@ export class Game {
         this.emit();
         return;
       }
+    }
+    // v8.1 万象因果遇事：按境界/气机姿态/出身/金手指动态演化打脸与博弈
+    const fsChance = c.auraStance === 'hide' ? 0.38 : c.auraStance === 'show' ? 0.34 : 0.30;
+    if (this.rng.chance(fsChance)) {
+      startFaceSlapEncounter(this, { context: 'explore', returnTo: ch.params?.returnTo || 'regionHub' });
+      this.afterAction();
+      this.emit();
+      return;
     }
     const ev = pickEvent(s, this.rng, this, this.rng.chance(0.7) ? 'wild' : 'world', region.id);
     const petExp = petBonuses(c).explore || 0;
@@ -1976,6 +2008,49 @@ export class Game {
     this.emit();
   }
 
+  /** v8.1：坊间走动，触发酒楼/摊位/丹坊/拍卖等网文打脸遇事。 */
+  act_cityEncounter(ch = {}) {
+    const s = this.state;
+    advanceMonths(s, 2, this.rng);
+    startFaceSlapEncounter(this, { context: 'city', returnTo: ch.params?.returnTo || 'cityHub' });
+    this.afterAction();
+    this.emit();
+  }
+
+  /** v8.1：动态遇事（万象打脸引擎）策略结算入口。 */
+  act_faceSlapResolve(ch = {}) {
+    return resolveFaceSlapChoice(this, ch.params?.tactic || 'walk');
+  }
+
+  /** v8.1：切换气机姿态（敛息藏锋 / 顺其自然 / 威压外放），零时间损耗。 */
+  act_cycleAuraStance(ch = {}) {
+    const s = this.state;
+    const c = s.char;
+    const order = ['hide', 'normal', 'show'];
+    const cur = c.auraStance || 'normal';
+    const next = (ch.params?.stance && order.includes(ch.params.stance))
+      ? ch.params.stance
+      : order[(order.indexOf(cur) + 1) % order.length];
+    c.auraStance = next;
+    const info = AURA_STANCES[next] || AURA_STANCES.normal;
+    if (ch.params?.silent) {
+      this.emit();
+      return info;
+    }
+    const detail = next === 'hide'
+      ? `你运起敛息之法，将真实修为深藏于丹田。此刻在外人眼中，你只显露「${perceivedRealmLabel(c)}」的气机——更容易引来不长眼之辈主动挑衅，正合扮猪吃虎。`
+      : next === 'show'
+        ? `你不再收敛周身灵压，${realmLabel(c)}的气机透体而出。低阶宵小多半不敢轻犯，但也更容易引来同阶天骄与护短长老试探锋芒。`
+        : `你收起刻意造作，气机顺其自然，如实显露「${realmLabel(c)}」之境。`;
+    s.scene.result = {
+      text: detail,
+      lines: [`气机姿态已切换为【${info.name}】`],
+      returnTo: s.scene.id === 'cave' ? 'cave' : null,
+    };
+    this.emit();
+    return info;
+  }
+
   buildCityNode() {
     const s = this.state;
     const c = s.char;
@@ -1991,6 +2066,7 @@ export class Game {
       text: `长街灯火通明，商行、书肆、商会拍卖、擂台都在这里。\n\n身上灵石：${c.stones.toLocaleString()}　·　各地货色不同。`,
       choices: [
         { id: 'city_market', label: `${region.name}商行`, hint: '一月 · 买卖当地特产、丹药与灵材', action: 'market' },
+        { id: 'city_stroll', label: '坊间走动 · 听风遇事', hint: '两月 · 酒楼/摊位/丹坊/拍卖风云，撞见不长眼之辈', action: 'cityEncounter', effect: 'primary' },
         { id: 'city_techs', label: '书肆', hint: '用灵石买功法残卷', action: 'openTechShop' },
         { id: 'city_auction', label: '通远商会 · 拍卖', hint: aucHint, action: 'auction' },
         { id: 'city_arena', label: '问道擂台', hint: `一月 · 与同境界的人比试（已胜 ${s.counters.arena_win || 0} 场），赢声望与灵石`, action: 'openArena' },
@@ -2944,6 +3020,12 @@ export class Game {
     const flavor = sect ? this.rng.pick(sect.taskFlavor) : '巡山杂务';
     lines.push(`${flavor}。贡献 +${contribution}，灵石 +${stones}，修为 +${got.toLocaleString()}。`);
     if (this.rng.chance(0.12)) s.counters.slack = (s.counters.slack || 0) + 1;
+    if (this.rng.chance(0.22)) {
+      startFaceSlapEncounter(this, { context: 'sect', returnTo: ch.params?.returnTo || 'sectHall' });
+      this.afterAction();
+      this.emit();
+      return;
+    }
     const ev = pickEvent(s, this.rng, this, 'sect');
     if (ev && this.rng.chance(0.38)) {
       this.openEvent(ev);
@@ -3042,6 +3124,7 @@ export class Game {
         `根基：道基【${daoName}】· 结丹【${coreName}】· 在用功法 ${active.length}/${maxTechSlots(c.realm)}`,
         `法则领悟：${lawList}`,
         `此生记录：抉择 ${s.stats.actions} 次 · 奇遇 ${s.stats.events} 次 · 斩敌 ${s.stats.kills} · 花费灵石 ${(s.stats.goldSpent || 0).toLocaleString()}`,
+        `遇事打脸：胜 ${s.counters.faceslap_wins || 0} 次（扮猪吃虎 ${s.counters.lowkey_wins || 0} · 威压震场 ${s.counters.flex_wins || 0} · 连收拾靠山 ${s.counters.elder_slaps || 0}）`,
         `已解锁结局：${s.meta.unlockedEndings.length} / ${ENDINGS.length} · 成就：${Object.keys(s.meta.achievements).length} / ${ACHIEVEMENTS.length}`,
       ],
     };
@@ -3475,6 +3558,10 @@ export class Game {
       const to = REALMS[spec.matchRealm]?.powerMult || 1;
       const k = to / from;
       enemy = { ...enemy, realm: spec.matchRealm, hp: Math.round(def.hp * k), atk: Math.round(def.atk * k), def: Math.round(def.def * k), exp: Math.round(def.exp * k), stones: Math.round(def.stones * k) };
+    }
+    if (typeof spec === 'object' && spec.scaleMult != null && spec.scaleMult !== 1) {
+      const sm = spec.scaleMult;
+      enemy = { ...enemy, hp: Math.max(12, Math.round(enemy.hp * sm)), atk: Math.max(4, Math.round(enemy.atk * sm)), def: Math.max(1, Math.round(enemy.def * sm)) };
     }
     // v8：宿敌显示其名；劫数让敌手更凶
     if (def.isRival && s.flags['宿敌名']) enemy.name = s.flags['宿敌名'];
@@ -4344,8 +4431,8 @@ export class Game {
       this.pushRumor(n);
       if (s.scene.result) s.scene.result.lines = [...(s.scene.result.lines || []), n];
     }
-    // 仅在返回主界且无结果弹屏/战斗/天劫/秘境探幽时才触发主线插播，绝不吞掉刚打开的奇遇或结果文本！
-    const calm = !s.scene.result && !s.combat && !s.tribulation && !s.delve;
+    // 仅在返回主界且无结果弹屏/战斗/天劫/秘境探幽/遇事交锋时才触发主线插播，绝不吞掉刚打开的奇遇或结果文本！
+    const calm = !s.scene.result && !s.combat && !s.tribulation && !s.delve && !s.faceSlap;
     s.pendingChapter = null;
     if (calm && hist.open && (s.scene.id === 'hub' || s.scene.id === 'regionHub' || s.scene.id === 'cave')) {
       const preface = beginHistoryEvent(s, hist.open);

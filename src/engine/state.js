@@ -50,6 +50,25 @@ export function lingqiWord(L) {
   return '断绝';
 }
 
+/** 外人眼中的修为表象（敛息藏锋时压低一至两个大境界，配合龟息藏锋诀更隐蔽）。 */
+export function perceivedRealmLabel(char) {
+  if (!char) return '炼气一层';
+  const stance = char.auraStance || 'normal';
+  if (stance !== 'hide') return realmLabel(char);
+  const stealth = char.goldenFingerId === 'gf_stealth';
+  const r = char.realm || 0;
+  const layer = char.layer || 0;
+  if (r === 0) {
+    if (stealth || layer <= 3) return '凡俗微弱气机';
+    return '炼气一层';
+  }
+  if (r === 1) return stealth ? '炼气一层' : '炼气三层';
+  if (r === 2) return stealth ? '炼气中期' : '炼气圆满';
+  const drop = stealth ? Math.min(3, r) : Math.min(2, r);
+  const shown = Math.max(0, r - drop);
+  return shown === 0 ? '炼气后期' : `${REALMS[shown].name}初期`;
+}
+
 /** 冲击某一大境所需的天地灵机（剧本：元婴以上是世人不知的境地，只在灵气鼎盛之世可成）。 */
 export const LINGQI_FOR_REALM = [0, 10, 30, 45, 70, 78, 82, 86, 88, 90];
 
@@ -403,6 +422,7 @@ export function createRun({ seed, name, gender, originId, rootId, goldenFingerId
     originId: origin.id,
     rootId: root.id,
     goldenFingerId: gf?.id || null,
+    auraStance: gf?.id === 'gf_stealth' ? 'hide' : 'normal',
     petId: null,
     petLevel: 1,
     caveLevel: 1,
@@ -522,13 +542,18 @@ export function createRun({ seed, name, gender, originId, rootId, goldenFingerId
     turn: 0,
     char,
     flags: { ...(origin.flags || {}), ...talentFlags },
-    counters: { roots_seen: rootsSeen.length, stay_home: 0, laws: 0, delves: 0 },
+    counters: {
+      roots_seen: rootsSeen.length, stay_home: 0, laws: 0, delves: 0,
+      faceslap_wins: 0, flex_wins: 0, lowkey_wins: 0, elder_slaps: 0, underdog_slaps: 0,
+    },
     recent: [],
     achievements: {},
     endings: {},
     buffs,
     combat: null,
     delve: null,
+    faceSlap: null,
+    faceSlapRecent: [],
     sectBoard: null,
     scene: { id: 'hub', result: null },
     log: [],

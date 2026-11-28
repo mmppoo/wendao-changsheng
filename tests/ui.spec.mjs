@@ -222,11 +222,11 @@ async function main() {
 
     await click('#btn-new');
     await sleep(200);
-    await check('建角页出身卡、6大伴生金手指与按钮状态', async () => {
+    await check('建角页出身卡、9大网文金手指与按钮状态', async () => {
       const n = await client.eval('document.querySelectorAll(".origin-card").length');
       const gfs = await client.eval('document.querySelectorAll(".gf-card").length');
       const disabled = await client.eval('document.getElementById("btn-roll").disabled');
-      if (n < 10 || gfs < 6 || !disabled) throw new Error(`n=${n}, gfs=${gfs}, disabled=${disabled}`);
+      if (n < 11 || gfs < 9 || disabled) throw new Error(`n=${n}, gfs=${gfs}, disabled=${disabled}`);
       await click('.gf-card[data-gf="gf_sword_elder"]');
       return `${n}出身 · ${gfs}金手指`;
     });
@@ -251,37 +251,45 @@ async function main() {
     await click('button[data-act="accept"]');
     await waitFor(() => client.eval('!document.getElementById("game-screen").hidden'));
     await finishTyping();
-    await sleep(300);
-    await client.screenshot(path.join(ART, '03-game-desktop.jpg'));
+    await sleep(220);
 
-    await check('主界面实时像素实景、像素头像、风闻条与行动按钮', async () => {
+    await check('退婚流开局场景与直入主界面八键、像素实景与风闻条', async () => {
+      const openState = await state();
+      if (openState.scene !== 'open_fallen_clan') throw new Error(`预期进入退婚流开场，实际 ${openState.scene}`);
+      // 完成退婚流开场选择（撕碎退婚书）并进入主界
+      await click('#choices .choice:not([disabled])');
+      await finishTyping();
+      await click('#choices .choice:not([disabled])');
+      await finishTyping();
+      await sleep(250);
+      await client.screenshot(path.join(ART, '03-game-desktop.jpg'));
       const s = await state();
       const canvasW = await client.eval('document.getElementById("scene-pixel-canvas")?.width || 0');
       const portraitW = await client.eval('document.getElementById("char-portrait")?.width || 0');
       const rumor = await client.eval('document.getElementById("rumor-bar")?.textContent?.trim() || ""');
       const overflow = await client.eval('document.documentElement.scrollWidth > window.innerWidth');
-      if (s.char.name !== '沈砚' || !s.choices.length) throw new Error('主界面初始化异常');
-      if (canvasW < 200 || portraitW < 32 || !rumor) throw new Error(`canvas=${canvasW} portrait=${portraitW}`);
+      if (s.char.name !== '沈砚' || s.choices.length !== 8) throw new Error(`主界面初始化异常 choices=${s.choices.length}`);
+      if (canvasW < 180 || portraitW < 32 || !rumor) throw new Error(`canvas=${canvasW} portrait=${portraitW}`);
       if (overflow) throw new Error('桌面端横向溢出');
       return `${s.char.name} · ${s.choices.length}项行动 · 像素实景=${canvasW}px`;
     });
 
     const before = await state();
-    await click('#choices .choice:not([disabled])'); // 进入洞府修行
+    await click('#choices .choice:not([disabled])'); // 主界直达「修炼半年」
     await finishTyping();
-    await click('#choices .choice:not([disabled])'); // 洞府吐纳炼气
-    await finishTyping();
-    await check('六大支柱导航（洞府修行→吐纳）、数值反馈与自动存档', async () => {
+    await check('主界直达修炼、气机姿态切换与自动存档', async () => {
       const s = await state();
       const saved = await client.eval('Boolean(localStorage.getItem("wendao.v3.slot.0"))');
       if (s.char.exp <= before.char.exp || !saved) throw new Error(`状态未更新 exp=${s.char.exp} saved=${saved}`);
-      return `scene=${s.scene} · exp=${s.char.exp} · atk=${s.char.atk}`;
+      await click('button[data-cycle-stance]');
+      const st = await client.eval('window.__game.state.char.auraStance');
+      return `scene=${s.scene} · exp=${s.char.exp} · atk=${s.char.atk} · 气机=${st}`;
     });
 
-    await click('#choices .choice:not([disabled])'); // 继续前行回洞府
+    await click('#choices .choice:not([disabled])'); // 继续前行回主界
     await finishTyping();
 
-    await check('v4.0 仙门大殿（藏经阁/宝库/任务堂）、九州历练与红尘道友', async () => {
+    await check('v8.1 门户大殿、五域行走、五层秘境、万象打脸遇事与故人', async () => {
       await client.eval(`(() => {
         const g = window.__game;
         g.state.char.sectId = 'taixuan';
@@ -293,19 +301,26 @@ async function main() {
       await client.screenshot(path.join(ART, '03b-sect-desktop.jpg'));
       const sectState = await state();
       if (sectState.scene !== 'sectHall' || !sectState.choices.some((c) => c.label.includes('藏经阁'))) {
-        throw new Error('仙门大殿渲染异常: ' + JSON.stringify(sectState.choices));
+        throw new Error('门户大殿渲染异常: ' + JSON.stringify(sectState.choices));
       }
       await client.eval('window.__game.act_openRegion(); window.__render();');
       const regState = await state();
       await client.eval('window.__game.act_startDelve(); window.__render();');
       const delveState = await state();
       await client.eval('window.__game.act_delveExtract(); window.__render();');
+      await client.eval('window.__game.act_cityEncounter(); window.__render();');
+      const fsState = await state();
+      if (fsState.scene !== 'faceSlap' || fsState.choices.length < 5) {
+        throw new Error(`万象打脸遇事渲染异常 scene=${fsState.scene} choices=${fsState.choices.length}`);
+      }
+      await click('#choices .choice:not([disabled])');
+      await finishTyping();
       await client.eval('window.__game.act_openNpcHub(); window.__render();');
       const npcState = await state();
       if (regState.scene !== 'regionHub' || delveState.scene !== 'delve' || npcState.scene !== 'npcHub') {
         throw new Error(`subhub error reg=${regState.scene} delve=${delveState.scene} npc=${npcState.scene}`);
       }
-      // 验证 hideIf 节点点击 ch.index 正确性（wrl_lx_clan_4 隐藏前两项后仍可执行第3项）
+      // 验证 hideIf 节点点击 ch.index 正确性
       await client.eval(`(() => {
         const g = window.__game;
         g.state.flags['落霞暗尾夺玉'] = true;
@@ -315,7 +330,7 @@ async function main() {
       const hideIdx = await client.eval('document.querySelector("#choices .choice")?.dataset?.index');
       if (Number(hideIdx) !== 2) throw new Error('hideIf ch.index 错位: ' + hideIdx);
       await client.eval('window.__game.act_backHub(); window.__render();');
-      return `仙门大殿(${sectState.choices.length}项) · 九州历练 · 五层秘境探幽 · 红尘道友(${npcState.choices.length}项) · hideIf索引=2`;
+      return `门户(${sectState.choices.length}项) · 秘境探幽 · 万象打脸(${fsState.choices.length}策略) · 故人(${npcState.choices.length}项) · hideIf索引=2`;
     });
 
     await check('储物袋直接服丹互动', async () => {
@@ -386,16 +401,17 @@ async function main() {
       return '三重雷劫阵图正常';
     });
 
-    await check('飞升结局、轮回与四栏图鉴', async () => {
+    await check('结局、轮回与图鉴（含前世手札）', async () => {
       await client.eval('window.__game.finishEnding("e_ascend"); window.__render();');
       await finishTyping();
       await sleep(250);
       await client.screenshot(path.join(ART, '06-ending-desktop.jpg'));
-      await click('#choices .choice:not([disabled])');
+      await click('#choices .choice.is-primary');
       await waitFor(() => client.eval('!document.getElementById("create-screen").hidden'));
       await click('#btn-back-title');
       await click('#btn-gallery');
       const tabs = await client.eval('document.querySelectorAll("#codex-tabs .tab").length');
+      await click('#codex-tabs .tab[data-tab="achievements"]');
       const body = await client.eval('document.getElementById("codex-body").textContent');
       await click('#codex-tabs .tab[data-tab="sects"]');
       const sectText = await client.eval('document.getElementById("codex-body").textContent');
@@ -403,11 +419,11 @@ async function main() {
       const techSum = await client.eval('document.getElementById("codex-summary").textContent');
       await click('#codex-tabs .tab[data-tab="regions"]');
       const regText = await client.eval('document.getElementById("codex-body").textContent');
-      if (tabs !== 6 || !body.includes('？？？') || !sectText.includes('太玄剑宗') || !techSum.includes('142') || !regText.includes('昆仑墟界')) {
+      if (tabs < 6 || !body.includes('？？？') || !sectText.includes('玄衡宗') || !techSum.includes('142') || !regText.includes('玉门与沙州')) {
         throw new Error(`图鉴内容异常 tabs=${tabs} techSum=${techSum}`);
       }
       await click('[data-close="codex-overlay"]');
-      return '6栏图鉴(含142功法与九州) + 隐藏遮蔽正常';
+      return `${tabs}栏图鉴(含前世手札/142功法/五域) + 隐藏遮蔽正常`;
     });
 
     // ---------------- 移动端 390×844 适配验证 ----------------

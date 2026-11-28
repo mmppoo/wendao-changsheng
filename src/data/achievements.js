@@ -374,6 +374,15 @@ export const ACHIEVEMENTS = [
   { id: 'a4_demon_50', name: '斩妖五十', desc: '一世斩杀五十头妖邪。', check: 'counter("demons_slain") >= 50' },
   { id: 'a4_disciple_30', name: '门徒三十', desc: '门下弟子三十人（化神以上方可收这么多）。', check: 'counters.disciples >= 30', tier: '地' },
   { id: 'a4_secret_10', name: '秘境十处', desc: '同一世通关十处不同的秘境。', check: 'char.secretsCleared.length >= 10', tier: '天' },
+  // —— v8.1 网文诸派与万象打脸 ——
+  { id: 'a5_faceslap_1', name: '莫欺少年穷', desc: '第一次在遇事交锋中当众打脸挑衅者。', check: 'counter("faceslap_wins") >= 1' },
+  { id: 'a5_faceslap_10', name: '专治各种不服', desc: '一世之中累计当众打脸十次。', check: 'counter("faceslap_wins") >= 10', tier: '地' },
+  { id: 'a5_faceslap_50', name: '五域打脸王', desc: '一世之中累计当众打脸五十次，无人再敢轻慢。', check: 'counter("faceslap_wins") >= 50', tier: '天', karmaReward: 2 },
+  { id: 'a5_lowkey_5', name: '扮猪吃虎', desc: '敛息藏锋诱敌加码后反手收网五次。', check: 'counter("lowkey_wins") >= 5', tier: '地' },
+  { id: 'a5_flex_5', name: '一威镇全场', desc: '以修为威压或身份底蕴直接震服全场五次。', check: 'counter("flex_wins") >= 5', tier: '地' },
+  { id: 'a5_elder_1', name: '打了小的来老的', desc: '连对方护短出头的长老靠山一并收拾。', check: 'counter("elder_slaps") >= 1', tier: '地' },
+  { id: 'a5_elder_10', name: '连根拔起', desc: '一世之中十次压服护短长老靠山。', check: 'counter("elder_slaps") >= 10', tier: '天', karmaReward: 2 },
+  { id: 'a5_underdog_slap', name: '以弱逆伐', desc: '在修为低于对方时正面打脸翻盘。', check: 'counter("underdog_slaps") >= 1', tier: '地', hidden: true },
 ].map((a) => ({
   ...a,
   ...(a.karmaReward != null

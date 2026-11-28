@@ -1,10 +1,15 @@
 /** 内容校验：所有 id / goto / 条件 / 物品 / 成就 / 敌人 引用必须落地。 */
-import { ALL_EVENTS, STORY_TRIGGERS } from '../src/data/events/index.js';
+import { ALL_EVENTS, STORY_TRIGGERS, LEGACY_TERMS } from '../src/data/events/index.js';
 import { ACHIEVEMENTS } from '../src/data/achievements.js';
 import { ENDINGS } from '../src/data/endings.js';
 import { ITEM_BY_ID, ALCHEMY_RECIPES } from '../src/data/items.js';
 import { ENEMY_BY_ID } from '../src/data/enemies.js';
 import { ROOTS } from '../src/data/roots.js';
+import { ORIGINS } from '../src/data/origins.js';
+import { GOLDEN_FINGERS } from '../src/data/golden_fingers.js';
+import {
+  FACESLAP_SCENARIOS, BACKING_FACTIONS, ORIGIN_COUNTERS, GF_COUNTERS,
+} from '../src/data/faceSlapScenarios.js';
 import { SECTS } from '../src/data/sects.js';
 import { REGIONS, REGION_BY_ID } from '../src/data/regions.js';
 import { LAW_BY_ID } from '../src/data/realms.js';
@@ -149,6 +154,36 @@ for (const rec of ALCHEMY_RECIPES) {
   for (const ing of rec.ingredients || []) {
     if (!ITEM_BY_ID[ing.id]) errors.push(`丹方 ${rec.id} 药材不存在: ${ing.id}`);
   }
+}
+
+// v8.1：校验万象打脸场景库、靠山、出身与金手指应对完整性及无旧世界词汇
+const fsIds = new Set();
+const fsJson = JSON.stringify({ FACESLAP_SCENARIOS, BACKING_FACTIONS, ORIGIN_COUNTERS, GF_COUNTERS });
+for (const term of [...LEGACY_TERMS, '金丹']) {
+  if (fsJson.includes(term)) errors.push(`faceSlapScenarios 含旧世界禁用词: ${term}`);
+}
+for (const sc of FACESLAP_SCENARIOS) {
+  if (fsIds.has(sc.id)) errors.push(`重复打脸场景 id: ${sc.id}`);
+  fsIds.add(sc.id);
+  if (!ENEMY_BY_ID[sc.enemyId]) errors.push(`打脸场景 ${sc.id} enemyId 不存在: ${sc.enemyId}`);
+  for (const reg of sc.regions || []) {
+    if (!REGION_BY_ID[reg]) errors.push(`打脸场景 ${sc.id} region 不存在: ${reg}`);
+  }
+  for (const k of ['hidden', 'blind', 'peer', 'bully']) {
+    if (!sc.provokeLine?.[k]) errors.push(`打脸场景 ${sc.id} 缺 provokeLine.${k}`);
+  }
+  for (const k of ['much_higher', 'higher', 'equal']) {
+    if (!sc.showWin?.[k]) errors.push(`打脸场景 ${sc.id} 缺 showWin.${k}`);
+  }
+}
+for (const bk of BACKING_FACTIONS) {
+  if (!ENEMY_BY_ID[bk.enemyId]) errors.push(`靠山势力 ${bk.id} enemyId 不存在: ${bk.enemyId}`);
+}
+for (const o of ORIGINS) {
+  if (!ORIGIN_COUNTERS[o.id]) errors.push(`出身 ${o.id} 缺少打脸专属应对 ORIGIN_COUNTERS`);
+}
+for (const g of GOLDEN_FINGERS) {
+  if (!GF_COUNTERS[g.id]) errors.push(`金手指 ${g.id} 缺少打脸专属应对 GF_COUNTERS`);
 }
 
 const totalWeight = ROOTS.reduce((a, r) => a + r.weight, 0);

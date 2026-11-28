@@ -1010,3 +1010,92 @@ test('v8 审计修复：做过的宗门任务冷却，不会连着上榜', () =>
   const next = g.ensureSectBoard();
   assert.ok(!next.slots.some((x) => x.missionId === id) || next.slots.length < 3, '冷却中的任务不上新榜');
 });
+
+test('v8.1 网文流派出身、气机姿态与万象因果打脸引擎（四档境界×三姿态×十一出身×九金手指×护短二段）', async () => {
+  const { ORIGINS } = await import('../src/data/origins.js');
+  const { GOLDEN_FINGERS } = await import('../src/data/golden_fingers.js');
+  const { FACESLAP_SCENARIOS } = await import('../src/data/faceSlapScenarios.js');
+  const { startFaceSlapEncounter, buildFaceSlapNode, resolveFaceSlapChoice } = await import('../src/engine/faceSlap.js');
+  const { perceivedRealmLabel } = await import('../src/engine/state.js');
+
+  // 1. 全部 11 出身均有流派标签、重生停滞背景与有效开局场景
+  assert.equal(ORIGINS.length, 11);
+  assert.ok(FACESLAP_SCENARIOS.length >= 32, `打脸场景至少 32 个，当前 ${FACESLAP_SCENARIOS.length}`);
+  for (const o of ORIGINS) {
+    assert.ok(o.trope && o.flags?.重生停滞, `${o.id} 应有网文流派标签与重生停滞标记`);
+    const gO = new Game();
+    gO.newRun({ seed: 101, name: '试道', gender: '男', originId: o.id, rootId: 'shuangling', goldenFingerId: 'gf_bottle' });
+    assert.equal(gO.state.scene.id, `open_${o.id}`, `${o.id} 开局应直入专属开场`);
+    assert.ok(gO.currentText().includes('两年'), `${o.id} 开场应自然带出停滞两年缘由`);
+  }
+
+  // 2. 气机姿态切换与表象境界（龟息藏锋默认敛息）
+  const gStealth = new Game();
+  gStealth.newRun({ seed: 7, name: '荀稳', gender: '男', originId: 'orphan', rootId: 'shuangling', goldenFingerId: 'gf_stealth' });
+  assert.equal(gStealth.state.char.auraStance, 'hide', '龟息藏锋诀默认开启敛息藏锋');
+  gStealth.state.char.realm = 4; // 化神
+  assert.ok(!perceivedRealmLabel(gStealth.state.char).includes('化神'), '敛息时外人不得看出化神真实修为');
+  gStealth.act_cycleAuraStance({ params: { stance: 'show', silent: true } });
+  assert.equal(gStealth.state.char.auraStance, 'show');
+  assert.ok(perceivedRealmLabel(gStealth.state.char).includes('化神'));
+
+  // 3. 远高于对手 + 敛息：扮猪吃虎 & 显露威压 100% 合理打脸并累积计数
+  const gHigh = new Game();
+  gHigh.newRun({ seed: 42, name: '高阶', gender: '男', originId: 'fallen_clan', rootId: 'shuangling', goldenFingerId: 'gf_sword_elder' });
+  gHigh.state.char.realm = 4;
+  gHigh.state.char.auraStance = 'hide';
+  startFaceSlapEncounter(gHigh, { context: 'city', forceRelTier: 'much_higher' });
+  const nodeHigh = buildFaceSlapNode(gHigh);
+  assert.ok(nodeHigh.text.includes('敛息藏锋'), '敛息遇事应体现表象修为');
+  assert.ok(nodeHigh.choices.length >= 6, `带金手指遇事至少应提供 6 类差异化应对，实际 ${nodeHigh.choices.length}`);
+  resolveFaceSlapChoice(gHigh, 'lowkey');
+  assert.ok((gHigh.state.counters.lowkey_wins || 0) >= 1, '远高于对手扮猪吃虎应记 lowkey_wins');
+  assert.ok((gHigh.state.counters.faceslap_wins || 0) >= 1);
+
+  // 4. 低于对手（严守逻辑）：低底蕴硬亮修为绝不无脑震慑，会激怒进入越阶实战！
+  const gLow = fresh();
+  gLow.state.char.realm = 0;
+  gLow.state.char.layer = 0;
+  gLow.state.char.attrs.道心 = 5;
+  gLow.state.char.attrs.神识 = 5;
+  startFaceSlapEncounter(gLow, { context: 'explore', forceRelTier: 'lower' });
+  resolveFaceSlapChoice(gLow, 'show');
+  assert.equal(gLow.state.scene.id, 'combat', '修为低于对手且底蕴不足时硬亮修为应激怒对手开战，不可无脑装逼成功');
+
+  // 5. 全部 11 出身 × 9 金手指均可无错结算并产出各自专属打脸文案
+  const texts = new Set();
+  for (const o of ORIGINS) {
+    const gT = new Game();
+    gT.newRun({ seed: 202, name: '林尘', gender: '男', originId: o.id, rootId: 'jin', goldenFingerId: 'gf_sword_elder' });
+    gT.state.char.realm = 2;
+    startFaceSlapEncounter(gT, { context: 'city', forceRelTier: 'higher' });
+    resolveFaceSlapChoice(gT, 'origin');
+    const txt = gT.state.scene.result?.text || gT.currentText();
+    assert.ok(txt.length > 20);
+    texts.add(`o:${o.id}:${txt.slice(0, 30)}`);
+  }
+  assert.equal(texts.size, 11, '11 种出身的打脸应对文案必须各不相同');
+
+  const gfTexts = new Set();
+  for (const gf of GOLDEN_FINGERS) {
+    const gG = new Game();
+    gG.newRun({ seed: 303, name: '韩墨', gender: '男', originId: 'fallen_clan', rootId: 'huo', goldenFingerId: gf.id });
+    gG.state.char.realm = 2;
+    startFaceSlapEncounter(gG, { context: 'city', forceRelTier: 'equal' });
+    resolveFaceSlapChoice(gG, 'gf');
+    const txt = gG.state.scene.result?.text || '';
+    assert.ok(txt.length > 20);
+    gfTexts.add(`gf:${gf.id}:${txt.slice(0, 30)}`);
+  }
+  assert.equal(gfTexts.size, GOLDEN_FINGERS.length, '9 种金手指的打脸应对文案必须各不相同');
+
+  // 6. 二段护短升级（打了小的来老的）：高阶主角连靠山长老一起威压跪服
+  const gElder = fresh();
+  gElder.state.char.realm = 5; // 炼虚大能
+  startFaceSlapEncounter(gElder, { context: 'city', forceRelTier: 'much_higher' });
+  gElder.state.faceSlap.stage = 'elder';
+  const elderNode = buildFaceSlapNode(gElder);
+  assert.ok(elderNode.title.includes('护短风波'));
+  resolveFaceSlapChoice(gElder, 'elder_show');
+  assert.ok((gElder.state.counters.elder_slaps || 0) >= 1, '高阶主角应直接震服护短长老并记 elder_slaps');
+});

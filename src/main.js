@@ -3,8 +3,9 @@ import { SaveStore, mergeMeta } from './engine/save.js';
 import {
   recomputeDerived, maxTechSlots, activeTechniques,
   techAlignmentConflict, lifespanAlert, titleBonuses, monthlyExp,
-  currentWorldEra, activeDaoGoal, lingqiWord,
+  currentWorldEra, activeDaoGoal, lingqiWord, perceivedRealmLabel,
 } from './engine/state.js';
+import { AURA_STANCES } from './engine/faceSlap.js';
 import { ROOTS, ROOT_BY_ID, GRADE_ORDER, ROOT_WEIGHT_TOTAL } from './data/roots.js';
 import { ORIGINS } from './data/origins.js';
 import {
@@ -651,6 +652,7 @@ function kickerFor(node) {
   if (id === 'cave' || id === 'techEquip' || id === 'alchemy') return '洞府修行';
   if (id === 'regionHub' || id === 'regionMap') return '五域行走';
   if (id === 'delve') return '秘境探幽';
+  if (id === 'faceSlap') return game.state.faceSlap?.stage === 'elder' ? '护短风波' : '遇事交锋';
   if (id === 'sectHall' || id === 'sectMissions' || id === 'sectLibrary' || id === 'sectTreasury' || id === 'sectPromote') return game.currentSectName();
   if (id === 'cityHub' || id === 'tianji' || id === 'techShop' || id === 'arena') return '市集坊间';
   if (id === 'npcHub' || id === 'npcDetail') return '故人';
@@ -772,6 +774,7 @@ function renderCharPanel() {
       <div class="stat-line"><span>攻 / 术 / 防</span><b style="color:var(--gold)">${formatNum(game.playerAtk())} / ${formatNum(game.playerSpellAtk())} / ${formatNum(game.playerDef())}</b></div>
             <div class="stat-line"><span>在用功法</span><b style="${conflict.conflict ? 'color:#ff7163' : ''}">${activeSet.size} / ${maxTechSlots(c.realm)} 部${conflict.conflict ? '（正邪相冲）' : ''}</b></div>
       <div class="stat-line"><span>洞府</span><b>${c.caveLevel || 1} 阶（修炼加快 ${Math.round(((c.caveLevel || 1) - 1) * 18)}%）</b></div>
+      <div class="stat-line"><span>气机姿态</span><b style="display:flex;align-items:center;gap:0.35rem">${escapeHtml(AURA_STANCES[c.auraStance || 'normal']?.name || '顺其自然')}${c.auraStance === 'hide' ? `（显${escapeHtml(perceivedRealmLabel(c))}）` : ''}<button type="button" class="bag-use-btn" data-cycle-stance="1" style="padding:0.08rem 0.35rem;font-size:0.72rem">切换</button></b></div>
       ${daoBase ? `<div class="stat-line"><span>道基品质</span><b style="color:var(--jade)">${daoBase.name}</b></div>` : ''}
       ${goldCore ? `<div class="stat-line"><span>结丹品阶</span><b style="color:var(--gold)">${goldCore.name}</b></div>` : ''}
       <div class="stat-line"><span>所在地</span><b>${escapeHtml(region.name)}（${regionProg}%）</b></div>
@@ -1071,6 +1074,16 @@ function wireMobileNav() {
       setTimeout(() => URL.revokeObjectURL(url), 1500);
       toast('修仙传记已导出', 'gold');
     }
+  });
+
+  $('char-panel')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-cycle-stance]');
+    if (!btn || !game.state || game.state.flags.finished) return;
+    sfx.play('click');
+    const info = game.act_cycleAuraStance({ params: { silent: true } });
+    renderAll();
+    if (info) toast(`气机切换：${info.name}`, 'gold');
+    store.save(0, game);
   });
 
   $('right-bag-wrap').addEventListener('click', (e) => {

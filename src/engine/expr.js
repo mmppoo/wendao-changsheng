@@ -262,6 +262,7 @@ export function buildContext(state, helpers = {}) {
       demon: (c) => c.state.char.demon,
       gender: (c) => c.state.char.gender,
       origin: (c) => c.state.char.originId ?? '',
+      auraStance: (c) => c.state.char.auraStance || 'normal',
       caveLevel: (c) => Number(c.state.char.caveLevel) || 1,
       petLevel: (c) => Number(c.state.char.petLevel) || 1,
       betrayCount: (c) => Number(c.state.char.betrayCount) || 0,
