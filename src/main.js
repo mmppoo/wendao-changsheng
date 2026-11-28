@@ -935,9 +935,13 @@ function ageLabel(months) {
   return `${Math.floor(months / 12)}岁 · ${(months % 12) + 1}月`;
 }
 
+// 这些操作之后，像素画面里的人物从左边走进画面
+const WALK_ACTIONS = new Set(['regionExplore', 'explore', 'travel', 'travelTo', 'cityEncounter', 'openCity', 'openRegion']);
 function pick(index) {
   const prev = snapshotChar();
+  const ch = game.choices().find((c) => c.index === index);
   const res = game.choose(index);
+  if (ch && WALK_ACTIONS.has(ch.action)) pixelStage.triggerAction('walk');
   handleResult(res, prev);
 }
 

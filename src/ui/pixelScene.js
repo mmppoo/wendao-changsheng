@@ -444,14 +444,27 @@ function pxDrawMoon(ctx, mx, my, outerCol, coreCol, haloCol) {
   pxRect(ctx, mx - 4, my - 4, 8, 8, coreCol);
 }
 
-/** 绘制像素角色（站立 / 打坐 / 挥剑），随境界与灵根自动进化 */
+/** 当前这一帧的动作特效（由 renderPixelScene 写入）：走入画面的进度、上一次画人物的位置 */
+const SCENE_FX = { walkP: 1, lastX: 0, lastY: 0 };
+
+/** 绘制像素角色（站立 / 打坐 / 挥剑），随境界与灵根自动进化；带呼吸、眨眼、转头、衣摆、打坐聚气 */
 function pxDrawCultivator(ctx, cx, cy, opts = {}) {
   const { realm = 0, rootId = 'wuling', sectId = null, pose = 'stand', t = 0, flip = false, petId = null, attackAnim = 0 } = opts;
   const pal = pxRobePalette(realm, sectId);
   const aura = pxRootAuraColor(rootId);
-  const dir = flip ? -1 : 1;
-  const bob = Math.round(Math.sin(t * 2.4) * (realm >= 3 ? 2 : 0.7));
+  // 走进画面：刚探索完时从左边走到站位，脚下扬尘
+  const walking = pose === 'stand' && SCENE_FX.walkP < 1;
+  if (walking) cx -= Math.round((1 - SCENE_FX.walkP) * 26);
+  // 待机时隔几秒左右看一看
+  const lookBack = pose === 'stand' && !walking && Math.floor((t + 3) / 7) % 3 === 2;
+  const dir = (flip ? -1 : 1) * (lookBack ? -1 : 1);
+  const bob = walking ? (Math.floor(t * 8) % 2) : Math.round(Math.sin(t * 2.4) * (realm >= 3 ? 2 : 0.7));
   const y = cy + bob;
+  // 呼吸：上身和头每三秒左右起落一个像素
+  const breathe = walking ? 0 : (Math.sin(t * 2.1) > 0.35 ? 1 : 0);
+  const yu = y - breathe;
+  SCENE_FX.lastX = cx;
+  SCENE_FX.lastY = cy;
 
   ctx.save();
   // 高境界仙环 / 金丹光轮
@@ -461,6 +474,17 @@ function pxDrawCultivator(ctx, cx, cy, opts = {}) {
     for (let i = 0; i < segs; i++) {
       const a = t * 1.4 + (i * Math.PI * 2) / segs;
       pxRect(ctx, cx + Math.cos(a) * r, y - 9 + Math.sin(a) * (r * 0.55), 2, 2, i % 2 ? aura : '#f5d989');
+    }
+  }
+  // 打坐：四周灵气一缕缕旋进丹田
+  if (pose === 'meditate') {
+    for (let i = 0; i < 10; i++) {
+      const ph = (t * 0.5 + i / 10) % 1;
+      const r = 24 * (1 - ph) + 3;
+      const a = ph * 5.5 + i * 0.63;
+      const qx = cx + Math.round(Math.cos(a) * r);
+      const qy = y - 7 + Math.round(Math.sin(a) * r * 0.45);
+      pxRect(ctx, qx, qy, ph > 0.7 ? 2 : 1, 1, i % 3 === 0 ? '#fff3c4' : aura);
     }
   }
   // 地面阴影或浮空灵莲
@@ -476,9 +500,9 @@ function pxDrawCultivator(ctx, cx, cy, opts = {}) {
 
   // 飘带（风动动画）
   const wave = Math.round(Math.sin(t * 5) * 1.5);
-  pxRect(ctx, cx - dir * 5, y - 10, 4, 2, pal.sash);
-  pxRect(ctx, cx - dir * 8, y - 9 + wave, 4, 2, pal.sash);
-  pxRect(ctx, cx - dir * 11, y - 8 - wave, 3, 1, aura);
+  pxRect(ctx, cx - dir * 5, yu - 10, 4, 2, pal.sash);
+  pxRect(ctx, cx - dir * 8, yu - 9 + wave, 4, 2, pal.sash);
+  pxRect(ctx, cx - dir * 11, yu - 8 - wave, 3, 1, aura);
 
   if (pose === 'meditate') {
     pxRect(ctx, cx - 7, y - 3, 14, 4, pal.main);
@@ -486,20 +510,37 @@ function pxDrawCultivator(ctx, cx, cy, opts = {}) {
     pxRect(ctx, cx - 1, y - 10, 2, 8, pal.trim);
     pxRect(ctx, cx - 5, y - 4, 10, 1, pal.sash);
   } else {
-    pxRect(ctx, cx - 4, y - 11, 8, 11, pal.main);
-    pxRect(ctx, cx - 5, y - 3, 10, 4, pal.main);
-    pxRect(ctx, cx - 1, y - 11, 2, 11, pal.trim);
-    pxRect(ctx, cx - 4, y - 6, 8, 1, pal.sash);
-    pxRect(ctx, cx - 3, y + 1, 2, 1, '#1a1a1f');
-    pxRect(ctx, cx + 1, y + 1, 2, 1, '#1a1a1f');
+    const hem = walking ? 0 : Math.round(Math.sin(t * 1.3 + 0.5));
+    pxRect(ctx, cx - 4, yu - 11, 8, 8 + breathe, pal.main);
+    pxRect(ctx, cx - 5 + hem, y - 3, 10, 4, pal.main);
+    pxRect(ctx, cx - 1, yu - 11, 2, 11 + breathe, pal.trim);
+    pxRect(ctx, cx - 4, yu - 6, 8, 1, pal.sash);
+    if (walking) {
+      const step = Math.floor(t * 8) % 2;
+      pxRect(ctx, cx - 3 + (step ? -1 : 0), y + 1, 2, 1, '#1a1a1f');
+      pxRect(ctx, cx + 1 + (step ? 0 : 1), y + 1, 2, 1, '#1a1a1f');
+      // 脚下扬尘
+      for (let k = 0; k < 3; k++) {
+        const dp = (t * 3 + k / 3) % 1;
+        pxRect(ctx, cx - 6 - Math.round(dp * 8), cy + 1 - Math.round(dp * 3), 1, 1, `rgba(200,190,170,${(0.6 * (1 - dp)).toFixed(2)})`);
+      }
+    } else {
+      pxRect(ctx, cx - 3, y + 1, 2, 1, '#1a1a1f');
+      pxRect(ctx, cx + 1, y + 1, 2, 1, '#1a1a1f');
+    }
   }
 
-  // 头与道髻
-  pxRect(ctx, cx - 3, y - 16, 6, 5, '#edd1b4');
-  pxRect(ctx, cx - 3, y - 18, 6, 2, '#1d1c24');
-  pxRect(ctx, cx - 1, y - 20, 3, 2, '#1d1c24');
-  pxRect(ctx, cx - 2, y - 19, 5, 1, '#e6b95c');
-  pxRect(ctx, cx + (dir > 0 ? 1 : -2), y - 14, 1, 1, '#191920');
+  // 头与道髻；发带随风摆，隔四秒眨一次眼
+  const hy = pose === 'meditate' ? y : yu;
+  pxRect(ctx, cx - 3, hy - 16, 6, 5, '#edd1b4');
+  pxRect(ctx, cx - 3, hy - 18, 6, 2, '#1d1c24');
+  pxRect(ctx, cx - 1, hy - 20, 3, 2, '#1d1c24');
+  pxRect(ctx, cx - 2, hy - 19, 5, 1, '#e6b95c');
+  const ribbon = Math.round(Math.sin(t * 4.2) * 1);
+  pxRect(ctx, cx - dir * 3, hy - 19, 1, 1, pal.sash);
+  pxRect(ctx, cx - dir * 4, hy - 18 + ribbon, 1, 2, pal.sash);
+  const blink = (t % 4.3) < 0.14;
+  if (!blink) pxRect(ctx, cx + (dir > 0 ? 1 : -2), hy - 14, 1, 1, '#191920');
 
   // 飞剑
   const swordOffX = attackAnim > 0 ? dir * Math.round(attackAnim * 28) : dir * 9;
@@ -707,6 +748,81 @@ function pxDrawSkyLife(ctx, W, H, t, kind) {
   }
 }
 
+/** 地面细节：草叶随风一摆一摆；青石镇草庐、故人小院的烟囱冒炊烟 */
+const GRASS_KINDS = { qingniu: '#3e6e58', village: '#3e6e58', wild: '#3f7a5c', sect: '#4a7a62', guixu: '#3f7f73', yaosen: '#2f7a58', beihuang: '#7a7650', zhongzhou: '#4f6e58' };
+function pxDrawGroundLife(ctx, W, H, t, kind, groundY) {
+  const gc = GRASS_KINDS[kind];
+  if (gc) {
+    for (let x = 3; x < W; x += 9) {
+      const sway = Math.sin(t * 1.8 + x * 0.21) > 0.3 ? 1 : 0;
+      const h = 2 + ((x * 7) % 3);
+      pxRect(ctx, x + sway, groundY - h, 1, h, gc);
+      if ((x * 13) % 5 === 0) pxRect(ctx, x + 2 + sway, groundY - h + 1, 1, h - 1, gc);
+    }
+  }
+  if (kind === 'qingniu' || kind === 'village') {
+    // 草庐在 W*0.27 处，屋顶约 groundY-26；炊烟一团团往上飘、往右散
+    const hx = Math.floor(W * 0.27) - 8;
+    for (let i = 0; i < 6; i++) {
+      const ph = (t * 0.35 + i / 6) % 1;
+      const sx = hx + Math.round(ph * 14 + Math.sin(t * 1.2 + i) * 2);
+      const sy = groundY - 28 - Math.round(ph * 30);
+      const a = (0.32 * (1 - ph)).toFixed(2);
+      const sz = ph > 0.5 ? 3 : 2;
+      pxRect(ctx, sx, sy, sz, sz, `rgba(190,196,210,${a})`);
+    }
+  }
+}
+
+/** 事件动作特效：画在人物身上 */
+function pxDrawActionFx(ctx, W, H, t, fxKind, fxAge, theme) {
+  if (!fxKind || fxAge > 2.2) return;
+  const cx = SCENE_FX.lastX || Math.floor(W / 2);
+  const cy = SCENE_FX.lastY || Math.floor(H * 0.78);
+  if (fxKind === 'breakthrough') {
+    // 突破：一道光柱冲天，光圈向外扩，金屑四溅
+    const p = Math.min(1, fxAge / 1.8);
+    const fade = 1 - p;
+    const colW = Math.max(2, Math.round(10 * (1 - Math.abs(p - 0.25) * 1.2)));
+    pxRect(ctx, cx - colW, 0, colW * 2, cy, `rgba(255,236,170,${(0.55 * fade).toFixed(2)})`);
+    pxRect(ctx, cx - 1, 0, 2, cy, `rgba(255,255,240,${(0.9 * fade).toFixed(2)})`);
+    for (let ring = 0; ring < 2; ring++) {
+      const rp = Math.min(1, p * 1.6 - ring * 0.3);
+      if (rp <= 0) continue;
+      const r = Math.round(6 + rp * 34);
+      for (let k = 0; k < 18; k++) {
+        const a = (k / 18) * Math.PI * 2;
+        pxRect(ctx, cx + Math.round(Math.cos(a) * r), cy - 8 + Math.round(Math.sin(a) * r * 0.4), 2, 1, `rgba(255,220,120,${(0.8 * (1 - rp)).toFixed(2)})`);
+      }
+    }
+    for (let k = 0; k < 14; k++) {
+      const a = k * 2.4;
+      const d = p * (18 + (k % 5) * 6);
+      pxRect(ctx, cx + Math.round(Math.cos(a) * d), cy - 10 - Math.round(Math.abs(Math.sin(a)) * d), 1, 1, k % 2 ? '#fff3c4' : (theme.accent || '#e6b95c'));
+    }
+  } else if (fxKind === 'alchemy') {
+    // 炼丹、得宝：身前升起一团团青金色丹烟
+    for (let i = 0; i < 9; i++) {
+      const ph = (fxAge * 0.8 + i / 9) % 1;
+      const sx = cx + 8 + Math.round(Math.sin(i * 1.7 + fxAge * 3) * 5);
+      const sy = cy - 6 - Math.round(ph * 26);
+      const a = (0.9 * (1 - ph) * (1 - fxAge / 2.6)).toFixed(2);
+      const sz = ph > 0.4 ? 3 : 2;
+      pxRect(ctx, sx, sy, sz, sz, i % 2 ? `rgba(120,230,170,${a})` : `rgba(250,220,130,${a})`);
+    }
+  } else if (fxKind === 'heal') {
+    // 疗伤：周身浮起绿色光点和小十字
+    for (let i = 0; i < 8; i++) {
+      const ph = (fxAge * 0.7 + i / 8) % 1;
+      const sx = cx - 8 + (i * 5) % 17;
+      const sy = cy - 4 - Math.round(ph * 22);
+      const a = (0.8 * (1 - ph) * (1 - fxAge / 2.2)).toFixed(2);
+      pxRect(ctx, sx, sy, 1, 3, `rgba(120,240,150,${a})`);
+      pxRect(ctx, sx - 1, sy + 1, 3, 1, `rgba(120,240,150,${a})`);
+    }
+  }
+}
+
 export function renderPixelScene(canvas, opts) {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
@@ -727,6 +843,8 @@ export function renderPixelScene(canvas, opts) {
 
   ctx.imageSmoothingEnabled = false;
   const kind = theme.kind || 'qingniu';
+  // 探索、远行之后人物从画面左侧走到站位（约 1.6 秒）
+  SCENE_FX.walkP = opts.actionKind === 'walk' ? Math.min(1, (opts.actionAge ?? 9) / 1.6) : 1;
 
   // 1. 16-bit 阶梯像素天幕
   pxDrawSteppedSky(ctx, W, H, theme.skyTop, theme.skyMid || theme.skyBot, theme.skyBot);
@@ -1206,6 +1324,12 @@ export function renderPixelScene(canvas, opts) {
     }
   }
 
+  // 3.5 地面细节：草随风摆、草庐炊烟
+  pxDrawGroundLife(ctx, W, H, t, kind, groundY);
+
+  // 3.6 事件动作：突破光柱、炼丹丹烟、疗伤绿光
+  pxDrawActionFx(ctx, W, H, t, fxKind, fxAge, theme);
+
   // 4. 四季：春落花、秋落叶、冬飘雪（只在外景；沙漠不下花雪）
   const OUTDOOR = new Set(['qingniu', 'luoxia', 'yaosen', 'guixu', 'beihuang', 'zhongzhou', 'kunlun', 'jiuxiao', 'wild', 'sect']);
   const season = opts.season;
@@ -1314,6 +1438,12 @@ export class PixelStage {
     this.fxStart = performance.now();
   }
 
+  /** 按玩家刚做的事播一段人物动作（目前：walk = 从左边走进画面） */
+  triggerAction(kind) {
+    this.actionKind = kind;
+    this.actionStart = performance.now();
+  }
+
   drawOnce(now) {
     const t = Math.max(0, (now - this.t0) / 1000);
     const fxAge = Math.max(0, (now - this.fxStart) / 1000);
@@ -1325,7 +1455,8 @@ export class PixelStage {
       fitSceneCanvas(this.sceneCanvas);
       const age = (typeof window !== 'undefined' && window.__game?.state?.char?.age) || 0;
       const season = ['春', '春', '春', '夏', '夏', '夏', '秋', '秋', '秋', '冬', '冬', '冬'][((age % 12) + 12) % 12];
-      renderPixelScene(this.sceneCanvas, { ...this.opts, t, fxKind: this.fxKind, fxAge, season });
+      const actionAge = Math.max(0, (now - (this.actionStart || 0)) / 1000);
+      renderPixelScene(this.sceneCanvas, { ...this.opts, t, fxKind: this.fxKind, fxAge, season, actionKind: this.actionKind, actionAge });
     }
   }
 
