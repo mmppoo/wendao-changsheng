@@ -59,7 +59,7 @@ export function perceivedRealmLabel(char) {
   const r = char.realm || 0;
   const layer = char.layer || 0;
   if (r === 0) {
-    if (stealth || layer <= 3) return '凡俗微弱气机';
+    if (stealth || layer <= 3) return '炼气一层';
     return '炼气一层';
   }
   if (r === 1) return stealth ? '炼气一层' : '炼气三层';

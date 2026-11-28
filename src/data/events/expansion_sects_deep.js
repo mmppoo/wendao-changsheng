@@ -269,10 +269,10 @@ export const SECT_DEEP_EXPANSION = [
     text: '子夜大雷，梵钟崖下镇压了六百年的黑魔窟裂开一道石缝，漆黑怨气卷着铁链声漫上山阶。\n\n大殿中那口无佛古钟无风自响，钟顶悬出一枚温润的古佛舍利。老僧闭目合十：「魔出窟，心先动。{name}，你欲以力伏魔，还是以心印佛？」',
     choices: [
       {
-        label: '提禅杖独入魔窟，镇压裂隙妖将', hint: '战斗 · 窟中魔将',
+        label: '独入魔窟，去镇压裂隙里的魔将', hint: '战斗 · 窟中魔将',
         cost: { month: 1 },
         combat: {
-          enemy: 'demon_general',
+          enemy: 'demon_general', displayName: '窟中魔将',
           win: {
             text: '钟声随你步步压入地底，魔将咆哮着退回漆黑石缝。你以金印重封崖壁，出窟时衣袂染血，古佛舍利却分出一缕清光没入你眉心。',
             effects: { items: ['qingxin_dan', 'dao_fruit'], contribution: 420, reputation: 70, karma: 35, attrs: { 道心: 6, 根骨: 3 }, demon: -15, flag: { 镇魔梵钟: true } },
@@ -317,7 +317,7 @@ export const SECT_DEEP_EXPANSION = [
     text: '霜降之夜，观星台二十八宿青石骤然失色。天幕东北角裂开一道无声黑痕，数缕域外魔影顺着星光垂落，所过之处，墨字成阵的护院石碑接连崩碎。\n\n三位白发先生以血墨稳住阵脚，回首望你：「星枢缺一笔，须以活人神识为毫！」',
     choices: [
       {
-        label: '以神识化毫，凌空补全周天星阵', hint: '悟性/神识检定 · 阵破域外魔',
+        label: '以神识化毫，凌空补阵', hint: '悟性/神识检定 · 阵破域外魔',
         cost: { mp: 40, month: 2 },
         roll: {
           p: 0.55, attrs: { 悟性: 0.012, 神识: 0.012 },
@@ -332,7 +332,7 @@ export const SECT_DEEP_EXPANSION = [
         },
       },
       {
-        label: '执青锋直入星裂，斩杀魔影本体', hint: '战斗 · 虚空魔影',
+        label: '仗剑直入星裂，去斩魔影本体', hint: '战斗 · 虚空魔影',
         cost: { month: 1 },
         combat: {
           enemy: 'void_fiend',
@@ -347,7 +347,7 @@ export const SECT_DEEP_EXPANSION = [
         },
       },
       {
-        label: '抢先护下书院典籍楼，不令古卷被毁', hint: '稳妥 · 贡献与悟性',
+        label: '抢先去护书院典籍楼', hint: '稳妥 · 贡献与悟性',
         outcome: {
           text: '你展开小型聚灵阵护住三千架手抄孤本。待星台战毕，天色微白，经楼片纸未损。老山长拍了拍你的手背。',
           effects: { contribution: 220, attrs: { 悟性: 3, 道心: 3 }, stones: 250 },
@@ -728,7 +728,7 @@ export const SECT_DEEP_EXPANSION = [
         label: '拔剑登桌，愿为先驱破大宗封脉令', hint: '战斗 · 宗门巡脉执事',
         cost: { month: 1 },
         combat: {
-          enemy: 'cultivator',
+          enemy: 'cultivator', displayName: '大宗巡脉执事',
           win: {
             text: '翌日黎明，你带三十名散修斩断西野封脉石碑，击退大宗巡脉执事。三大宗门顾忌众怒，终究让出半条灵脉。酒肆里从此多了一块写着你名字的木牌。',
             effects: { stones: 800, items: ['jiejin_dan', 'shenxing_fu'], reputation: 85, karma: 25, attrs: { 根骨: 4, 道心: 4 }, title: '野脉盟主', flag: { 散修盟会: true } },
@@ -1356,7 +1356,7 @@ export const SECT_DEEP_EXPANSION = [
     text: '炼虚之境，肉身与神魂半隐太虚。入定深处，你一步迈出山河界壁，落入无光无声的太虚夹层。\n\n脚下没有大地，头顶没有星辰，只有破碎的古界残片与游弋的混沌魔影。炼虚合道，便要在这片虚无里，走出一条只属于自己的路。',
     choices: [
       {
-        label: '在太虚深处刻下己道真名，镇杀来犯虚空魔', hint: '死战 · 虚空魔影 · 合道根基',
+        label: '在太虚深处刻下己道真名，迎战来犯虚空魔', hint: '死战 · 虚空魔影 · 合道根基',
         cost: { month: 6 },
         combat: {
           enemy: 'void_fiend',

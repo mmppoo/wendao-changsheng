@@ -250,11 +250,11 @@ export const SECT_EXPANSION = [
   {
     id: 'ev_s_tianyin_sutra', title: '血经', pool: 'sect', tier: 1, weight: 8, minRealm: 0,
     require: 'flag("入宗:tianyin") && char.sectId === "tianyin"',
-    text: '寺里抄经用血不用墨。你的差事是抄《渡亡经》第九卷，一日三页，血从指尖取。\n\n抄到第二页，纸上的字开始不对——不是你写错的，是字自己在挪。',
+    text: '祠里抄经用血不用墨。你的差事是抄《渡亡经》第九卷，一日三页，血从指尖取。\n\n抄到第二页，纸上的字开始不对——不是你写错的，是字自己在挪。',
     choices: [
       {
         label: '停下，把纸烧了重抄',
-        outcome: { text: '你在火盆边坐了一夜，重抄一遍，字很稳。老僧来看过，说：「字挪，是有人要你看见他。」', effects: { contribution: 60, attrs: { 道心: 3 }, hp: -15 } },
+        outcome: { text: '你在火盆边坐了一夜，重抄一遍，字很稳。守祠的老人来看过，说：「字挪，是有人要你看见他。」', effects: { contribution: 60, attrs: { 道心: 3 }, hp: -15 } },
       },
       {
         label: '顺着字挪的方向读下去', hint: '神识检定',
@@ -266,7 +266,7 @@ export const SECT_EXPANSION = [
       },
       {
         label: '换用墨，不取血', hint: '违背寺规',
-        outcome: { text: '墨字清楚，也凉。老僧看了你的纸，说：「省了血，也省了心。」三页都退了回来。', effects: { contribution: -60, attrs: { 道心: -1 }, hp: 10 } },
+        outcome: { text: '墨字清楚，也凉。守祠的老人看了你的纸，说：「省了血，也省了心。」三页都退了回来。', effects: { contribution: -60, attrs: { 道心: -1 }, hp: 10 } },
       },
     ],
   },
@@ -346,7 +346,7 @@ export const SECT_EXPANSION = [
   {
     id: 'ev_s_hanshan_snow_house', title: '雪里的人家', pool: 'sect', tier: 2, weight: 7, minRealm: 0,
     require: 'flag("入宗:hanshan") && char.sectId === "hanshan"',
-    text: '山下猎户来观里求人：孩子夜里总哭，说屋梁上坐着个人。\n\n你带着符纸下山，雪很深。屋里很干净，梁上什么也没有。孩子指着你的方向，说：「他下来了。」',
+    text: '山下猎户来营里求人：孩子夜里总哭，说屋梁上坐着个人。\n\n你带着符纸下山，雪很深。屋里很干净，梁上什么也没有。孩子指着你的方向，说：「他下来了。」',
     choices: [
       {
         label: '在梁上贴符，烧掉屋里的旧物', hint: '消耗护心符',
@@ -362,8 +362,8 @@ export const SECT_EXPANSION = [
         label: '硬拔：用神识逼它出来', hint: '战斗 · 怨魂',
         combat: {
           enemy: 'ghost',
-          win: { text: '你把它从天井逼出来，是一团很小的影子，不凶。你送它走了，第二天观里的钟自己响了一下。', effects: { exp: 200, karma: 30, attrs: { 神识: 3 } } },
-          lose: { text: '它不肯走，反过来缠上你。你在雪地里吐了一口血，回观后病了两个月。', effects: { hp: -55, injury: 2, demon: 8 } },
+          win: { text: '你把它从天井逼出来，是一团很小的影子，不凶。你送它走了，第二天营里的更鼓自己响了一下。', effects: { exp: 200, karma: 30, attrs: { 神识: 3 } } },
+          lose: { text: '它不肯走，反过来缠上你。你在雪地里吐了一口血，回营后病了两个月。', effects: { hp: -55, injury: 2, demon: 8 } },
         },
       },
     ],
@@ -377,7 +377,7 @@ export const SECT_EXPANSION = [
     choices: [
       {
         label: '如实记「缺一件」',
-        outcome: { text: '老先生签了字，什么也没说。三个月后，那枚玉扣出现在拍卖台上，卖家是阁里的人。', effects: { contribution: 100, attrs: { 道心: 3 }, reputation: 10 } },
+        outcome: { text: '老先生签了字，什么也没说。三个月后，那枚玉扣出现在拍卖台上，卖家是会里的人。', effects: { contribution: 100, attrs: { 道心: 3 }, reputation: 10 } },
       },
       {
         label: '把账抹平',
@@ -452,7 +452,7 @@ export const SECT_EXPANSION = [
   {
     id: 'ev_s_wanshou_three_months', title: '同住三月', pool: 'sect', tier: 2, weight: 6, minRealm: 0,
     require: 'flag("入宗:wanshou") && char.sectId === "wanshou"',
-    text: '山门是兽骨拱门。新入门的人要与一头妖兽同住三月，不许用强，不许上锁。\n\n分给你的是铁甲妖猪，半人高，牙很黄。它第一天就把你的铺盖拱进了泥里。',
+    text: '营门是兽骨拱门。新入门的人要与一头妖兽同住三月，不许用强，不许上锁。\n\n分给你的是铁甲妖猪，半人高，牙很黄。它第一天就把你的铺盖拱进了泥里。',
     choices: [
       {
         label: '跟它挤一个窝，睡地上',
@@ -518,7 +518,7 @@ export const SECT_EXPANSION = [
       },
       {
         label: '撬开地砖，让它掉下去', hint: '破坏公物',
-        outcome: { text: '你撬了四块砖。傀儡掉下去，砸穿两层楼板。城主没露面，只传下一句话：「修好。」你修了两年。', effects: { contribution: -300, attrs: { 悟性: 4 }, exp: 200 } },
+        outcome: { text: '你撬了四块砖。傀儡掉下去，砸穿两层楼板。坊主没露面，只传下一句话：「修好。」你修了两年。', effects: { contribution: -300, attrs: { 悟性: 4 }, exp: 200 } },
       },
       {
         label: '站着，让人去报',
@@ -659,7 +659,7 @@ export const SECT_EXPANSION = [
   {
     id: 'ev_s_youming_ferry', title: '黄泉渡', pool: 'sect', tier: 2, weight: 8, minRealm: 0,
     require: 'flag("入宗:youming") && char.sectId === "youming"',
-    text: '黄泉渡的差事是收魂：把不肯走的魂魄劝上船，送过那片灰水。\n\n今夜来的是个孩子，蹲在渡口，说什么也不上船。他手里攥着半块饼，饼是硬的。',
+    text: '寨子在旧河闸下有个老渡口，寨里人叫它黄泉渡。水上死的人多，魂不肯走，寨里便派年轻人去劝上船，送过那片灰水。\n\n今夜来的是个孩子，蹲在渡口，说什么也不上船。他手里攥着半块饼，饼是硬的。',
     choices: [
       {
         label: '蹲下来，跟他说说话',
@@ -683,7 +683,7 @@ export const SECT_EXPANSION = [
   {
     id: 'ev_s_youming_grave', title: '挖坟', pool: 'sect', tier: 2, weight: 6, minRealm: 0,
     require: 'flag("入宗:youming") && char.sectId === "youming"',
-    text: '宗门派你去一户人家挖坟。死的是个修士，下葬时带了件法器，宗门要那件东西。\n\n坟挖开，棺材里的尸身没有烂，眼睛是睁着的。',
+    text: '寨里派你去一户人家挖坟。死的是个修士，下葬时带了件法器，寨主要那件东西。\n\n坟挖开，棺材里的尸身没有烂，眼睛是睁着的。',
     choices: [
       {
         label: '按差事取物，盖上土',
@@ -698,8 +698,8 @@ export const SECT_EXPANSION = [
         },
       },
       {
-        label: '把坟填回去，空手回宗',
-        outcome: { text: '执事没罚你，只说：「你迟早要挖的。」那年冬天，你自己家的坟被人挖了。', effects: { contribution: -150, attrs: { 道心: 3 }, demon: 4 } },
+        label: '把坟填回去，空手回寨',
+        outcome: { text: '管事的没罚你，只说：「你迟早要挖的。」那年冬天，寨里换了个人去，还是把那座坟挖开了。', effects: { contribution: -150, attrs: { 道心: 3 }, demon: 4 } },
       },
     ],
   },
@@ -949,7 +949,7 @@ export const SECT_EXPANSION = [
       {
         label: '守到援兵来', hint: '战斗 · 筑基修士',
         combat: {
-          enemy: 'cultivator',
+          enemy: 'cultivator', displayName: '敌宗领头人',
           win: { text: '你们把他堵在石阶上，弩箭钉住他的袖口。他抬头看了看烟，笑了：「早了一炷香。」援兵到时他还活着。', effects: { contribution: 500, exp: 300, attrs: { 根骨: 3 }, injury: 1 }, goto: 'ev_s_border_post_3' },
           lose: { text: '你们守到只剩三个人。石屋的门被撞开时，援兵的号角从山那边响起来。', effects: { hp: -60, injury: 3, contribution: 200 }, goto: 'ev_s_border_post_3' },
         },
@@ -1117,7 +1117,7 @@ export const SECT_EXPANSION = [
         roll: {
           p: 0.45, attrs: { 道心: 0.014, 悟性: 0.008 },
           success: { text: '第十四日，声音一起回来了，像很多人同时开口。你被冲得吐了一口血，但神识大进。', effects: { attrs: { 神识: 8, 道心: 5 }, expPct: 0.25, hp: -30 } },
-          fail: { text: '声音一直没回来。出关后你靠读唇接人说话，宗门里开始有人叫你哑师兄。', effects: { demon: 10, attrs: { 神识: 2 }, flag: { 失聪: true } } },
+          fail: { text: '声音一直没回来。出关后你靠读唇接人说话，认识你的人开始叫你哑道人。', effects: { demon: 10, attrs: { 神识: 2 }, flag: { 失聪: true } } },
         },
       },
       {
@@ -1128,7 +1128,7 @@ export const SECT_EXPANSION = [
   },
   {
     id: 'ev_i_family_letter', title: '家书', pool: 'inner', tier: 1, weight: 8, minRealm: 0,
-    require: 'age >= 30',
+    require: 'age >= 30 && origin !== "orphan" && origin !== "demon_child" && origin !== "royal" && origin !== "artifact_spirit"',
     text: '入定时，一封没写完的家书浮上来：\n\n「娘，我在山上很好，饭吃得饱，师父待我——」\n\n后面没有了。你记得那天你在等一个答案，等到墨干了，就没再写。',
     choices: [
       {
@@ -1142,7 +1142,7 @@ export const SECT_EXPANSION = [
       {
         label: '醒来真的写一封，托人带下山', hint: '二十灵石',
         cost: { stones: 20 },
-        outcome: { text: '半年后有人带回一句话：「村里没人姓这个了。」你把回信烧在山上，风把灰吹得很高。', effects: { attrs: { 道心: 3 }, demon: 5, flag: { 寄过家书: true } } },
+        outcome: { text: '半年后有人带回一句话：「那地方已经没人姓这个了。」你把回信烧在山上，风把灰吹得很高。', effects: { attrs: { 道心: 3 }, demon: 5, flag: { 寄过家书: true } } },
       },
     ],
   },
@@ -1204,7 +1204,7 @@ export const SECT_EXPANSION = [
       },
       {
         label: '把血收进小瓶，拿去问人',
-        outcome: { text: '丹房的老丹师看了很久，把瓶塞回去：「别让人看见。」他压低声音，「上一个这样的，被宗门请去做客，再没回来。」', effects: { attrs: { 神识: 2 }, demon: 4, flag: { 金血: true } } },
+        outcome: { text: '相熟的一位老丹师看了很久，把瓶塞回去：「别让人看见。」他压低声音，「上一个这样的，被大宗门请去做客，再没回来。」', effects: { attrs: { 神识: 2 }, demon: 4, flag: { 金血: true } } },
       },
     ],
   },
@@ -1225,8 +1225,8 @@ export const SECT_EXPANSION = [
         },
       },
       {
-        label: '出去走走，看看夜里的宗门',
-        outcome: { text: '你绕山门走了一圈。演武场上有个人在练剑，是执事。他练最基础的起手式，练了三十年。他没看见你。', effects: { attrs: { 道心: 4, 悟性: 1 }, demon: -3 } },
+        label: '出去走走，看看夜里的山',
+        outcome: { text: '你绕着山走了一圈。山脚空地上有个老人在练剑，练的是最基础的起手式，看样子练了几十年。他没看见你。', effects: { attrs: { 道心: 4, 悟性: 1 }, demon: -3 } },
       },
     ],
   },
@@ -1279,7 +1279,7 @@ export const SECT_EXPANSION = [
   },
   {
     id: 'ev_i_qi_tide', title: '灵气潮', pool: 'inner', tier: 3, weight: 5, minRealm: 1,
-    text: '子时，山里的灵气忽然涨了，像海。\n\n你坐在闭关室里，灵气从四面八方挤进来，挤得肋骨发响。这个时辰宗门的老人都知道不该修炼，但没人说过为什么。',
+    text: '子时，山里的灵气忽然涨了，像海。\n\n你坐在闭关室里，灵气从四面八方挤进来，挤得肋骨发响。这个时辰，修行多年的老人都知道不该修炼，但没人说过为什么。',
     choices: [
       {
         label: '开大周天，硬吞', hint: '根骨检定',
@@ -1371,7 +1371,7 @@ export const SECT_EXPANSION = [
   {
     id: 'ev_i_see_own_death', title: '看见自己的死', pool: 'inner', tier: 4, weight: 3, minRealm: 3,
     require: 'age >= 60',
-    text: '这次不是梦。打坐时你清清楚楚地「看见」了自己死的那一天。\n\n地点是一座山顶，天气很好，身边没有人。你死得很安静，像睡着。年份看不清，但那个山顶你认得——就是宗门后山。',
+    text: '这次不是梦。打坐时你清清楚楚地「看见」了自己死的那一天。\n\n地点是一座山顶，天气很好，身边没有人。你死得很安静，像睡着。年份看不清，但那个山顶你认得——就是你常去打坐的那座后山。',
     choices: [
       {
         label: '记下来，等那一天',

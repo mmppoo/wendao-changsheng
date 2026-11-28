@@ -43,7 +43,7 @@ export const ENDGAME_EXPANSION = [
         roll: {
           p: 0.45, attrs: { 悟性: 0.006, 气运: 0.008 },
           success: { text: '十个孩子你带出去七个。三个死在路上，你用剑挖了坑，坑不深。活下来的七个在山下学种地，后来都记得你，只有两个记得你的名字。', effects: { karma: 35, attrs: { 道心: 4 }, exp: 300, flag: { 带出孩子: true } } },
-          fail: { text: '第七天你们被溃兵围住。你杀开一条路，回头时孩子只剩三个。那三个不哭，只是拉着你的衣角，拉得很紧。', effects: { karma: 15, hp: -50, demon: 12 } },
+          fail: { text: '第七天你们被溃兵围住，溃兵里混着几个投了军的修士。你杀开一条路，回头时孩子只剩三个。那三个不哭，只是拉着你的衣角，拉得很紧。', effects: { karma: 15, hp: -50, demon: 12 } },
         },
       },
       {
@@ -59,7 +59,7 @@ export const ENDGAME_EXPANSION = [
       {
         label: '守镇门', hint: '一战 · 妖将',
         combat: {
-          enemy: 'demon_general',
+          enemy: 'demon_general', matchRealm: 'player', displayName: '妖将',
           win: { text: '妖将的角断在镇门上，他退了三步，然后整支队伍都退了。镇里的人从门缝里看你，没有人敢先出来。你在门口坐到天亮。', effects: { reputation: 40, karma: 30, attrs: { 道心: 4 }, expPct: 0.5, flag: { 守过南镇: true } } },
           lose: { text: '你被撞进半座牌楼。镇门破了，妖没有进来——它们绕过镇子，往更大的城去了。你数了数活下来的人，一百一十。', effects: { hp: -100, injury: 3, karma: 10, demon: 10 } },
         },
@@ -69,7 +69,7 @@ export const ENDGAME_EXPANSION = [
         cost: { month: 1 },
         roll: {
           p: 0.4, attrs: { 根骨: 0.006, 气运: 0.008 },
-          success: { text: '你带着那面破旗跑了二百里，妖跟了二百里。最后你把旗插在无人的荒滩上，妖在滩上转了三圈，散了。你躺下来，喘得像破风箱。', effects: { karma: 35, lifespan: -5, attrs: { 根骨: 3 }, expPct: 0.35 } },
+          success: { text: '你扛着镇口那面破旗跑了二百里，妖跟了二百里。最后你把旗插在无人的荒滩上，妖在滩上转了三圈，散了。你躺下来，喘得像破风箱。', effects: { karma: 35, lifespan: -5, attrs: { 根骨: 3 }, expPct: 0.35 } },
           fail: { text: '第三天它们不追了。你回头看，它们掉头回了镇子。你赶回去时镇子已经烧了一半，剩下的一半正在烧。', effects: { hp: -60, karma: -10, demon: 15 } },
         },
       },
@@ -150,12 +150,12 @@ export const ENDGAME_EXPANSION = [
   },
   {
     id: 'ev_e_enemy_arrives', title: '仇家上门', pool: 'world', tier: 5, weight: 5, minRealm: 4,
-    text: '他站在你洞府门口，站了三天。第三天你开门，他说的第一句话不是「报仇」，是「你老了」。\n\n他身后跟着两个金丹，一个提着刀，一个空着手。空手的那个一直在看你的院子，像在估价。',
+    text: '他站在你洞府门口，站了三天。第三天你开门，他说的第一句话不是「报仇」，是「你老了」。\n\n他身后跟着两个帮手，一个提着刀，一个空着手。空手的那个一直在看你的院子，像在估价。',
     choices: [
       {
         label: '接下这一战', hint: '一战 · 旧怨',
         combat: {
-          enemy: 'cultivator',
+          enemy: 'cultivator', matchRealm: 'player', displayName: '仇家',
           win: { text: '他倒下时抓住你的衣襟，说了一句你听不清的话。空手的那个转身就走，走得很快。你把刀捡起来，插在他坟前，刀柄朝上。', effects: { expPct: 0.55, attrs: { 道心: 4 }, reputation: 25, karma: -10, items: [{ id: 'liaoshang_dan', qty: 2 }] } },
           lose: { text: '他没杀你。他把你按在地上，说：「我要你活着，慢慢想。」他走了，带走了你院子里那株养了八十年的树。', effects: { hp: -110, injury: 3, demon: 15, attrs: { 道心: -4 } } },
         },
@@ -210,9 +210,9 @@ export const ENDGAME_EXPANSION = [
         outcome: { text: '你在丹房坐了七日，把二十年的寿数一寸寸挪出去。她醒来时脸色好了，问你为什么白了一半头发。你说路上风大。她看了你很久，没有拆穿。', effects: { lifespan: -20, relation: { 道侣: 50 }, flag: { 道侣: true }, attrs: { 道心: 5 }, demon: -8 } },
       },
       {
-        label: '去求一炉九转丹', hint: '三月 · 耗丹材',
+        label: '以洗髓丹作药引，开炉炼续命丹', hint: '三月 · 耗丹材',
         cost: { month: 3, item: 'xisui_dan' },
-        outcome: { text: '你把洗髓丹当药引押在炉里，守了三个月。开炉时丹只有一枚，比指甲盖小。她服下，咳声停了。剩下的药渣你收进袖里，一直留着。', effects: { removeItems: ['xisui_dan'], items: ['jiuzhuan_dan'], relation: { 道侣: 40 }, flag: { 道侣: true }, stones: -400 } },
+        outcome: { text: '你把洗髓丹当药引押在炉里，又搭进四百灵石的辅药，守了三个月。开炉时丹只有两枚，比指甲盖小。她服下一枚，咳声停了，另一枚你收着。剩下的药渣你收进袖里，一直留着。', effects: { removeItems: ['xisui_dan'], items: ['jiuzhuan_dan'], relation: { 道侣: 40 }, flag: { 道侣: true }, stones: -400 } },
       },
       {
         label: '什么也不做，陪着她', hint: '她的时间不多了',
@@ -229,7 +229,7 @@ export const ENDGAME_EXPANSION = [
         roll: {
           p: 0.45, attrs: { 悟性: 0.006, 气运: 0.006 },
           success: { text: '棺里没有尸首，只有一件叠好的衣服和半块玉。玉上刻着一个日期，是三个月后。你把玉收起来，把土填回去，填得比原来还平整。', effects: { attrs: { 悟性: 3 }, flag: { 故人未死: true, 见过死期: true }, demon: 8, exp: 400 } },
-          fail: { text: '棺盖掀开的一瞬，里面积了三十年的尸气扑上来。你退了两步，还是吸进去一口。那晚你梦见他在笑，笑得很年轻。', effects: { hp: -60, demon: 15, attrs: { 道心: -3 } } },
+          fail: { text: '棺盖掀开的一瞬，里面闷着的尸气扑上来。你退了两步，还是吸进去一口。那晚你梦见他在笑，笑得很年轻。', effects: { hp: -60, demon: 15, attrs: { 道心: -3 } } },
         },
       },
       {
@@ -239,12 +239,12 @@ export const ENDGAME_EXPANSION = [
       },
       {
         label: '把剑拔走', hint: '留个念想',
-        outcome: { text: '剑拔出来时带出一截木屑，是剑鞘烂在土里的。你把剑背在身上，走了三里才发现剑穗是他妻子编的，编得很笨。你没有解下来。', effects: { items: ['canjian'], attrs: { 道心: 2 }, relation: { 故人: 10 }, demon: 3 } },
+        outcome: { text: '剑插得很深，拔出来时带出一把湿土。你把剑背在身上，走了三里才发现剑穗是他妻子编的，编得很笨。你没有解下来。', effects: { items: ['canjian'], attrs: { 道心: 2 }, relation: { 故人: 10 }, demon: 3 } },
       },
     ],
   },
   {
-    id: 'ev_e_homecoming', title: '衣锦还乡', pool: 'world', tier: 4, weight: 6, minRealm: 3,
+    id: 'ev_e_homecoming', require: 'origin === "farmer" || origin === "hunter"', title: '衣锦还乡', pool: 'world', tier: 4, weight: 6, minRealm: 3,
     text: '村口的老槐树还在，树干上你小时候刻的名字被树皮包住，只露出一个偏旁。\n\n你穿着外面的衣服走进村子，没有人认出你。有个孩子仰头问：「仙师找谁？」他的眉眼有点像你三叔。',
     choices: [
       {
@@ -264,7 +264,7 @@ export const ENDGAME_EXPANSION = [
     ],
   },
   {
-    id: 'ev_e_hometown_ruins', title: '故里成墟', pool: 'world', tier: 5, weight: 5, minRealm: 4,
+    id: 'ev_e_hometown_ruins', require: 'origin === "farmer" || origin === "hunter"', title: '故里成墟', pool: 'world', tier: 5, weight: 5, minRealm: 4,
     text: '村子没有了。地基还在，一圈一圈排着，像被谁用刀刻在地上。井还在，井水是黑的，照不出人。\n\n你在其中一圈地基上站了很久。那是你家的位置，门槛石还在，被磨得中间凹下去一块。',
     choices: [
       {
@@ -403,7 +403,7 @@ export const ENDGAME_EXPANSION = [
       },
       {
         label: '取一截指骨', hint: '贪 · 有报',
-        outcome: { text: '你用剑砍了半个时辰才砍下一节，指骨比铁重，抱着走路要弯着腰。走出山谷的那天，你听见身后有指甲刮石头的声音，很慢，一直跟着你。', effects: { items: ['xuantie'], karma: -25, demon: 18, attrs: { 根骨: 3 }, flag: { 取神骨: true } } },
+        outcome: { text: '你用剑砍了半个时辰才砍下一节，指骨比铁重，抱着走路要弯着腰。走出山谷时，那节指骨已沉成一块乌黑的玄铁。那之后你总听见身后有指甲刮石头的声音，很慢，一直跟着你。', effects: { items: ['xuantie'], karma: -25, demon: 18, attrs: { 根骨: 3 }, flag: { 取神骨: true } } },
       },
     ],
   },
@@ -557,8 +557,8 @@ export const ENDGAME_EXPANSION = [
       {
         label: '迎上去', hint: '一战 · 妖将',
         combat: {
-          enemy: 'demon_general',
-          win: { text: '它倒下时散成了一地骨头，骨头里有东西在滚，是一枚内丹。你捡起来，掌心烫了一下。沟里的低吼停了，今年不会再响。', effects: { items: ['jiuzhuan_dan'], expPct: 0.55, attrs: { 根骨: 4 }, reputation: 20, flag: { 平妖坟: true } } },
+          enemy: 'demon_general', displayName: '坟中骨妖',
+          win: { text: '它倒下时散成了一地骨头，骨头里有东西在滚，是一枚缠着九道纹的丹。你捡起来，掌心烫了一下。沟里的低吼停了，今年不会再响。', effects: { items: ['jiuzhuan_dan'], expPct: 0.55, attrs: { 根骨: 4 }, reputation: 20, flag: { 平妖坟: true } } },
           lose: { text: '它把你按在骨堆上，看了你很久，然后松手走了。你躺在那堆骨头里，听见它们在说话，说的不是妖语，是你家乡的方言。', effects: { hp: -100, injury: 3, demon: 20 } },
         },
       },
@@ -596,13 +596,13 @@ export const ENDGAME_EXPANSION = [
       },
       {
         label: '取殿中的法器', hint: '贪 · 宫里有人看着',
-        outcome: { text: '你拿了那面镜。走出殿门时听见身后有人叹了一口气，很轻。镜子里从此多了一个人，站在你身后半步，你回头时他不在，不回头时他在。', effects: { items: ['huxin_fu'], karma: -20, demon: 15, attrs: { 神识: 3 }, flag: { 仙宫镜: true } } },
+        outcome: { text: '你揭下那面镜子背后贴着的一道护心符。走出殿门时听见身后有人叹了一口气，很轻。从此你照镜子，镜里总多一个人，站在你身后半步，你回头时他不在，不回头时他在。', effects: { items: ['huxin_fu'], karma: -20, demon: 15, attrs: { 神识: 3 }, flag: { 仙宫镜: true } } },
       },
     ],
   },
   {
     id: 'ev_e_cloud_market', title: '云上集市', pool: 'wild', tier: 4, weight: 6, minRealm: 3,
-    text: '云上集市每月开一次，摊子摆在云里，买卖不用灵石，用记忆。一段好记忆换一瓶丹，一段坏记忆换一张符。\n\n有个摊子只收一样东西：你还记得的最后一个亲人。摊主是个很老的女子，一直在数线。',
+    text: '云上集市每月开一次，摊子摆在云里，买卖多半不用灵石，用记忆。一段好记忆换一瓶丹，一段坏记忆换一张符。\n\n有个摊子只收一样东西：你还记得的最后一个亲人。摊主是个很老的女子，一直在数线。',
     choices: [
       {
         label: '卖一段记忆', hint: '换丹 · 忘了就没了',
@@ -649,14 +649,14 @@ export const ENDGAME_EXPANSION = [
     choices: [
       {
         label: '现在摘', hint: '药性不足 · 只能撑一阵',
-        outcome: { text: '你摘了，连根。根是断的，断口渗出一线白。你拿回去煎了，她喝了，脸色好了一阵子，好到第二年春天。第三年药性过了，一切照旧。', effects: { items: ['liaoshang_dan'], relation: { 道侣: 20 }, flag: { 道侣: true, 摘药: true }, demon: 8, karma: -10 } },
+        outcome: { text: '你摘了，连根。根是断的，断口渗出一线白。你拿回去煎了，她喝了，药渣你搓成一丸收着。她脸色好了一阵子，好到第二年春天。第三年药性过了，一切照旧。', effects: { items: ['liaoshang_dan'], relation: { 道侣: 20 }, flag: { 道侣: true, 摘药: true }, demon: 8, karma: -10 } },
       },
       {
         label: '等它开花', hint: '三月 · 未必等得到',
         cost: { month: 3 },
         roll: {
           p: 0.3, attrs: { 气运: 0.01 },
-          success: { text: '第三个月的最后一天它开了，花了半夜，开完就枯。你捧着那朵枯花回去，她还有气。药煎出来是甜的，她喝完说：「像小时候的糖。」', effects: { items: ['jiuzhuan_dan'], relation: { 道侣: 45 }, flag: { 道侣: true, 药开花: true }, lifespan: 10 } },
+          success: { text: '药师说要三十年，它却在第三个月的最后一天开了，花了半夜，开完就枯。你捧着那朵枯花回去，她还有气。药煎出来是甜的，她喝完说：「像小时候的糖。」剩下的半碗你熬成一枚丹，收着。', effects: { items: ['jiuzhuan_dan'], relation: { 道侣: 45 }, flag: { 道侣: true, 药开花: true }, lifespan: 10 } },
           fail: { text: '第二个月末下了一场霜，花苞冻黑了。你在崖下站了一夜，什么也没做。回去的时候她已经不太认人了。', effects: { demon: 20, relation: { 道侣: -10 }, flag: { 道侣: true }, lifespan: -3 } },
         },
       },

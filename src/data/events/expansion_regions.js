@@ -601,7 +601,7 @@ export const REGION_EXPANSION = [
         label: '拔剑斩断其去路，以战立威',
         hint: '战筑基修士 · 夺其储物袋',
         combat: {
-          enemy: 'cultivator',
+          enemy: 'cultivator', displayName: '灰袍散修',
           win: {
             text: '林间剑气纵横，灰袍散修护体灵罩碎裂，吐血倒飞。你收剑入鞘，清点其遗留灵石后从容出森。',
             effects: { stones: 340, reputation: 35, expPct: 0.2, counter: { secrets: 1 } },
@@ -613,7 +613,7 @@ export const REGION_EXPANSION = [
         },
       },
       {
-        label: '激发神行符，借浓雾瞬间甩开追兵',
+        label: '激发神行符，借浓雾遁走',
         hint: '消耗神行符 · 无伤脱身',
         require: 'has("shenxing_fu")',
         requireHint: '行囊中无神行符',
@@ -648,7 +648,7 @@ export const REGION_EXPANSION = [
     text: '腐叶铺满墨绿毒潭，紫黑瘴气贴着水面翻涌。潭心枯木上生着一株通体赤红的灵草，水面忽起巨浪，一条水桶粗的毒蟒缓缓昂首，碧绿毒涎滴落处连岩石都冒起白烟。',
     choices: [
       {
-        label: '迎瘴而上，斩毒蟒取蛇胆与赤草',
+        label: '迎瘴而上，与毒蟒相斗',
         hint: '战百丈毒蟒 · 战利品极丰',
         combat: {
           enemy: 'poison_python',
@@ -844,12 +844,12 @@ export const REGION_EXPANSION = [
     text: '暗礁环抱的海谷之中，一尊青铜古鼎正吞吐着浓郁水灵。三头青面獠牙的海夜叉绕鼎盘旋，见你破水而入，领头夜叉发出一声刺耳水啸，钢叉裹挟漩涡直刺心口。',
     choices: [
       {
-        label: '剑斩海夜叉，夺下青铜鼎中真宝',
+        label: '拔剑斗海夜叉，去夺鼎中真宝',
         hint: '战海夜叉 · 得龙血精与结金丹',
         combat: {
-          enemy: 'sea_yaksha',
+          enemy: 'sea_yaksha', displayName: '海夜叉',
           win: {
-            text: '剑光分水十丈，海夜叉惨嚎着化作一团血雾。你掀开古鼎青盖，取出一瓶凝如琥珀的龙血精与结金丹。',
+            text: '剑光分水十丈，海夜叉惨嚎着化作一团血雾。你掀开古鼎青盖，取出一块凝如琥珀的古蛟血晶与一包凝丹散。',
             effects: { stones: 900, items: ['longxue_jing', 'jiejin_dan'], reputation: 55, counter: { secrets: 1 } },
           },
           lose: {
@@ -1202,7 +1202,7 @@ export const REGION_EXPANSION = [
     minRealm: 4,
     maxRealm: 8,
     once: true,
-    text: '中州白玉京百年一度开启天骄论道，九座浮空青玉道台悬于云海之上。各州大能与天骄云集，主坛白衣剑修抚剑环顾：「今日不问出身宗派，只论大道高低。谁敢先登第一台？」',
+    text: '宁京百年一度开启天骄论道，九座浮空青玉道台悬于云海之上。各州大能与天骄云集，主坛白衣剑修抚剑环顾：「今日不问出身宗派，只论大道高低。谁敢先登第一台？」',
     choices: [
       {
         label: '踏云登台，以大道义理舌战群雄',
@@ -1224,11 +1224,11 @@ export const REGION_EXPANSION = [
         },
       },
       {
-        label: '拔剑登台，破白衣剑修凝化的太古剑影',
+        label: '拔剑登台，接白衣剑修凝化的太古剑影',
         hint: '以剑论道 · 战太古剑影',
         cost: { month: 1 },
         combat: {
-          enemy: 'sword_phantom',
+          enemy: 'sword_phantom', displayName: '太古剑影',
           win: {
             text: '云海剑气纵横三十里，你一剑斩碎太古剑影，白衣剑修抚掌大笑：「好锋芒！中州剑台当有道友一席！」',
             effects: { reputation: 115, attrs: { 根骨: 5 }, flag: { 中州武胜: true } },
@@ -1380,7 +1380,7 @@ export const REGION_EXPANSION = [
     text: '中州天宝轩夜场灯火辉煌，压轴拍品是一枚自虚空灵脉剥离的虚空晶与化神丹。\n\n珠帘之后数股化神威压暗自碰撞，几大世家供奉更在私下传音施压，企图吓退其余竞拍者。',
     choices: [
       {
-        label: '豪掷四千灵石，当场压服群豪拍下灵宝',
+        label: '豪掷四千灵石竞拍',
         hint: '4000 灵石 · 稳得虚空晶与化神丹',
         require: 'stones >= 4000',
         requireHint: '灵石不足四千',
@@ -1392,9 +1392,9 @@ export const REGION_EXPANSION = [
       },
       {
         label: '散场后于城外截击仗势欺人的世家供奉',
-        hint: '战强敌天庭使徒级供奉 · 险夺虚空晶',
+        hint: '战世家供奉 · 险夺虚空晶',
         combat: {
-          enemy: 'heaven_envoy',
+          enemy: 'heaven_envoy', displayName: '世家供奉',
           win: {
             text: '云外十里短兵交锋，那名骄横供奉护身法宝尽碎，弃宝遁逃。你收起虚空晶与一袋灵石，消失于夜色。',
             effects: { items: ['xukong_jing'], stones: 2500, karma: -15, reputation: 65 },

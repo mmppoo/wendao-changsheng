@@ -54,7 +54,7 @@ export const INNER_EVENTS = [
     ],
   },
   {
-    id: 'ev_inner_memory', title: '旧事', pool: 'inner', tier: 1, weight: 8, minRealm: 0,
+    id: 'ev_inner_memory', title: '旧事', pool: 'inner', tier: 1, weight: 8, minRealm: 0, require: 'origin !== "artifact_spirit"',
     text: '入定时，一段很久以前的记忆浮了上来。\n\n那年你七岁，蹲在门口等一个人回来。等到天黑，等到睡着，那个人也没回来。',
     choices: [
       {

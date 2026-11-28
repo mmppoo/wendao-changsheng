@@ -93,10 +93,10 @@ export const WEBNOVEL_EXPANSION = [
   {
     id: 'wn_blood_trial_1', title: '秘境 · 血色禁地试炼', pool: 'wild', tier: 4, weight: 7, minRealm: 1,
     once: true,
-    text: '十年一开的血色禁地雾瘴弥漫，无数低阶修士为争夺筑基灵药杀红了眼。\n\n你潜行至一处石窟外，忽听里面剑气轰鸣——两名大宗真传弟子正为石台上一池「万年灵乳」拼得两败俱伤，双双灵力见底！',
+    text: '十年一开的血色禁地雾瘴弥漫，无数修士为争夺禁地灵药杀红了眼。\n\n你潜行至一处石窟外，忽听里面剑气轰鸣——两名大宗真传弟子正为石台上一池「万年灵乳」拼得两败俱伤，双双灵力见底！',
     choices: [
       {
-        label: '屏息潜伏，等他们拼完再当「黄雀」', hint: '凡人流经典操作 · 坐收渔翁之利',
+        label: '屏息潜伏，等他们拼完再当「黄雀」', hint: '坐收渔翁之利',
         cost: { month: 1 },
         roll: {
           p: 0.65, attrs: { 神识: 0.01, 气运: 0.01 },
@@ -108,7 +108,7 @@ export const WEBNOVEL_EXPANSION = [
           fail: {
             text: '你脚下踩碎一块枯骨，惊动了尚余一战之力的红衣真传！对方怒喝一声挥剑杀来！',
             combat: {
-              enemy: 'blood_cult',
+              enemy: 'blood_cult', displayName: '红衣真传',
               win: {
                 text: '恶战过后，你踩着满地碎剑独吞了万年灵乳，战利品比预想还丰厚三分。',
                 effects: { stones: 750, items: ['zhuji_dan', 'huiling_dan'], expPct: 0.4, counter: { secrets: 1 } },
@@ -123,7 +123,7 @@ export const WEBNOVEL_EXPANSION = [
         label: '【绿瓶催熟】趁乱取走石壁枯萎的伴生灵芝', hint: '掌天小绿瓶专属 · 众人眼皮底下拿走真正至宝',
         require: 'flag("金手指_绿瓶")', requireHint: '需携有「掌天小绿瓶」',
         outcome: {
-          text: '那两人只盯着灵乳，却不知石壁缝里那株干枯药根才是上古紫芝！你悄无声息将其挖走，夜里滴上一滴绿液——紫光冲天，瞬间化作千年仙药！',
+          text: '那两人只盯着灵乳，却不知石壁缝里那株干枯药根才是上古紫芝！你悄无声息将其挖走，夜里滴上一滴绿液——紫光冲天，枯根一夜抽芽，长成两株灵草，根下还结出一枚洗髓的丹果！',
           effects: { items: ['xisui_dan', 'lingcao', 'lingcao'], lifespan: 30, expPct: 0.5, flag: { 万年灵草: true }, counter: { secrets: 1 } },
           goto: 'wn_blood_trial_2',
         },
@@ -144,9 +144,9 @@ export const WEBNOVEL_EXPANSION = [
       {
         label: '冷笑拔剑：「正好，我也嫌储物袋太轻！」', hint: '以杀止杀 · 反杀劫修摸尸',
         combat: {
-          enemy: 'rogue',
+          enemy: 'rogue', displayName: '蒙面劫修',
           win: {
-            text: '你踩过劫修尸身，顺手搜出三袋灵石与一张泛黄古方，大步踏入白光冲天的传送阵。',
+            text: '你踩过劫修尸身，顺手搜出三袋灵石与一张泛黄符纸，大步踏入白光冲天的传送阵。',
             effects: { stones: 480, items: ['shenxing_fu', 'liaoshang_dan'], reputation: 50, attrs: { 根骨: 3 } },
           },
           lose: {
@@ -156,7 +156,7 @@ export const WEBNOVEL_EXPANSION = [
         },
       },
       {
-        label: '扔出一把假丹药烟雾弹，御风冲阵', hint: '机敏脱身',
+        label: '撒出一把呛人的药粉，御风冲阵', hint: '机敏脱身',
         outcome: {
           text: '浓烟骤起，劫修以为是毒雾纷纷退避。你哈哈一笑，身形如箭窜入传送光柱！',
           effects: { attrs: { 气运: 3, 悟性: 2 }, expPct: 0.15 },
@@ -176,13 +176,13 @@ export const WEBNOVEL_EXPANSION = [
         require: 'stones >= 40', requireHint: '灵石不足 40',
         cost: { stones: 40 },
         outcome: {
-          text: '你故意挑了半天破铁锅，最后随口把红锈铁片搭在一起付账。回洞府以灵火洗去铁锈——竟是一枚上古剑胎残片，还暗藏半篇炼器秘法！',
+          text: '你故意挑了半天破铁锅，最后随口把红锈铁片搭在一起付账。回洞府以灵火洗去铁锈——竟是一枚上古剑胎残片！',
           effects: { items: ['xuantie', 'canjian'], attrs: { 悟性: 4, 气运: 3 }, flag: { 坊市捡漏: true, 得地阶法宝: true } },
           goto: 'wn_stall_leak_2',
         },
       },
       {
-        label: '【天机镜/剑老】直接看穿真身，并反向杀价到十灵石', hint: '金手指专属 · 血赚捡漏',
+        label: '【天机镜/剑老】看穿真身，再压价', hint: '需天机镜或剑老',
         require: 'flag("金手指_天机镜") || flag("金手指_剑老")', requireHint: '需天机镜或残剑老祖魂',
         cost: { stones: 10 },
         outcome: {
@@ -209,7 +209,7 @@ export const WEBNOVEL_EXPANSION = [
         combat: {
           enemy: 'bandit',
           win: {
-            text: '劫修伏诛。你熟练地摸走对方储物袋，又弹指一团火球毁尸灭迹——凡人修仙第一课，莫留后患。',
+            text: '劫修伏诛。你熟练地摸走对方储物袋，又弹指一团火球毁尸灭迹——出门在外，莫留后患。',
             effects: { stones: 240, items: ['liaoshang_dan'], reputation: 20 },
           },
           lose: {
@@ -219,9 +219,9 @@ export const WEBNOVEL_EXPANSION = [
         },
       },
       {
-        label: '祭出神行符，瞬间消失在夜雾中', hint: '安全撤离',
+        label: '借夜雾掩护，转身就走', hint: '安全撤离',
         outcome: {
-          text: '青风卷起，你一掠数十丈，把两名劫修远远甩在身后。',
+          text: '你钻进雾里，一口气奔出数十丈，把两名劫修远远甩在身后。',
           effects: { attrs: { 气运: 2 } },
         },
       },
@@ -309,10 +309,10 @@ export const WEBNOVEL_EXPANSION = [
   {
     id: 'wn_dao_heart_1', title: '异象 · 坐忘真假界', pool: 'inner', tier: 4, weight: 6, minRealm: 2,
     once: true,
-    text: '闭关第七日，你忽然睁开眼——眼前的石洞竟化作一间白炽灯惨亮的病房，窗外车水马龙。穿白大褂的人叹了口气：「又犯病了，嘴里念叨什么金丹元婴呢。」\n\n可你掌心那枚温热的储物戒，分明还在微微发烫。',
+    text: '闭关第七日，你忽然睁开眼——眼前的石洞竟化作一间白炽灯惨亮的病房，窗外车水马龙。穿白大褂的人叹了口气：「又犯病了，嘴里念叨什么结丹元婴呢。」\n\n可你掌心那枚温热的储物戒，分明还在微微发烫。',
     choices: [
       {
-        label: '「假作真时真亦假，一剑斩破幻境！」', hint: '道心检定 · 破除诡秘心魔大劫',
+        label: '「假作真时真亦假。」挥剑斩向幻境', hint: '道心检定 · 破除诡秘心魔大劫',
         roll: {
           p: 0.6, attrs: { 道心: 0.01, 神识: 0.01 },
           success: {
@@ -326,7 +326,7 @@ export const WEBNOVEL_EXPANSION = [
         },
       },
       {
-        label: '在「现代病房」里静静坐一晚，记下梦里的只言片语', hint: '以奇异视角反观大道',
+        label: '在那间陌生的屋子里静静坐一晚，记下梦里的只言片语', hint: '以奇异视角反观大道',
         outcome: {
           text: '你看着窗外的霓虹与车流，忽然笑了：「无论这是梦还是仙途，我走过的路都是真的。」天明时，病房化作晨雾散去。',
           effects: { attrs: { 悟性: 10, 道心: 6 }, demon: -12, flag: { 镜中人: true } },

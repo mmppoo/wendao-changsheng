@@ -118,7 +118,7 @@ export const WORLD_EVENTS = [
         combat: {
           enemy: 'beast',
           win: {
-            text: '你杀到城墙下堆满了兽尸。天亮时，活下来的人只有三个，其中一个是你的。\n\n守城的老修士拍了拍你的肩，什么也没说。',
+            text: '你杀到城墙下堆满了兽尸。天亮时，活下来的人只有三个，你是其中之一。\n\n守城的老修士拍了拍你的肩，什么也没说。',
             effects: { exp: 300, reputation: 80, karma: 30, title: '守城人', flag: { 守过城: true } },
           },
           lose: { text: '你被一头妖猪撞下城墙。醒来时城已经破了，到处是火。', effects: { hp: -80, injury: 3 } },
@@ -155,12 +155,12 @@ export const WORLD_EVENTS = [
     ],
   },
   {
-    id: 'ev_old_acquaintance', title: '故人', pool: 'world', tier: 2, weight: 7, minRealm: 1,
-    text: '街上有人叫你的名字。\n\n你回头，看见一个挑着担子的中年人，脸上有风霜，眼睛却还是少年时候的样子。\n\n「真的是你。」他说，「我以为你早死了。」',
+    id: 'ev_old_acquaintance', title: '故人', pool: 'world', tier: 2, weight: 7, minRealm: 1, require: 'age <= 60',
+    text: '街上有人叫你的名字。\n\n你回头，看见一个挑着担子的汉子，脸上有风霜，眼睛却还是少年时候的样子。\n\n「真的是你。」他说，「我以为你早死了。」',
     choices: [
       {
         label: '认他', hint: '红尘',
-        outcome: { text: '你们在酒馆坐到打烊。他说他娶了媳妇，生了两个儿子，大儿子今年要去考秀才。\n\n「你呢？」他问。\n\n你说：我在找一样东西。\n「找到了吗？」\n「还没有。」\n他点点头，好像这很正常。', effects: { attrs: { 道心: 4 }, demon: -5, flag: { 故人: true } } },
+        outcome: { text: '你们在酒馆坐到打烊。他说他娶了媳妇，生了两个儿子，日子还过得去。\n\n「你呢？」他问。\n\n你说：我在找一样东西。\n「找到了吗？」\n「还没有。」\n他点点头，好像这很正常。', effects: { attrs: { 道心: 4 }, demon: -5, flag: { 故人: true } } },
       },
       {
         label: '装作不认识', hint: '',
@@ -197,7 +197,7 @@ export const WORLD_EVENTS = [
         label: '救人', hint: '根骨检定',
         roll: {
           p: 0.55, attrs: { 根骨: 0.012 },
-          success: { text: '你扛起断桅，把两个人拖了出来。船最后还是沉了，但所有人都上了救生筏。\n\n海上漂了两天，你一滴水没喝。', effects: { karma: 40, reputation: 30, attrs: { 根骨: 3 }, injury: 1 } },
+          success: { text: '你扛起断桅，把两个人拖了出来。船最后还是沉了，但所有人都上了小舢板。\n\n海上漂了两天，你一滴水没喝。', effects: { karma: 40, reputation: 30, attrs: { 根骨: 3 }, injury: 1 } },
           fail: { text: '浪打过来，你被拍进水里。断桅压着你的腿，你割破了三根手指才挣开。', effects: { hp: -70, injury: 2 } },
         },
       },

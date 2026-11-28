@@ -153,14 +153,14 @@ export const SECT_EVENTS = [
     text: '十年一度的内门大比。擂台下站满了人。\n\n签筒传到你面前，你抽到的对手是——上一届的第三名。',
     choices: [
       {
-        label: '上台', hint: '战斗 · 金丹长老（压制修为）',
+        label: '上台', hint: '战斗 · 上届大比第三名',
         combat: {
-          enemy: 'jindan_elder',
+          enemy: 'jindan_elder', displayName: '上届大比第三名',
           win: {
             text: '你赢了。台下静了一瞬，然后炸开。\n\n长老在台上站起来，第一次正眼看你。',
             effects: { contribution: 800, reputation: 100, exp: 500, counter: { arena_win: 1 }, title: '大比魁首', flag: { 大比魁首: true } },
           },
-          lose: { text: '你输了，输得很干脆。下台时有人拍你的肩：「明年再来。」', effects: { exp: 200, contribution: 100, attrs: { 道心: 3 } } },
+          lose: { text: '你输了，输得很干脆。下台时有人拍你的肩：「十年后再来。」', effects: { exp: 200, contribution: 100, attrs: { 道心: 3 } } },
         },
       },
       {
@@ -229,7 +229,7 @@ export const SECT_EVENTS = [
         label: '帮他看火', hint: '丹道',
         roll: {
           p: 0.6, attrs: { 悟性: 0.01 },
-          success: { text: '你盯着炉火看了半日，忽然说：「停。」\n\n师兄手一抖，收了火。丹炉里躺着三枚浑圆的丹。\n\n「你……」他看了你半天，「你怎么知道？」\n\n你也说不清。', effects: { counter: {}, items: ['zhuji_dan'], attrs: { 悟性: 3 }, contribution: 100 } },
+          success: { text: '你盯着炉火看了半日，忽然说：「停。」\n\n师兄手一抖，收了火。丹炉里躺着三枚浑圆的丹。\n\n「你……」他看了你半天，「你怎么知道？」\n\n你也说不清。他把其中一枚塞进了你手里。', effects: { counter: {}, items: ['zhuji_dan'], attrs: { 悟性: 3 }, contribution: 100 } },
           fail: { text: '你说「停」的时候，炉子正好炸了。药渣糊了你一脸。', effects: { hp: -20, attrs: { 悟性: 1 } } },
         },
       },

@@ -68,7 +68,7 @@ export const WILD_EVENTS = [
       {
         label: '取走他的储物袋', hint: '贪婪 · 有因果',
         outcome: {
-          text: '袋子里有三枚丹药和一枚黑色玉牌。你把玉牌翻过来，背面刻着一个名字——和你同名。\n\n你手一抖。',
+          text: '袋子里有两枚丹药和一枚黑色玉牌。你把玉牌翻过来，背面刻着一个名字——和你同名。\n\n你手一抖。',
           effects: { items: ['zhuji_dan', 'yinqi_dan'], karma: -10, demon: 5, flag: { 同名玉牌: true } },
           goto: 'ev_dead_cultivator_2',
         },
@@ -110,7 +110,7 @@ export const WILD_EVENTS = [
         },
       },
       {
-        label: '把玉牌扔进火里', hint: '消耗一枚丹药引火',
+        label: '捏碎一枚引气丹引出丹火，烧掉玉牌', hint: '消耗一枚丹药引火',
         require: 'has("yinqi_dan")', requireHint: '没有可烧的东西',
         cost: { item: 'yinqi_dan' },
         outcome: {
@@ -158,11 +158,11 @@ export const WILD_EVENTS = [
         roll: {
           p: 0.45, attrs: { 道心: 0.012, 神识: 0.006 },
           success: {
-            text: '你一剑挑开轿帘。纸人碎了，里面掉出一枚铜钱，铜钱上刻着「买命」二字。\n\n唢呐声停了。红衣人一个个跪下，然后化成纸灰。',
+            text: '你一剑挑开轿帘。纸人碎了，里面掉出一张护心符，符背面写着「买命」二字。\n\n唢呐声停了。红衣人一个个跪下，然后化成纸灰。',
             effects: { expPct: 0.3, items: ['huxin_fu'], attrs: { 道心: 4 }, achievements: ['a_ghost'] },
           },
           fail: {
-            text: '你的剑穿过了轿子，像穿过一团雾。纸人转过头，对你笑了一下。\n\n你醒来时躺在路边，手里攥着一枚铜钱，掌心被烫出一个「囍」字。',
+            text: '你的剑穿过了轿子，像穿过一团雾。纸人转过头，对你笑了一下。\n\n你醒来时躺在路边，手里攥着一张护心符，掌心被烫出一个「囍」字。',
             effects: { hp: -50, demon: 12, items: ['huxin_fu'], flag: { 掌心囍: true } },
           },
         },
@@ -207,7 +207,7 @@ export const WILD_EVENTS = [
       {
         label: '取一瓶雷水', hint: '炼器材料',
         cost: { month: 1 },
-        outcome: { text: '你用玉瓶装了半瓶雷水，瓶身一直在抖。', effects: { items: ['leimu'], attrs: { 神识: 2 } } },
+        outcome: { text: '你用玉瓶装了半瓶雷水，瓶身一直在抖，没走出山谷就裂了。倒是池边一截被雷劈了不知多少回的老木还好好的，你把它带走了。', effects: { items: ['leimu'], attrs: { 神识: 2 } } },
       },
     ],
   },
@@ -219,7 +219,7 @@ export const WILD_EVENTS = [
         label: '小心采下', hint: '悟性检定',
         roll: {
           p: 0.6, attrs: { 悟性: 0.008 },
-          success: { text: '你用指甲一点点刨开土，根须完整。这株草至少有三百年。', effects: { items: ['lingcao'], exp: 30 } },
+          success: { text: '你用指甲一点点刨开土，根须完整。这株草至少有一百年。', effects: { items: ['lingcao'], exp: 30 } },
           fail: { text: '你手重了，根断了。灵草的汁液渗进土里，很快看不见了。', effects: { attrs: { 悟性: 1 } } },
         },
       },
@@ -258,7 +258,7 @@ export const WILD_EVENTS = [
       {
         label: '把碑挖出来', hint: '力气活',
         cost: { month: 1 },
-        outcome: { text: '碑下埋着一个铁盒，盒里是一枚生锈的钥匙，不知道开什么锁。', effects: { items: ['xuantie'], flag: { 生锈钥匙: true } } },
+        outcome: { text: '碑下埋着一个玄铁打的盒子，盒里是一枚生锈的钥匙，不知道开什么锁。', effects: { items: ['xuantie'], flag: { 生锈钥匙: true } } },
       },
     ],
   },
@@ -318,7 +318,7 @@ export const WILD_EVENTS = [
         label: '涉水去摘', hint: '根骨检定 · 毒',
         roll: {
           p: 0.5, attrs: { 根骨: 0.01, 气运: 0.006 },
-          success: { text: '你屏住呼吸蹚过去，摘下了那朵花。花入手冰凉，毒气顺着掌心往上爬，被你压了回去。', effects: { items: ['lingcao'], attrs: { 根骨: 2 }, exp: 50 } },
+          success: { text: '你屏住呼吸蹚过去，连根拔起了那株开黑花的灵草。草入手冰凉，毒气顺着掌心往上爬，被你压了回去。', effects: { items: ['lingcao'], attrs: { 根骨: 2 }, exp: 50 } },
           fail: { text: '水下的泥吸住了你的腿。你挣扎着爬回来，小腿上全是紫色的斑。', effects: { hp: -45, injury: 1, demon: 3 } },
         },
       },
@@ -403,7 +403,7 @@ export const WILD_EVENTS = [
         label: '再问一句：你是谁', hint: '神识',
         roll: {
           p: 0.5, attrs: { 神识: 0.012 },
-          success: { text: '「我是你。」回音说，「你走的时候，别忘了带我。」\n\n你在洞里找到一面铜镜，镜子里没有人。', effects: { items: ['huxin_fu'], attrs: { 神识: 3 }, flag: { 镜中人: true }, achievements: ['a_mirror'] } },
+          success: { text: '「我是你。」回音说，「你走的时候，别忘了带我。」\n\n你在洞里找到一面铜镜，镜子里没有人。镜背上贴着一张护心符。', effects: { items: ['huxin_fu'], attrs: { 神识: 3 }, flag: { 镜中人: true }, achievements: ['a_mirror'] } },
           fail: { text: '回音突然变成很多个声音，同时说：「你是谁？你是谁？你是谁？」\n\n你捂着耳朵跑出去，耳鸣了三天。', effects: { hp: -20, demon: 6 } },
         },
       },

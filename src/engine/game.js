@@ -94,7 +94,9 @@ export class Game {
     this.state.rumorAt = s.char.age;
     // v8：每一世分到一个宿敌（六种之一），名字按原型的姓名池生成
     const mix = Math.imul((s.seed >>> 0) ^ 0x9e3779b9, 2654435761) >>> 0;
-    const arch = NEMESIS_ARCHETYPES[mix % NEMESIS_ARCHETYPES.length];
+    // 没落世家少主开场已被河洛支脉退过一次婚，不再分到同一桩退婚宿敌
+    const archPool = NEMESIS_ARCHETYPES.filter((a) => !(s.char.originId === 'fallen_clan' && a.id === 'tuihun'));
+    const arch = archPool[mix % archPool.length];
     if (arch) {
       this.state.flags['宿敌'] = arch.id;
       this.state.flags['宿敌名'] = this.rng.pick(arch.surnames) + this.rng.pick(arch.givenNames);
@@ -3612,11 +3614,13 @@ export class Game {
     const customRealm = typeof spec === 'object' && spec.customRealm != null ? spec.customRealm : null;
     let enemy = (preserve || def.isRival) ? { ...def } : scaleEnemy(def, customRealm != null ? customRealm : s.char.realm);
     // 匹配境界：按境界战力倍率把敌手整体换算到指定境界（切磋、擂台用，避免高境界一招秒杀照拿全额奖励）
-    if (typeof spec === 'object' && spec.matchRealm != null) {
+    // matchRealm: 'player' 表示「与你同境的对手」（仇家、天骄、守冢者等），按你当前境界换算
+    const matchTo = typeof spec === 'object' && spec.matchRealm === 'player' ? s.char.realm : (typeof spec === 'object' ? spec.matchRealm : null);
+    if (typeof spec === 'object' && matchTo != null && !(spec.matchRealm === 'player' && matchTo <= (def.realm || 0))) {
       const from = REALMS[def.realm || 0]?.powerMult || 1;
-      const to = REALMS[spec.matchRealm]?.powerMult || 1;
+      const to = REALMS[matchTo]?.powerMult || 1;
       const k = to / from;
-      enemy = { ...enemy, realm: spec.matchRealm, hp: Math.round(def.hp * k), atk: Math.round(def.atk * k), def: Math.round(def.def * k), exp: Math.round(def.exp * k), stones: Math.round(def.stones * k) };
+      enemy = { ...enemy, realm: matchTo, hp: Math.round(def.hp * k), atk: Math.round(def.atk * k), def: Math.round(def.def * k), exp: Math.round(def.exp * k), stones: Math.round(def.stones * k) };
     }
     if (typeof spec === 'object' && spec.scaleMult != null && spec.scaleMult !== 1) {
       const sm = spec.scaleMult;
@@ -3624,7 +3628,11 @@ export class Game {
     }
     // v8：宿敌显示其名；劫数让敌手更凶
     if (def.isRival && s.flags['宿敌名']) enemy.name = s.flags['宿敌名'];
-    if (typeof spec === 'object' && spec.displayName) enemy.name = spec.displayName;
+    if (typeof spec === 'object' && spec.displayName && spec.displayName !== def.name) {
+      // 换了显示名就别再用原敌手的介绍，免得「石鳞蛇」配着「铁甲妖猪」的描述
+      enemy.name = spec.displayName;
+      enemy.desc = spec.desc || `${spec.displayName}拦在你面前。`;
+    }
     const jm = jieshuMods(s.char.jieshu || 0);
     if (jm.enemyMult > 1) {
       enemy.hp = Math.round(enemy.hp * jm.enemyMult);

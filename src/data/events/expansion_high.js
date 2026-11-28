@@ -104,7 +104,7 @@ export const HIGH_EXPANSION = [
         label: '斩守冢的剑仆',
         hint: '战斗 · 剑仆持一件旧宝',
         combat: {
-          enemy: 'cultivator',
+          enemy: 'cultivator', matchRealm: 'player', displayName: '守冢剑仆',
           win: { text: '他手里那件东西先碎了，然后才是他。碎片落在地上，还在自己拼合，拼到一半就散了。你收剑，剑冢里的响动一起停了。', effects: { flag: { 剑断法宝: true }, attrs: { 道心: 3 }, expPct: 0.35, stones: 300 } },
           lose: { text: '他不用剑，用那件东西挡。你的剑砍在上面，弹回来的力道卸在你自己的肩上。你退出剑冢时，刀口还朝着你。', effects: { hp: -70, injury: 2, demon: 8 } },
         },
@@ -127,7 +127,7 @@ export const HIGH_EXPANSION = [
         roll: {
           p: 0.3, attrs: { 气运: 0.01, 道心: 0.006 },
           success: { text: '指尖触到的不是冷，是慢。你把一段还没发生的事看完了，看完只用了一息。收手时指甲全黑，掌心的纹路换了方向。', effects: { attrs: { 悟性: 8, 神识: 4 }, lifespan: -20, expPct: 0.8, flag: { 触裂隙: true } } },
-          fail: { text: '你抽手的时候慢了。手回来了，回来的那三年没有回来，它们从你命里被直接剪掉，剪口很齐，不疼。', effects: { lifespan: -40, demon: 15, hp: -40 } },
+          fail: { text: '你抽手的时候慢了。手回来了，可有四十年没有跟着回来，它们从你命里被直接剪掉，剪口很齐，不疼。', effects: { lifespan: -40, demon: 15, hp: -40 } },
         },
       },
       {
@@ -317,7 +317,7 @@ export const HIGH_EXPANSION = [
         label: '买那对最静的',
         hint: '花费 400 灵石',
         cost: { stones: 400 },
-        outcome: { text: '他把眼睛取出来，装进一只小盒，嘱咐你不要在白天开。你收了，回去后神识确实清明了些，只是梦里总有人在别处看东西。', effects: { items: ['xisui_dan'], attrs: { 神识: 5 }, demon: 8, flag: { 妖市眼: true } } },
+        outcome: { text: '他把眼睛取出来，装进一只小盒，嘱咐你不要在白天开。盒底还垫着一枚洗髓丹，算是添头。你收了，回去后神识确实清明了些，只是梦里总有人在别处看东西。', effects: { items: ['xisui_dan'], attrs: { 神识: 5 }, demon: 8, flag: { 妖市眼: true } } },
       },
       {
         label: '问眼睛的来历',
@@ -433,7 +433,7 @@ export const HIGH_EXPANSION = [
         hint: '有风险',
         roll: {
           p: 0.5, attrs: { 根骨: 0.008, 悟性: 0.006 },
-          success: { text: '刀裹在布里，抽出来时布里结了霜。老人让你握了一下，刀柄上有一道旧裂。他说这刀杀过七个金丹，裂是第八个留下的。', effects: { attrs: { 根骨: 3 }, items: ['liegong'], flag: { 见妖刀: true }, exp: 200 } },
+          success: { text: '刀裹在布里，抽出来时布里结了霜。老人让你握了一下，刀柄上有一道旧裂。他说这刀杀过七个结丹，裂是第八个留下的。临别他丢给你一张护心符，说握过这刀的人，多半用得着。', effects: { attrs: { 根骨: 3 }, items: ['huxin_fu'], flag: { 见妖刀: true }, exp: 200 } },
           fail: { text: '你伸手，老人的手先动了。刀没有出鞘，你的虎口先裂了。他收回手，说：诚意是给会谈用的。', effects: { hp: -40, demon: 8, attrs: { 道心: 2 } } },
         },
       },
@@ -453,7 +453,7 @@ export const HIGH_EXPANSION = [
         label: '去挑战榜上第十',
         hint: '战斗 · 输了也留名',
         combat: {
-          enemy: 'cultivator',
+          enemy: 'cultivator', matchRealm: 'player', displayName: '天骄榜第十',
           win: { text: '他撑了十九招。第二十招你把他的剑挑到了榜上，绢破了一道口子，正好划过他的名字。围观的人没有叫好，只是让开了一条路。', effects: { reputation: 40, expPct: 0.4, attrs: { 根骨: 4 }, flag: { 上榜: true } } },
           lose: { text: '第十招你就知道赢不了，还是撑到第三十招。他收剑时说了句什么，你没听清，也不想问。回去的路上没有人跟着你。', effects: { hp: -50, reputation: -10, attrs: { 道心: 3 } } },
         },
@@ -555,7 +555,7 @@ export const HIGH_EXPANSION = [
         label: '出价',
         hint: '花费 3000 灵石',
         cost: { stones: 3000 },
-        outcome: { text: '没有人跟你抢。落槌太快，快得像早就等着你举牌。甲穿上身很合，只有心口那一块是空的，指骨的位置也正好在空处。', effects: { items: ['huxin_fu'], attrs: { 根骨: 5 }, flag: { 拍得残甲: true }, demon: 5 } },
+        outcome: { text: '没有人跟你抢。落槌太快，快得像早就等着你举牌。甲是残的，穿不上身。心口那块空处塞着一张折好的护心符，指骨正压在符上。', effects: { items: ['huxin_fu'], attrs: { 根骨: 5 }, flag: { 拍得残甲: true }, demon: 5 } },
       },
       {
         label: '不出价，看谁买走',
@@ -568,7 +568,7 @@ export const HIGH_EXPANSION = [
         hint: '有风险 · 业力',
         roll: {
           p: 0.4, attrs: { 气运: 0.008, 根骨: 0.006 },
-          success: { text: '他在巷子里停下，把甲扔给你，说这东西该给活人穿。你愣着，他已经走了。甲里还有一只小瓶和五百灵石。', effects: { items: ['xisui_dan'], stones: 500, karma: -12, flag: { 拦买主: true } } },
+          success: { text: '他在巷子里停下，从甲里摸出一只小瓶和五百灵石扔给你，说这些该给活人用。你愣着，他已经走了。', effects: { items: ['xisui_dan'], stones: 500, karma: -12, flag: { 拦买主: true } } },
           fail: { text: '你刚跟上，他就回过头来。巷子太窄，你没有退的地方。他收起手时，你的肋骨断了两根。', effects: { hp: -45, demon: 10, flag: { 被识破: true } } },
         },
       },
@@ -579,13 +579,13 @@ export const HIGH_EXPANSION = [
     text: '商队的车是铁皮的，轮子包着鲸骨，走起来没有声音。他们贩的东西写在木牌上：盐、铁、药、人。\n\n领队问你要不要搭一段。他说价钱好说，只要路上肯出一把力，出力的地方他会先说清楚。',
     choices: [
       {
-        label: '搭船，出力护送',
+        label: '搭车，出力护送',
         hint: '四月 · 会动手',
         cost: { month: 4 },
         combat: {
           enemy: 'bandit',
           win: { text: '劫道的是本地人，刀很旧，人不少。你打退了三拨，最后一拨没敢上来。领队分账时多给了你一份，说这是买命的价。', effects: { stones: 400, expPct: 0.3, attrs: { 根骨: 3 }, flag: { 随商队: true } } },
-          lose: { text: '第四拨人带了弩。你替车挡了一箭，车队走了，把你留在了路边。三天后你才爬到一个村口。', effects: { hp: -40, injury: 1, karma: 5 } },
+          lose: { text: '第四拨人带了专破护体灵光的破法弩。你替车挡了一箭，车队走了，把你留在了路边。三天后你才爬到一个村口。', effects: { hp: -40, injury: 1, karma: 5 } },
         },
       },
       {
@@ -648,7 +648,7 @@ export const HIGH_EXPANSION = [
         combat: {
           enemy: 'wolf',
           win: { text: '它们从沙里出来，来了四头。你守住了那段墙，天亮时墙下躺着两头。老兵递给你一壶酒，说这酒他存了四年。', effects: { exp: 240, attrs: { 根骨: 3 }, reputation: 15, flag: { 守关: true } } },
-          lose: { text: '你砍空了一刀。第三头咬住你的胳膊，把你拖下墙去。老兵用火把把它们逼退，扶你上来时说：你还年轻。', effects: { hp: -35, injury: 1 } },
+          lose: { text: '四头后面还跟着一头成了气候的狼王。你砍空了一刀，它一口咬穿你的护体灵光，把你拖下墙去。老兵用火把把狼群逼退，扶你上来时说：你还年轻。', effects: { hp: -35, injury: 1 } },
         },
       },
       {
@@ -694,7 +694,7 @@ export const HIGH_EXPANSION = [
         roll: {
           p: 0.45, attrs: { 气运: 0.012, 道心: 0.004 },
           success: { text: '庄家掀开碗，你赢了。十年寿数进账时没有感觉，只是忽然觉得屋子里暖了些。旁边输的那个看了你一眼，起身走了。', effects: { lifespan: 10, attrs: { 气运: 2 }, flag: { 赌寿赢: true } } },
-          fail: { text: '你输了一年。划走的时候不疼，只是想起明年该做的事，好像少了一件，又想不起是哪件。', effects: { lifespan: -12, demon: 8, attrs: { 道心: 1 } } },
+          fail: { text: '你输了。说好只划一年，账上却划走了十二年，小二说多出的是利钱。划走的时候不疼，只是想起明年该做的事，好像少了一件，又想不起是哪件。', effects: { lifespan: -12, demon: 8, attrs: { 道心: 1 } } },
         },
       },
       {
@@ -708,9 +708,9 @@ export const HIGH_EXPANSION = [
         label: '掀了赌桌',
         hint: '战斗 · 会得罪人',
         combat: {
-          enemy: 'rogue',
+          enemy: 'rogue', displayName: '赌坊庄家',
           win: { text: '桌子翻了，寿数散回各人身上，有人当场哭出来。庄家从后门走了。你在这间客栈的名字留了下来，好的坏的一半一半。', effects: { reputation: 20, karma: 10, attrs: { 道心: 3 }, flag: { 掀赌桌: true } } },
-          lose: { text: '屋里七八个人一起站起来，你只打断了两个的骨头。被扔出门时，招牌上的红字在你眼里晃了很久。', effects: { hp: -40, reputation: -15, demon: 5 } },
+          lose: { text: '庄家一拍桌，满屋押上的寿数都成了他的护身之力，七八个人一起站起来，你只打断了两个的骨头。被扔出门时，招牌上的红字在你眼里晃了很久。', effects: { hp: -40, reputation: -15, demon: 5 } },
         },
       },
     ],
@@ -718,7 +718,7 @@ export const HIGH_EXPANSION = [
 
   {
     id: 'ev_h_yuanying_out', title: '元婴出窍', pool: 'inner', tier: 5, weight: 5, minRealm: 5,
-    text: '第一次出窍时，你从自己头顶飘起来，回头看见自己还坐着，坐得很端正。\n\n屋里的东西都在原位，只有一样不对：那具身体在呼吸，而你不需要呼吸了。你伸手去碰它，手穿了过去，没有声音。',
+    text: '这一回出窍时，你从自己头顶飘起来，回头看见自己还坐着，坐得很端正。\n\n屋里的东西都在原位，只有一样不对：那具身体在呼吸，而你不需要呼吸了。你伸手去碰它，手穿了过去，没有声音。',
     choices: [
       {
         label: '往外走，看看山',
@@ -744,8 +744,8 @@ export const HIGH_EXPANSION = [
     ],
   },
   {
-    id: 'ev_h_memory_gap', title: '记忆错位', pool: 'inner', tier: 3, weight: 7, minRealm: 3,
-    text: '你记得八岁那年在河边捡到一块骨头，记得很清楚，连骨头上有一道裂都记得。\n\n可你昨天回了趟家，河在山的另一侧，从村口走过去要两个时辰，八岁的你走不了那么远。母亲说你从没去过河边，说那年你在发烧。',
+    id: 'ev_h_memory_gap', title: '记忆错位', pool: 'inner', tier: 3, weight: 7, minRealm: 3, require: 'origin != "artifact_spirit"',
+    text: '你记得八岁那年在河边捡到一块骨头，记得很清楚，连骨头上有一道裂都记得。\n\n可前些日子你路过儿时住的地方，河在山的另一侧，走过去要两个时辰，八岁的孩子走不了那么远。当年照看过你的老人说你从没去过河边，说那年你一直在发烧。',
     choices: [
       {
         label: '去河边找那块骨头',
@@ -753,8 +753,8 @@ export const HIGH_EXPANSION = [
         cost: { month: 2 },
         roll: {
           p: 0.5, attrs: { 气运: 0.008, 神识: 0.006 },
-          success: { text: '你在河湾的淤泥里摸到了它。骨头还是那块，裂也是一样的裂，只是比记忆里大了三倍。它在你手里轻轻震了一下。', effects: { items: ['canjian'], attrs: { 神识: 4 }, exp: 240, flag: { 骨头: true } } },
-          fail: { text: '你在河边找了两个月，什么也没有。回村那天母亲问你找什么，你张了张嘴，发现自己说不清那块骨头长什么样了。', effects: { demon: 10, hp: -25, attrs: { 悟性: 1 } } },
+          success: { text: '你在河湾的淤泥里摸到了它。那不是骨头，是一截锈透的断剑，裂也是一样的裂，只是比记忆里大了三倍。它在你手里低低震了一下。', effects: { items: ['canjian'], attrs: { 神识: 4 }, exp: 240, flag: { 骨头: true } } },
+          fail: { text: '你在河边找了两个月，什么也没有。回去那天老人问你找什么，你张了张嘴，发现自己说不清那块骨头长什么样了。', effects: { demon: 10, hp: -25, attrs: { 悟性: 1 } } },
         },
       },
       {
@@ -763,38 +763,38 @@ export const HIGH_EXPANSION = [
         outcome: { text: '你把它折好，压进识海最底下的一层。此后提起八岁，你只记得一场高烧。这样干净，也这样省事。', effects: { attrs: { 道心: 5 }, demon: -6, flag: { 封忆: true }, exp: 150 } },
       },
       {
-        label: '写信问母亲',
+        label: '托人再去问那位老人',
         hint: '一月',
         cost: { month: 1 },
-        outcome: { text: '回信只有半页，字是邻居代写的。她说那年你确实病了很久，病中一直说河。她把信纸折了三折，纸上有水痕，不像雨。', effects: { attrs: { 悟性: 3, 道心: 2 }, karma: 5, exp: 180, flag: { 问母亲: true } } },
+        outcome: { text: '回信只有半页，字是旁人代写的。老人说那年你确实病了很久，病中一直说河。信纸折了三折，纸上有水痕，不像雨。', effects: { attrs: { 悟性: 3, 道心: 2 }, karma: 5, exp: 180, flag: { 问母亲: true } } },
       },
     ],
   },
   {
     id: 'ev_h_dao_collapse', title: '道心崩解', pool: 'inner', tier: 4, weight: 5, minRealm: 4,
-    text: '你在打坐时忽然想不起自己为什么要修行。这个念头一起来，境界就开始往下掉，一层，又一层，像退潮。\n\n你没有害怕，这才是最坏的地方——你连害怕都想不起来了。屋外的雪落在瓦上，声音很清楚。',
+    text: '你在打坐时忽然想不起自己为什么要修行。这个念头一起来，体内的灵力就开始往下沉，一层，又一层，像退潮。\n\n你没有害怕，这才是最坏的地方——你连害怕都想不起来了。屋外的雪落在瓦上，声音很清楚。',
     choices: [
       {
-        label: '强压境界',
+        label: '强行压住',
         hint: '耗灵力 · 反噬',
         cost: { mp: 80 },
         roll: {
           p: 0.4, attrs: { 道心: 0.012 },
-          success: { text: '你把境界一层层按回去，按到最后一层时吐了一口血。血落在雪上，很快结成一块。你坐着，忽然想起自己为什么要修行了——理由很平常。', effects: { attrs: { 道心: 8 }, expPct: 0.2, hp: -25 } },
-          fail: { text: '压不住。境界一路退到底，你从蒲团上滑下来，趴在地上喘。三天后你才站起来，站起来时头发白了一片。', effects: { demon: 25, hp: -60, lifespan: -8, attrs: { 道心: 2 } } },
+          success: { text: '你把灵力一层层按回去，按到最后一层时吐了一口血。血落在雪上，很快结成一块。你坐着，忽然想起自己为什么要修行了——理由很平常。', effects: { attrs: { 道心: 8 }, expPct: 0.2, hp: -25 } },
+          fail: { text: '压不住。灵力一路退到丹田最底，你从蒲团上滑下来，趴在地上喘。三天后你才站起来，站起来时头发白了一片。', effects: { demon: 25, hp: -60, lifespan: -8, attrs: { 道心: 2 } } },
         },
       },
       {
         label: '任它退，退到哪算哪',
         hint: '三月 · 不求',
         cost: { month: 3 },
-        outcome: { text: '你不拦，境界退去之后，识海里空出一大块地方，安静得能听见远处的雪。三个月后你重新开始呼吸吐纳，第一个周天走得很慢，很稳。', effects: { attrs: { 道心: 12, 悟性: 6 }, lifespan: -5, demon: -10, flag: { 退境: true }, exp: 200 } },
+        outcome: { text: '你不拦，灵力退尽之后，识海里空出一大块地方，安静得能听见远处的雪。三个月后灵力慢慢回涨，你重新开始呼吸吐纳，第一个周天走得很慢，很稳。', effects: { attrs: { 道心: 12, 悟性: 6 }, lifespan: -5, demon: -10, flag: { 退境: true }, exp: 200 } },
       },
       {
         label: '去找一个能说话的人',
         hint: '两月',
         cost: { month: 2 },
-        outcome: { text: '你走了两百里，找到一个卖茶的老修士。他听你说完，只说了一句：那就别修了，先吃饭。你在他那儿吃了一碗面，境界没有回来，但你不慌了。', effects: { karma: 10, attrs: { 道心: 6 }, items: ['liaoshang_dan'], flag: { 求助: true } } },
+        outcome: { text: '你走了两百里，找到一个卖茶的老修士。他听你说完，只说了一句：那就别修了，先吃饭。你在他那儿吃了一碗面，灵力没有马上回来，但你不慌了。', effects: { karma: 10, attrs: { 道心: 6 }, items: ['liaoshang_dan'], flag: { 求助: true } } },
       },
     ],
   },
@@ -834,7 +834,7 @@ export const HIGH_EXPANSION = [
         hint: '道心检定',
         roll: {
           p: 0.55, attrs: { 道心: 0.008, 悟性: 0.006 },
-          success: { text: '你说：是。它笑了一下，笑得很像我。然后它往后退，退进识海深处，走的时候把它占的那块地方留给了你，那里很宽。', effects: { attrs: { 道心: 10 }, demon: -20, expPct: 0.4, flag: { 认了: true } } },
+          success: { text: '你说：是。它笑了一下，笑得很像你。然后它往后退，退进识海深处，走的时候把它占的那块地方留给了你，那里很宽。', effects: { attrs: { 道心: 10 }, demon: -20, expPct: 0.4, flag: { 认了: true } } },
           fail: { text: '你说了是，可声音在抖。它抓住了那个抖，往前坐了半寸。你的胸口疼了一整夜，第二天照镜子，眼睛比平时深。', effects: { demon: 20, hp: -50, attrs: { 道心: 2 } } },
         },
       },
@@ -851,7 +851,7 @@ export const HIGH_EXPANSION = [
         cost: { mp: 70 },
         combat: {
           enemy: 'heart_demon',
-          win: { text: '你们打了很久，打到最后它用的是我十六岁那年的招式，你用的是现在的。它散了，散时说了句什么，你没有听清，也不打算再问。', effects: { attrs: { 道心: 12 }, demon: -25, flag: { 降心魔: true }, expPct: 0.3 } },
+          win: { text: '你们打了很久，打到最后它用的是你十六岁那年的招式，你用的是现在的。它散了，散时说了句什么，你没有听清，也不打算再问。', effects: { attrs: { 道心: 12 }, demon: -25, flag: { 降心魔: true }, expPct: 0.3 } },
           lose: { text: '它比你熟这间屋子。你被按在识海最底，看它站起来，用你的手脚走了半圈。醒来时，你的手在做一件你不记得要做的动作。', effects: { demon: 30, hp: -40, attrs: { 道心: 1 } } },
         },
       },
@@ -875,7 +875,7 @@ export const HIGH_EXPANSION = [
         label: '去查这个名字',
         hint: '三月 · 世上也许真有此人',
         cost: { month: 3 },
-        outcome: { text: '你在三个地方的旧志里找到同一个人：七百年前的守城校尉，死于城破那日。志上写着他的佩刀去向，你照着找，找到一柄埋在地里的刀。', effects: { exp: 280, attrs: { 神识: 3 }, items: ['huiling_dan'], flag: { 查名: true } } },
+        outcome: { text: '你在三个地方的旧志里找到同一个人：七百年前的守城校尉，死于城破那日。志上写着他的佩刀去向，你照着找，找到一柄埋在地里的刀。刀早朽了，刀鞘里却封着一只小瓶。', effects: { exp: 280, attrs: { 神识: 3 }, items: ['huiling_dan'], flag: { 查名: true } } },
       },
       {
         label: '不再念，也不再想',
@@ -942,8 +942,8 @@ export const HIGH_EXPANSION = [
     ],
   },
   {
-    id: 'ev_h_life_end', title: '寿元将尽', pool: 'inner', tier: 5, weight: 4, minRealm: 5,
-    text: '你算了一下，剩下的日子还有十一年，如果不再受伤，也不再突破。\n\n这个数字很结实，不吃不喝也不会变。你把屋里该扔的东西扔了，留下三样：一柄剑，一册手抄的经，和一枚别人给的木牌。木牌上的号已经磨掉了。',
+    id: 'ev_h_life_end', title: '寿元将尽', pool: 'inner', tier: 5, weight: 4, minRealm: 5, require: 'lifespan - age <= 15',
+    text: '你算了一下，剩下的日子已经屈指可数，如果不再受伤，也不再突破。\n\n这个数字很结实，不吃不喝也不会变。你把屋里该扔的东西扔了，留下三样：一柄剑，一册手抄的经，和一枚别人给的木牌。木牌上的号已经磨掉了。',
     choices: [
       {
         label: '用剩下的日子冲一次关',
@@ -952,7 +952,7 @@ export const HIGH_EXPANSION = [
         roll: {
           p: 0.3, attrs: { 悟性: 0.012, 道心: 0.01 },
           success: { text: '最后一夜，你体内的东西忽然通了。不是突破，是接上了什么。你睁眼，看见自己的手背上有细密的纹，寿数回来了，回来的比原来的多。', effects: { attrs: { 悟性: 10, 道心: 6 }, expPct: 1, lifespan: 40, flag: { 最后一关: true } } },
-          fail: { text: '关口没有开。你耗掉一年，也耗掉了十年里的三年。醒来时窗外的树已经落了两回叶，你没有力气去数。', effects: { lifespan: -20, demon: 10, attrs: { 道心: 3 } } },
+          fail: { text: '关口没有开。你耗掉一年，剩下的日子又被折去一截。醒来时窗外的树已经落了两回叶，你没有力气去数。', effects: { lifespan: -20, demon: 10, attrs: { 道心: 3 } } },
         },
       },
       {
@@ -965,7 +965,7 @@ export const HIGH_EXPANSION = [
         label: '出门走一趟',
         hint: '四月 · 看看没看过的',
         cost: { month: 4 },
-        outcome: { text: '你去了四个地方：第一次见到海，第一次喝醉，第一次在雪里睡着，第一次给人送葬。回来时还剩下七年，你把它们过得很慢。', effects: { exp: 280, karma: 10, attrs: { 道心: 5, 悟性: 3 }, flag: { 临终游: true } } },
+        outcome: { text: '你去了四个地方：第一次见到海，第一次喝醉，第一次在雪里睡着，第一次给人送葬。回来时剩下的日子又少了些，你把它们过得很慢。', effects: { exp: 280, karma: 10, attrs: { 道心: 5, 悟性: 3 }, flag: { 临终游: true } } },
       },
     ],
   },

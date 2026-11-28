@@ -224,7 +224,7 @@ export const INK_EXPANSION = [
       {
         label: '「请赐教」', hint: '以剑会友 · 战斗',
         combat: {
-          enemy: 'cultivator',
+          enemy: 'cultivator', displayName: '青衫剑客',
           win: {
             text: '青衫剑客收剑微笑，身形化作漫天剑影散去，只在地上留下一枚刻着「无尘」的剑令与一袋灵石。',
             effects: { stones: 600, reputation: 60, attrs: { 根骨: 4, 悟性: 4 }, flag: { 剑断法宝: true }, title: '剑冢客' },

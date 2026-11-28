@@ -605,7 +605,7 @@ export const WORLD_REGIONS_HIGH = [
     weight: 4,
     minRealm: 3,
     maxRealm: 6,
-    text: '赤沙岭背风处扎着一座正道联军前哨营，护营青幕已破损三处。营中丹师愁眉不展——昨日魔潮突袭，十余名金丹弟子身中血毒，营内疗伤灵丹却已告罄，营主正四处重金求援。',
+    text: '赤沙岭背风处扎着一座正道联军前哨营，护营青幕已破损三处。营中丹师愁眉不展——昨日魔潮突袭，十余名结丹弟子身中血毒，营内疗伤灵丹却已告罄，营主正四处重金求援。',
     choices: [
       {
         label: '赠出一粒大还丹，并亲自出手拔除众修血毒',
@@ -624,7 +624,7 @@ export const WORLD_REGIONS_HIGH = [
         combat: {
           enemy: 'demon_general',
           win: {
-            text: '你在阵前十合斩落妖将首级，魔军锐气大挫。营中欢声雷动，营主当场赠你千枚灵石与护体符诏。',
+            text: '你在阵前十合斩落妖将首级，魔军锐气大挫。营中欢声雷动，营主当场赠你三千余灵石与一张紫霄神雷符。',
             effects: { stones: 3600, reputation: 85, karma: 35, items: ['jiuxiao_leifu'] },
           },
           lose: {
@@ -948,10 +948,10 @@ export const WORLD_REGIONS_HIGH = [
     weight: 3,
     minRealm: 3,
     maxRealm: 6,
-    text: '两座铁黑色峭壁夹出一条三十里长峡，常年呼啸着能直接切割元婴神魂的「哭魂风」。风声时而似故人低语，时而如厉鬼索命，无数心智不坚的修士在此走火入魔，化作峡底白骨。',
+    text: '两座铁黑色峭壁夹出一条三十里长峡，常年呼啸着能直接切割修士神魂的「哭魂风」。风声时而似故人低语，时而如厉鬼索命，无数心智不坚的修士在此走火入魔，化作峡底白骨。',
     choices: [
       {
-        label: '逆风步行穿越长峡，借哭魂风千锤百炼元婴',
+        label: '逆风步行穿越长峡，借哭魂风千锤百炼神魂',
         hint: '道心 ≥ 30 · 耗两月，神识与道心暴涨',
         require: 'char.attrs.道心 >= 30',
         requireHint: '道心不足三十，恐遭哭魂风吹散神魂',
@@ -960,7 +960,7 @@ export const WORLD_REGIONS_HIGH = [
           p: 0.62,
           attrs: { 道心: 0.012, 神识: 0.01 },
           success: {
-            text: '你步步生莲，任狂风刮骨而灵台不动。走出风峡那刻，你只觉元婴通透如琉璃，心魔涤尽。',
+            text: '你步步生莲，任狂风刮骨而灵台不动。走出风峡那刻，你只觉神魂通透如琉璃，心魔涤尽。',
             effects: { attrs: { 神识: 6, 道心: 6 }, demon: -25, expPct: 0.25 },
           },
           fail: {
@@ -1161,13 +1161,13 @@ export const WORLD_REGIONS_HIGH = [
     text: '赤红岩浆自裂谷深处涌出，热浪扭曲长空。裂谷正中悬着一座上古魔修遗留的玄铁炼炉，炉火千年未熄，隐约可见一柄灵宝剑胚在岩浆火柱中沉浮，剑气与地火交缠如龙。',
     choices: [
       {
-        label: '投入星辰砂与自身精血，借地火重淬灵宝剑胚',
+        label: '投入西陲磁砂与自身精血，借地火重淬灵宝剑胚',
         hint: '消耗星辰砂 · 稳得灵宝太虚斩虹剑',
         require: 'has("xingchen_sha")',
         requireHint: '行囊中无星辰砂',
         cost: { item: 'xingchen_sha', month: 2 },
         outcome: {
-          text: '星辰砂融化如银瀑浇于剑胚之上，六十日烈火淬炼后，一柄长虹饮血般的太虚斩虹剑破炉飞入手中！',
+          text: '磁砂融化如银瀑浇于剑胚之上，六十日烈火淬炼后，一柄长虹饮血般的太虚斩虹剑破炉飞入手中！',
           effects: { items: ['taixu_jian'], lawExp: 55, lawId: 'sword', attrs: { 根骨: 3 } },
         },
       },
@@ -1451,7 +1451,7 @@ export const WORLD_REGIONS_HIGH = [
     weight: 4,
     minRealm: 3,
     maxRealm: 6,
-    text: '漫天红沙之中，一座孤零零的石屋挂着半面「息戈驿」破旗。屋内炭火融融，竟坐着一名青衫剑修与一名黑袍魔老——两人皆是元婴后期，此刻却相安无事地分饮一坛烈酒，见你入屋便抬手示意同坐。',
+    text: '漫天红沙之中，一座孤零零的石屋挂着半面「息戈驿」破旗。屋内炭火融融，竟坐着一名青衫剑修与一名黑袍魔老——两人修为皆深不可测，此刻却相安无事地分饮一坛烈酒，见你入屋便抬手示意同坐。',
     choices: [
       {
         label: '落座共饮三碗，听正魔二老漫谈大道同归',
@@ -1469,7 +1469,7 @@ export const WORLD_REGIONS_HIGH = [
         requireHint: '行囊中无松鹤延寿丹',
         cost: { item: 'yanshou_dan' },
         outcome: {
-          text: '两位老祖眼眸微亮，倾囊相授各自冲击化神时的关键窍门，令你少走数十年弯路。',
+          text: '两位老祖眼眸微亮，倾囊相授各自压箱底的破境窍门，令你少走数十年弯路。',
           effects: { expPct: 0.45, breakBonus: 15, attrs: { 悟性: 5, 神识: 4 } },
         },
       },
@@ -1600,7 +1600,7 @@ export const WORLD_REGIONS_HIGH = [
         label: '纵剑截杀魔使，截获魔宫密诏与军资',
         hint: '战血衣剑尊 · 胜得重宝与大声望',
         combat: {
-          enemy: 'crimson_sword',
+          enemy: 'crimson_sword', displayName: '血衣剑使',
           win: {
             text: '云海之中剑气纵横，你断其血遁秘术将其伏诛。打开玉筒，竟是一份魔军偷袭路线图与一粒元婴丹！',
             effects: { items: ['yuanying_dan', 'jiuxiao_leifu'], stones: 3500, reputation: 95, karma: 40 },
@@ -1791,15 +1791,15 @@ export const WORLD_REGIONS_HIGH = [
     weight: 3,
     minRealm: 3,
     maxRealm: 6,
-    text: '跨越千丈黑壑的天然骨桥中央，盘坐着一名赤袍染尘的独臂剑修。他身前横着一柄血色古剑，见你踏桥而来，缓缓抬眸：「吾名血鸿，困于元婴巅峰三百年。阁下若肯与我倾力一剑，胜负皆有厚赠。」',
+    text: '跨越千丈黑壑的天然骨桥中央，盘坐着一名赤袍染尘的独臂剑修。他身前横着一柄血色古剑，见你踏桥而来，缓缓抬眸：「吾名血鸿，困于瓶颈三百年。阁下若肯与我倾力一剑，胜负皆有厚赠。」',
     choices: [
       {
-        label: '应下问剑之约，与血衣剑尊倾力一战',
+        label: '应下问剑之约，与血鸿倾力一战',
         hint: '战血衣剑尊 · 胜则剑道大成、得厚礼',
         combat: {
-          enemy: 'crimson_sword',
+          enemy: 'crimson_sword', displayName: '独臂剑修血鸿',
           win: {
-            text: '双剑交鸣震落崖石，血鸿大笑三声收剑归鞘：「痛快！这一剑让我看见了化神门径！」言罢赠你剑魄通明丹与灵石。',
+            text: '双剑交鸣震落崖石，血鸿大笑三声收剑归鞘：「痛快！这一剑让我看见了破境的门径！」言罢赠你剑魄通明丹与灵石。',
             effects: { items: ['jianyi_dan', 'ningying_dan'], stones: 3200, lawExp: 65, lawId: 'sword', reputation: 85 },
           },
           lose: {
@@ -2236,7 +2236,7 @@ export const WORLD_REGIONS_HIGH = [
         combat: {
           enemy: 'void_stalker',
           win: {
-            text: '你识破其虚空折跃之法，一击将暗影钉死在浪涛之上。暗影消散，凝出一块晶莹剔透的虚空晶碎片。',
+            text: '你识破其虚空折跃之法，一击将暗影钉死在浪涛之上。暗影消散，凝出一块虚空晶碎片，转眼便在江风中化作齑粉。',
             effects: { expPct: 0.25, lawExp: 45, lawId: 'space', reputation: 80, flag: { 玉江斩暗影: true } },
             goto: 'wrh_zz_rift_2',
           },
@@ -2850,7 +2850,7 @@ export const WORLD_REGIONS_HIGH = [
     weight: 3,
     minRealm: 4,
     maxRealm: 7,
-    text: '中州北境雄关外黑云蔽日，一尊身披兽皮大氅的化神妖王孤身立于阵前，手持半块三千年前人妖两族共刻的青铜盟碑：「昔年人族借吾族三条灵脉建城，许诺三千年后归还一脉。今期已至，中州可敢履约？」',
+    text: '中州北境雄关外黑云蔽日，一尊身披兽皮大氅的妖王孤身立于阵前，手持半块三千年前人妖两族共刻的青铜盟碑：「昔年人族借吾族三条灵脉建城，许诺三千年后归还一脉。今期已至，中州可敢履约？」',
     choices: [
       {
         label: '出关与妖王一战，以拳剑重定人妖新约',
@@ -3021,7 +3021,7 @@ export const WORLD_REGIONS_HIGH = [
             effects: { items: ['bagua_xuanjia'], reputation: 95, lawExp: 45, lawId: 'array' },
           },
           fail: {
-            text: '器灵震散你的神念，宝甲重重坠回石台。阁主退还半数灵石并赠你两块星辰砂作慰。',
+            text: '器灵震散你的神念，宝甲重重坠回石台。阁主退还半数灵石并赠你两块磁砂作慰。',
             effects: { stones: 4500, items: [{ id: 'xingchen_sha', qty: 2 }], hp: -160 },
           },
         },
@@ -3310,7 +3310,7 @@ export const WORLD_REGIONS_HIGH = [
         combat: {
           enemy: 'star_golem',
           win: {
-            text: '你摧毁过载星核令巨傀停机，抢下数卷完好星图与一粒周天星辉丹，并收获古守卫体表大量星辰砂。',
+            text: '你摧毁过载星核令巨傀停机，抢下数卷完好星图与一粒周天星辉丹，并收获古守卫体表大量磁砂。',
             effects: { items: ['xinghui_dan', 'xingchen_sha'], stones: 4800, lawExp: 55, lawId: 'star' },
           },
           lose: {
@@ -3323,7 +3323,7 @@ export const WORLD_REGIONS_HIGH = [
         label: '以空间摄物法抢出半部星典便即刻远离坍塌古阁',
         hint: '稳妥 · 星辰感悟与灵石',
         outcome: {
-          text: '你精准摄出两块玉简与一袋星砂，随即飞身离去，片刻后古阁轰然倾塌。',
+          text: '你精准摄出两块玉简与一袋磁砂，随即飞身离去，片刻后古阁轰然倾塌。',
           effects: { items: ['xingchen_sha'], lawExp: 45, lawId: 'star', stones: 1800 },
         },
       },
@@ -3416,7 +3416,7 @@ export const WORLD_REGIONS_HIGH = [
     text: '中州断云谷古松之下，半枚流淌银辉的秘境残钥破土而出，引来两尊大妖与数名邪修疯狂抢夺。残钥灵光直冲云霄，隐约指向一座尘封数千年的上古丹器秘藏。',
     choices: [
       {
-        label: '横扫群雄，力斩领头化神妖王夺取残钥',
+        label: '横扫群雄，力斩领头妖王夺取残钥',
         hint: '战妖王 · 胜得秘藏重宝',
         combat: {
           enemy: 'demon_king',
@@ -3437,7 +3437,7 @@ export const WORLD_REGIONS_HIGH = [
           p: 0.6,
           attrs: { 神识: 0.012, 气运: 0.012 },
           success: {
-            text: '你抢在众人血拼前从后山空间缝隙潜入秘室，顺手收走一粒化神丹与一块法则残片，深藏功与名！',
+            text: '你抢在众人血拼前从后山空间缝隙潜入秘室，顺手收走一粒化神丹与一块法则残片，悄然退走。',
             effects: { items: ['huashen_dan', 'faze_canpian'], lawExp: 45, lawId: 'space' },
           },
           fail: {
@@ -3762,7 +3762,7 @@ export const WORLD_REGIONS_HIGH = [
         },
       },
       {
-        label: '祭出镇狱古钟或护道仙符硬承三剑，求取通行资格',
+        label: '凭道心硬承三剑，求取通行资格',
         hint: '道心 ≥ 55 · 耗两月，以守代攻',
         require: 'char.attrs.道心 >= 55',
         requireHint: '道心不足五十五，难承太古仙剑三斩',
@@ -4604,7 +4604,7 @@ export const WORLD_REGIONS_HIGH = [
     text: '万丈孤峰峭壁间斜生着一株半枯半荣的太古悟道古树，今夜恰逢三千年一度的花落成实之期。漫天紫金花瓣随山风飘落如雨，每片花瓣上皆浮现一道天然大道真纹，枝头更结着一枚晶莹悟道果！',
     choices: [
       {
-        label: '飞身摘取枝头悟道果，留作合体破境无上圣药',
+        label: '飞身摘取枝头悟道果，留作日后破境的圣药',
         hint: '得悟道果与悟性提升',
         outcome: {
           text: '你轻掠孤峰稳稳接住瓜熟蒂落的悟道果，清香透鼻，顿觉识海灵光如泉涌出。',
@@ -4905,7 +4905,7 @@ export const WORLD_REGIONS_HIGH = [
           p: 0.6,
           attrs: { 道心: 0.009, 根骨: 0.009 },
           success: {
-            text: '剑啸穿云裂石！你顶住噬心杀意将半截神兵硬生生拔出冰川——竟是名震太古的仙器「诛仙残剑」！',
+            text: '剑啸穿云裂石！你顶住噬心杀意将半截神兵硬生生拔出冰川——竟是名震太古的仙器「诛仙断刃」！',
             effects: { items: ['zhuxian_canjian'], lawExp: 90, lawId: 'sword', demon: 10 },
           },
           fail: {

@@ -49,7 +49,7 @@ export const WILD_EXPANSION = [
         label: '翻供桌底下', hint: '贪',
         roll: {
           p: 0.45, attrs: { 气运: 0.01 },
-          success: { text: '砖缝里塞着一只布包，里面是三枚凝气丹，纸包上的字迹已经化开。', effects: { items: [{ id: 'yinqi_dan', qty: 3 }], karma: -5 } },
+          success: { text: '砖缝里塞着一只布包，里面是三枚引气丹，纸包上的字迹已经化开。', effects: { items: [{ id: 'yinqi_dan', qty: 3 }], karma: -5 } },
           fail: { text: '你掀开砖，底下是一窝潮虫，还有一截发黑的手指骨。你把砖放回去了。', effects: { karma: -8, demon: 3 } },
         },
       },
@@ -72,7 +72,7 @@ export const WILD_EXPANSION = [
       {
         label: '提一桶雾上来', hint: '一月 · 炼气',
         cost: { month: 1 },
-        outcome: { text: '你把桶放下去，提上来时桶里是空的，桶底却结了一层白霜。\n\n你把霜刮进玉瓶，它有灵气的味道，很不干净，但能用。', effects: { items: ['lingcao'], exp: 40, demon: 3 } },
+        outcome: { text: '你把桶放下去，提上来时桶里是空的，桶底却结了一层白霜。\n\n霜化开后，桶底剩下一株细小的灵草，它有灵气的味道，很不干净，但能用。', effects: { items: ['lingcao'], exp: 40, demon: 3 } },
       },
       { label: '把井绳割断', outcome: { text: '刀落下去，绳子掉进井里，很久才听见回声。\n\n你走出村口时，身后有打水的声音，一下，一下，很规律。', effects: { karma: -5, attrs: { 道心: 2 }, flag: { 断井绳: true } } } },
     ],
@@ -84,7 +84,7 @@ export const WILD_EXPANSION = [
       {
         label: '采凡药，进城换钱', hint: '一月 · 稳妥',
         cost: { month: 1 },
-        outcome: { text: '你采了满满两筐，背到镇上药铺，掌柜的按斤称，给了你一串铜钱换成灵石。\n\n他多看了你一眼，说：手上有药味，是常年采的。', effects: { stones: 60, attrs: { 悟性: 1 } } },
+        outcome: { text: '你采了满满两筐，背到镇上药铺，掌柜的按斤称，折成几块碎灵石给了你。\n\n他多看了你一眼，说：手上有药味，是常年采的。', effects: { stones: 60, attrs: { 悟性: 1 } } },
       },
       {
         label: '往深处找灵草', hint: '悟性检定',
@@ -111,7 +111,7 @@ export const WILD_EXPANSION = [
       },
       {
         label: '用灵力震开', hint: '需炼气三层以上',
-        require: 'realm >= 0 && char.layer >= 2', requireHint: '灵力不够震开铁齿',
+        require: 'realm >= 1 || char.layer >= 2', requireHint: '灵力不够震开铁齿',
         cost: { mp: 15 },
         outcome: { text: '你把灵力灌进掌心，往两边一推，铁齿崩了一个口子。\n\n夹子废了。你把它埋进雪里，算是还给猎户的。', effects: { hp: -10, attrs: { 神识: 1 } } },
       },
@@ -173,7 +173,7 @@ export const WILD_EXPANSION = [
         label: '侧身钻进去', hint: '根骨检定 · 狭窄',
         roll: {
           p: 0.5, attrs: { 根骨: 0.01, 气运: 0.005 },
-          success: { text: '树心里是空的，一直通到根下，底下有一窝干草和几枚蛋，蛋壳上有细纹，摸着发热。\n\n你留下两枚，拿了两枚。', effects: { items: [{ id: 'lingcao', qty: 2 }], exp: 40 } },
+          success: { text: '树心里是空的，一直通到根下，底下有一窝干草和几枚蛋，蛋壳上有细纹，摸着发热。\n\n窝里垫的干草中夹着两株灵草，你拔了出来，蛋没有动。', effects: { items: [{ id: 'lingcao', qty: 2 }], exp: 40 } },
           fail: { text: '你卡在中间，卡了半个时辰。挣出来时肩膀磨掉一层皮，树洞里传出细小的爬动声。', effects: { hp: -25, injury: 1, demon: 3 } },
         },
       },
@@ -222,7 +222,7 @@ export const WILD_EXPANSION = [
       {
         label: '取水回去炼丹', hint: '一月 · 得材料',
         cost: { month: 1 },
-        outcome: { text: '你用三只玉瓶装满，瓶口封了三层蜡。走出十里，瓶身还是凉的。\n\n这三瓶水，够炼一炉不算差的丹。', effects: { items: ['lingcao'], stones: 50, attrs: { 神识: 1 } } },
+        outcome: { text: '你用三只玉瓶装满，瓶口封了三层蜡。走出十里，瓶身还是凉的。\n\n后来你拿这三瓶水跟药铺换了一株百年灵草，还找回几十块灵石。', effects: { items: ['lingcao'], stones: 50, attrs: { 神识: 1 } } },
       },
       { label: '把泉眼填了', hint: '为什么？', outcome: { text: '你搬石头堵住泉眼，堵到一半手停住了。\n\n你想起自己喝过的那一口。石头又一块块搬开了。', effects: { attrs: { 道心: 4 }, karma: 6, exp: 30 } } },
     ],
@@ -289,9 +289,9 @@ export const WILD_EXPANSION = [
       {
         label: '动手', hint: '战斗 · 角兽',
         combat: {
-          enemy: 'beast',
+          enemy: 'beast', displayName: '角兽',
           win: {
-            text: '它撞断了三棵树才倒下，角上的红布条掉进溪水里，一进水就化成一摊血。\n\n你在它腹中剖出一枚温热的骨珠。',
+            text: '它撞断了三棵树才倒下，角上的红布条掉进溪水里，一进水就化成一摊血。\n\n你从它角根里撬出一块乌沉沉的东西，是铁，沉得不像骨头。',
             effects: { exp: 110, items: ['xuantie'], attrs: { 根骨: 2 }, karma: -8 },
           },
           lose: { text: '它的角挑穿了你的肩，把你甩出三丈。你爬起来时它已经走了，溪边有一小块红布。', effects: { hp: -50, injury: 2 } },
@@ -315,13 +315,13 @@ export const WILD_EXPANSION = [
         label: '以火驱蛇', hint: '需火灵根或符',
         require: 'char.rootId === "huo" || has("huxin_fu")', requireHint: '你没有能生火的东西',
         cost: { mp: 12 },
-        outcome: { text: '火顺着坡烧上去，蛇群像退潮一样缩回石缝里。烟散了以后，洞里露出一堆蛇蜕，最上面那层还带着鳞光。\n\n你收了半袋，是好材料。', effects: { items: ['lingcao'], exp: 60, attrs: { 神识: 1 } } },
+        outcome: { text: '火顺着坡烧上去，蛇群像退潮一样缩回石缝里。烟散了以后，洞里露出一堆蛇蜕，最上面那层还带着鳞光。\n\n蛇蜕底下压着一株被蛇群守了多年的灵草，你连根挖了。', effects: { items: ['lingcao'], exp: 60, attrs: { 神识: 1 } } },
       },
       {
         label: '杀了那条最粗的', hint: '战斗 · 石鳞蛇',
         combat: {
-          enemy: 'beast',
-          win: { text: '它的头被你砍下来时还张着嘴。剩下的蛇在石壁上乱窜，你从洞里挖出一窝蛇蛋，蛋壳硬得像石子。', effects: { exp: 90, items: ['lingcao'], karma: -5 } },
+          enemy: 'beast', displayName: '石鳞蛇',
+          win: { text: '它的头被你砍下来时还张着嘴。剩下的蛇在石壁上乱窜，你从洞里挖出一株被蛇群守着的灵草，根须上还缠着蛇蜕。', effects: { exp: 90, items: ['lingcao'], karma: -5 } },
           lose: { text: '它的牙擦过你的手腕，一股麻意顺着胳膊往上爬。你退出洞口，用灵力逼了半夜的毒。', effects: { hp: -45, injury: 1, demon: 3 } },
         },
       },
@@ -340,7 +340,7 @@ export const WILD_EXPANSION = [
         cost: { month: 1 },
         roll: {
           p: 0.5, attrs: { 神识: 0.01, 气运: 0.005 },
-          success: { text: '最后一间屋里，墙角有堆新土。你挖开，是一只木匣，里面有三张符和一小袋灵石，压着一张纸条：给来收尸的人。', effects: { stones: 120, items: ['huxin_fu'], exp: 30 } },
+          success: { text: '最后一间屋里，墙角有堆新土。你挖开，是一只木匣，里面有一张符和一小袋灵石，压着一张纸条：给来收尸的人。', effects: { stones: 120, items: ['huxin_fu'], exp: 30 } },
           fail: { text: '你推开第七扇门，屋里的桌椅摆得整整齐齐，四个人坐在桌边，脸都是空的。\n\n你退出去，门自己关上了。', effects: { hp: -25, demon: 10 } },
         },
       },
@@ -460,7 +460,7 @@ export const WILD_EXPANSION = [
       {
         label: '引泉入瓶', hint: '一月 · 得材料',
         cost: { month: 1 },
-        outcome: { text: '你灌了五瓶，瓶塞压不住，气从缝里往外冒。\n\n回到城里，一个炼丹的老头看见瓶子，眼神变了。', effects: { items: [{ id: 'huiling_dan', qty: 2 }], stones: 80 } },
+        outcome: { text: '你灌了五瓶，瓶塞压不住，气从缝里往外冒。\n\n回到城里，一个炼丹的老头看见瓶子，眼神变了，当场拿两枚回灵丹和一袋灵石换走了。', effects: { items: [{ id: 'huiling_dan', qty: 2 }], stones: 80 } },
       },
       { label: '把鹿埋了再走', hint: '', outcome: { text: '你挖了个坑，把鹿推进去，盖上土。\n\n埋完你才想起，是这具尸体养肥了这一泉的水。你也说不清自己做对了没有。', effects: { karma: 10, attrs: { 道心: 3 } } } },
     ],
@@ -500,7 +500,7 @@ export const WILD_EXPANSION = [
         label: '替他砍一斧', hint: '根骨检定',
         roll: {
           p: 0.5, attrs: { 根骨: 0.01 },
-          success: { text: '你接过斧头，一斧下去，树干裂开一条缝，缝里掉出一枚灰色的珠子。\n\n樵夫看着珠子，说：「原来有东西。」然后他就散了，斧头落在草里。', effects: { items: ['xisui_dan'], exp: 80, karma: 10, attrs: { 道心: 2 } } },
+          success: { text: '你接过斧头，一斧下去，树干裂开一条缝，缝里掉出一枚灰色的丹丸。\n\n樵夫看着丹丸，说：「原来有东西。」然后他就散了，斧头落在草里。', effects: { items: ['xisui_dan'], exp: 80, karma: 10, attrs: { 道心: 2 } } },
           fail: { text: '斧头卡在树里，拔不出来。你回头，樵夫不见了。\n\n你在树前站了很久，最后把自己的手割破，往缝里滴了一滴血。', effects: { hp: -15, demon: 6, exp: 30 } },
         },
       },
@@ -526,7 +526,7 @@ export const WILD_EXPANSION = [
           fail: { text: '你走进去七步就走不动了，是靠退出来时扒着冰壁爬的。醒来时，脚趾冻黑了两根。', effects: { hp: -85, injury: 3, demon: 5 } },
         },
       },
-      { label: '在洞口取冰', hint: '一月', cost: { month: 1 }, outcome: { text: '你凿下一块冰，装进玉匣。冰在匣里不化，贴着掌心冷得很干净。\n\n这东西炼器用得上。', effects: { items: ['xuantie'], attrs: { 神识: 1 } } } },
+      { label: '在洞口取冰', hint: '一月', cost: { month: 1 }, outcome: { text: '你凿下一块冰，冰心里冻着一块乌黑的玄铁。冰化了，铁还是凉的，贴着掌心冷得很干净。\n\n这东西炼器用得上。', effects: { items: ['xuantie'], attrs: { 神识: 1 } } } },
     ],
   },
   {
@@ -549,7 +549,7 @@ export const WILD_EXPANSION = [
           fail: { text: '你憋不住，深吸了一口。眼前的坡忽然变陡，你跪在花里吐了。', effects: { hp: -30, demon: 8 } },
         },
       },
-      { label: '采一束花', outcome: { text: '花离了枝就枯，一束花在手里变成了干草。\n\n你捏着那束干草，忽然想起自己为什么会走进这个山谷。', effects: { items: ['lingcao'], attrs: { 悟性: 1 }, demon: 3 } } },
+      { label: '采一束花', outcome: { text: '花离了枝就枯，一束花在手里变成了干草。\n\n干草里只有一株灵草还活着。你捏着它，忽然想起自己为什么会走进这个山谷。', effects: { items: ['lingcao'], attrs: { 悟性: 1 }, demon: 3 } } },
     ],
   },
   {
@@ -604,7 +604,7 @@ export const WILD_EXPANSION = [
         label: '喊一声', hint: '神识',
         roll: {
           p: 0.5, attrs: { 神识: 0.008, 魅力: 0.006 },
-          success: { text: '数数的声音停了。过了一会儿，洞里走出一个穿青衣的女人，头发梳得很整。\n\n「你听得见？」她问。你说听得见。她笑了，把三只碗收进袖子，留下一条白帕子。', effects: { items: ['shenxing_fu'], attrs: { 魅力: 2 }, flag: { 狐识: true } } },
+          success: { text: '数数的声音停了。过了一会儿，洞里走出一个穿青衣的女人，头发梳得很整。\n\n「你听得见？」她问。你说听得见。她笑了，把三只碗收进袖子，留下一条白帕子，帕子里包着一张符。', effects: { items: ['shenxing_fu'], attrs: { 魅力: 2 }, flag: { 狐识: true } } },
           fail: { text: '数数的声音快了，越数越乱，最后变成一片尖响。你捂着耳朵后退，洞口塌了半边。', effects: { hp: -25, demon: 8 } },
         },
       },
@@ -645,7 +645,7 @@ export const WILD_EXPANSION = [
       {
         label: '把他埋了', hint: '一月',
         cost: { month: 1 },
-        outcome: { text: '你挖了半人深的坑，把他放平，饼塞回他手里。\n\n埋完你在他包袱里找到一枚小小的银锁，刻着两个字，是名字。你把银锁也埋了。', effects: { karma: 15, attrs: { 道心: 2 }, stones: 40 } },
+        outcome: { text: '你挖了半人深的坑，把他放平，饼塞回他手里。\n\n埋完你在他包袱里找到一枚小小的银锁，刻着两个字，是名字。你把银锁也埋了，包袱里的几块碎灵石留作了路费。', effects: { karma: 15, attrs: { 道心: 2 }, stones: 40 } },
       },
       {
         label: '翻他的包袱', hint: '贪',
@@ -708,7 +708,7 @@ export const WILD_EXPANSION = [
       {
         label: '不退，拔剑', hint: '战斗 · 雪窟老怪',
         combat: {
-          enemy: 'old_monster',
+          enemy: 'old_monster', displayName: '雪窟老怪',
           win: {
             text: '他死的时候很平静，手里的指甲断在冰上。你在他身下摸到一只玉匣，匣里是一枚九转丹。\n\n洞壁上的冰开始化，十一个人闭上眼睛。',
             effects: { expPct: 0.6, items: ['jiuzhuan_dan'], attrs: { 根骨: 4 }, karma: 15, title: '斩雪窟老怪', flag: { 雪窟: true } },
@@ -777,19 +777,19 @@ export const WILD_EXPANSION = [
   },
   {
     id: 'ev_x_jindan_ruin', title: '遗府', pool: 'wild', tier: 4, weight: 3, minRealm: 2,
-    text: '半塌的石门后面是一处洞府，丹炉倒在中间，炉底的灰还是干的。\n\n墙上挂着一条腰带，腰带上绣着云纹，是金丹修士才配的东西。\n\n你往里走，脚底下踩到了骨头，一踩就碎。',
+    text: '半塌的石门后面是一处洞府，丹炉倒在中间，炉底的灰还是干的。\n\n墙上挂着一条腰带，腰带上绣着云纹，是结丹修士才配的东西。\n\n你往里走，脚底下踩到了骨头，一踩就碎。',
     choices: [
       {
-        label: '往里走到底', hint: '战斗 · 守府金丹',
+        label: '往里走到底', hint: '战斗 · 遗府残魂',
         combat: {
-          enemy: 'jindan_elder',
+          enemy: 'jindan_elder', displayName: '遗府残魂',
           win: { text: '那东西只剩一口气撑着，死了以后就散了。丹炉下面压着一只匣子，匣子里有两枚丹药，其中一枚还带着温。', effects: { expPct: 0.4, items: ['zhuji_dan', 'pozhang_dan'], attrs: { 神识: 2 }, flag: { 得遗府: true } } },
           lose: { text: '它一掌拍在你胸口。你飞出去撞在石门上，肋骨断了四根，吐出来的血是黑的。', effects: { hp: -85, injury: 3, demon: 8 } },
         },
       },
       {
         label: '只取腰带', hint: '稳妥',
-        outcome: { text: '你把腰带解下来，布料入手就碎了一半。\n\n你捧着剩下的半条走出去，觉得背后一直有人在看。', effects: { items: ['xuantie'], stones: 150, karma: -5 } },
+        outcome: { text: '你把腰带解下来，布料入手就碎了一半，只剩一枚玄铁带扣还完好。\n\n你捧着剩下的半条走出去，觉得背后一直有人在看。', effects: { items: ['xuantie'], stones: 150, karma: -5 } },
       },
       {
         label: '替他收拾丹炉', hint: '一月 · 道心',
@@ -850,7 +850,7 @@ export const WILD_EXPANSION = [
       {
         label: '先动手', hint: '战斗 · 山魈',
         combat: {
-          enemy: 'beast',
+          enemy: 'beast', displayName: '山魈',
           win: { text: '它死得很安静，笑还挂在脸上。你在它窝里找到一堆东西：铜钱、骨头、一只还能用的储物袋。', effects: { exp: 100, stones: 90, items: ['liaoshang_dan'] } },
           lose: { text: '它的爪子从你肩头刮到腰，你的衣服和皮一起裂开。它没追，只是坐在石头上笑。', effects: { hp: -55, injury: 2 } },
         },
@@ -892,7 +892,7 @@ export const WILD_EXPANSION = [
       {
         label: '趁天没亮采完', hint: '一月 · 熬夜',
         cost: { month: 1 },
-        outcome: { text: '你采了三个清晨，把这批露水收进两只玉瓶，只装了半瓶。\n\n最后一早，你看见整片草都蔫了。你有点后悔，但瓶子已经收进怀里。', effects: { items: ['huiling_dan'], exp: 30, karma: -3 } },
+        outcome: { text: '你采了三个清晨，把这批露水收进两只玉瓶，只装了半瓶，后来托人炼成了一枚回灵丹。\n\n最后一早，你看见整片草都蔫了。你有点后悔，但瓶子已经收进怀里。', effects: { items: ['huiling_dan'], exp: 30, karma: -3 } },
       },
       {
         label: '只取一颗，含在舌下', hint: '悟性',
@@ -924,7 +924,7 @@ export const WILD_EXPANSION = [
       },
       {
         label: '杀了它，取了皮', hint: '贪',
-        outcome: { text: '它太小，皮剥下来只有巴掌大。你把它晾干收进储物袋，一路没再看。\n\n那块皮后来一直有味道。', effects: { items: ['lingcao'], karma: -18, demon: 6 } },
+        outcome: { text: '它太小，皮剥下来只有巴掌大。你把它晾干收进储物袋，一路没再看。\n\n后来你拿它跟药农换了一株灵草，手上那股味道却一直没散。', effects: { items: ['lingcao'], karma: -18, demon: 6 } },
       },
     ],
   },
@@ -979,8 +979,8 @@ export const WILD_EXPANSION = [
       {
         label: '抢在它们动之前冲', hint: '战斗 · 木傀',
         combat: {
-          enemy: 'rogue',
-          win: { text: '你冲到台子上，木偶在你身后一排排倒下。台上是一枚玉简，里面刻着一套操纵之术。', effects: { expPct: 0.3, items: ['shenxing_fu'], attrs: { 神识: 3 }, flag: { 得傀术: true } } },
+          enemy: 'rogue', displayName: '木傀',
+          win: { text: '你冲到台子上，木偶在你身后一排排倒下。台上是一枚玉简，里面刻着一套操纵之术，底下还压着一张神行符。', effects: { expPct: 0.3, items: ['shenxing_fu'], attrs: { 神识: 3 }, flag: { 得傀术: true } } },
           lose: { text: '一只木偶的手掐住了你的脖子，另一只按住你的腿。你被抬起来，放在台子上。\n\n三天后你自己醒的。', effects: { hp: -70, injury: 2, demon: 8 } },
         },
       },
@@ -1072,7 +1072,7 @@ export const WILD_EXPANSION = [
         cost: { stones: 50 },
         roll: {
           p: 0.3, attrs: { 气运: 0.015 },
-          success: { text: '回家你把它泡在井水里，锈皮脱了一层，底下是半截剑身，还有灵光。\n\n你回去找那个摊子，摊子没了。', effects: { items: ['canjian'], exp: 60, flag: { 捡漏: true } } },
+          success: { text: '回去你把它泡在井水里，锈皮脱了一层，底下是半截剑身，还有灵光。\n\n你回去找那个摊子，摊子没了。', effects: { items: ['canjian'], exp: 60, flag: { 捡漏: true } } },
           fail: { text: '锈就是锈。你把它扔进河里，它沉得很干脆。', effects: { attrs: { 悟性: 1 } } },
         },
       },
@@ -1125,7 +1125,7 @@ export const WILD_EXPANSION = [
       {
         label: '在楼下听完全曲', hint: '一月',
         cost: { month: 1 },
-        outcome: { text: '你听了一个月，每晚都在楼下。她后来改成每晚只弹一遍，弹完就熄灯。\n\n你走的那天，她把一支旧琴弦从楼上扔下来。', effects: { attrs: { 道心: 3, 悟性: 2 }, items: ['shenxing_fu'], demon: -6 } },
+        outcome: { text: '你听了一个月，每晚都在楼下。她后来改成每晚只弹一遍，弹完就熄灯。\n\n你走的那天，她把一支旧琴弦从楼上扔下来，弦上系着一张符。', effects: { attrs: { 道心: 3, 悟性: 2 }, items: ['shenxing_fu'], demon: -6 } },
       },
       { label: '走开', outcome: { text: '你走了。琴声跟了你半条街，然后被市声盖住。', effects: { demon: -2 } } },
     ],
@@ -1152,13 +1152,13 @@ export const WILD_EXPANSION = [
   },
   {
     id: 'ev_x_arena', title: '擂台', pool: 'world', tier: 2, weight: 7, minRealm: 0,
-    text: '城西的擂台上已经打了三天，赢的那个是个光头，站了三天没下来。\n\n台下押注的人喊得嗓子都哑了。\n\n主持人看见你身上的灵气，走过来问：「上不上？赢一场二十枚灵石。」',
+    text: '城西的擂台上已经打了三天，赢的那个是个光头，筑基修士，站了三天没下来。\n\n台下押注的人喊得嗓子都哑了。\n\n主持人看见你身上的灵气，走过来问：「上不上？赢了他，彩头一百二十枚灵石。」',
     choices: [
       {
         label: '上擂台', hint: '战斗 · 擂主',
         combat: {
-          enemy: 'cultivator',
-          win: { text: '他倒下去的时候还睁着眼。台下静了一瞬，然后有人开始喊你的名字。\n\n你下台时，二十枚灵石砸在你脚边。', effects: { exp: 120, stones: 120, reputation: 20, attrs: { 根骨: 2 }, counter: { arena_win: 1 } } },
+          enemy: 'cultivator', displayName: '擂台光头',
+          win: { text: '他倒下去的时候还睁着眼。台下静了一瞬，然后有人开始喊你的名字。\n\n你下台时，一百二十枚灵石的彩头砸在你脚边。', effects: { exp: 120, stones: 120, reputation: 20, attrs: { 根骨: 2 }, counter: { arena_win: 1 } } },
           lose: { text: '他的一掌贴在你胸口，你飞下擂台，撞翻了三个押注的人。\n\n醒的时候有人往你手里塞了几枚灵石。', effects: { hp: -50, injury: 1, reputation: -5 } },
         },
       },
@@ -1186,7 +1186,7 @@ export const WILD_EXPANSION = [
         roll: {
           p: 0.6, attrs: { 根骨: 0.008, 道心: 0.005 },
           success: { text: '桌子翻了，册子散在泥里。两个差役跑了，跑得比村里人还快。\n\n村里人没敢欢呼，只是把碎锅捡走了。', effects: { karma: 15, reputation: 20, flag: { 抗税: true }, demon: 3 } },
-          fail: { text: '你掀了桌子，第二天县里来了七个带刀的。你在村外的山上躲了三天。', effects: { hp: -30, reputation: -15, flag: { 通缉: true } } },
+          fail: { text: '你掀了桌子，第二天县里来了七个带刀的。你不愿对凡人下重手，挨了几下刀鞘，在村外的山上躲了三天。', effects: { hp: -30, reputation: -15, flag: { 通缉: true } } },
         },
       },
       { label: '走开', outcome: { text: '你走开了。身后有瓷器碎裂的声音，接着是差役的笑。\n\n你走得很快。', effects: { karma: -8, demon: 4 } } },
@@ -1195,17 +1195,17 @@ export const WILD_EXPANSION = [
   {
     id: 'ev_x_siege_city', title: '围城', pool: 'world', tier: 4, weight: 4, minRealm: 1,
     once: true,
-    text: '城被围了四十天。城墙上的人越来越少，城下的人越来越多。\n\n你进城时，米价已经涨到一斗一串钱，街上有人在卖马。\n\n守将站在城头，披风破了，正在看城外的营火。',
+    text: '城被围了四十天。围城的是北边草滩下来的狼群，领头的是一头比马还高的白狼。城墙上的人越来越少，城下的狼越来越多。\n\n你进城时，米价已经涨到一斗一串钱，街上有人在卖马。\n\n守将站在城头，披风破了，正在看城外那一片绿莹莹的眼睛。',
     choices: [
       {
-        label: '留下守城', hint: '战斗 · 攻城先锋',
+        label: '留下守城', hint: '战斗 · 朔川狼王',
         combat: {
           enemy: 'demon_general',
           win: {
-            text: '你从城头跳下去，落在云梯上，把那面旗砍倒。城上的人跟着喊起来。\n\n围军退了三里。守将下来时，把披风解下来给你，说：这城欠你一条命。',
+            text: '你从城头跳下去，落进狼群，一路杀到那头白狼跟前。城上的人跟着喊起来。\n\n狼群退了三里。守将下来时，把披风解下来给你，说：这城欠你一条命。',
             effects: { expPct: 0.4, reputation: 90, karma: 40, title: '守城人', flag: { 守过围城: true } },
           },
-          lose: { text: '那东西一枪挑穿你的肩，把你钉在城墙上。你被自己人拖回去的。\n\n城最后没破，但你躺了两个月。', effects: { hp: -90, injury: 3, reputation: 20 } },
+          lose: { text: '那头白狼一口咬穿你的肩，把你按在城墙根下。你是被自己人用钩子拖回去的。\n\n城最后没破，但你躺了两个月。', effects: { hp: -90, injury: 3, reputation: 20 } },
         },
       },
       {
@@ -1253,7 +1253,7 @@ export const WILD_EXPANSION = [
         label: '塞钱给师爷', hint: '花费 100 灵石',
         require: 'stones >= 100', requireHint: '拿不出',
         cost: { stones: 100 },
-        outcome: { text: '师爷把银子收进袖子，改了一句状纸上的话。案子变成「牛走失」，打了五板就放了。\n\n佃户出来后一直跟着你，跟了三条街。', effects: { karma: 12, flag: { 识得师爷: true }, demon: 3 } },
+        outcome: { text: '师爷把灵石收进袖子，改了一句状纸上的话。案子变成「牛走失」，打了五板就放了。\n\n佃户出来后一直跟着你，跟了三条街。', effects: { karma: 12, flag: { 识得师爷: true }, demon: 3 } },
       },
       { label: '不掺和', outcome: { text: '你站在门外听完了。板子打下去的声音，和你想象的不一样，很闷。', effects: { karma: -5 } } },
     ],
@@ -1276,7 +1276,7 @@ export const WILD_EXPANSION = [
       },
       {
         label: '捡他们掉的东西', hint: '贪',
-        outcome: { text: '他们走后，地上留着一截断剑鞘和一只荷包。荷包里是一枚女子的发簪。\n\n你把发簪埋了，剑鞘收了。', effects: { items: ['canjian'], karma: -6, attrs: { 悟性: 1 } } },
+        outcome: { text: '他们走后，地上留着半截断剑和一只荷包。荷包里是一枚女子的发簪。\n\n你把发簪埋了，断剑收了。', effects: { items: ['canjian'], karma: -6, attrs: { 悟性: 1 } } },
       },
     ],
   },
@@ -1287,7 +1287,7 @@ export const WILD_EXPANSION = [
       {
         label: '上前', hint: '战斗 · 水匪',
         combat: {
-          enemy: 'bandit',
+          enemy: 'bandit', displayName: '水匪',
           win: { text: '你砍断两条钩绳，跳上最近的快船。船上的人没料到，被逼得跳了江。\n\n渡船靠岸时，一船人都在看你。', effects: { exp: 120, stones: 100, reputation: 20, karma: 15 } },
           lose: { text: '钩子挂住了你的衣服，把你拖进水里。你在水下被打了两棍，醒来时船已经空了。', effects: { hp: -55, stones: -60, injury: 2 } },
         },
@@ -1321,7 +1321,7 @@ export const WILD_EXPANSION = [
       {
         label: '说：那个村子我去过', hint: '需在山中行走有年',
         require: 'count("山行") >= 2', requireHint: '你还没在山里走够',
-        outcome: { text: '你说了村里的井、井沿上的七道槽，还有井底那层白雾。\n\n茶棚里安静下来。两个行商对看了一眼，其中一个把茶碗推开，低声问：那你还敢不敢再去。', effects: { attrs: { 神识: 2 }, exp: 60, reputation: 5, flag: { 六指手印: true }, counter: { 传话: 1 } } },
+        outcome: { text: '你说了山里那些空村子：门都开着，锅还架在灶上，饭摆在桌上没人动过。\n\n茶棚里安静下来。两个行商对看了一眼，其中一个把茶碗推开，低声问：那你还敢不敢再去。', effects: { attrs: { 神识: 2 }, exp: 60, reputation: 5, flag: { 六指手印: true }, counter: { 传话: 1 } } },
       },
     ],
   },
@@ -1374,8 +1374,8 @@ export const WILD_EXPANSION = [
       {
         label: '帮他们打一仗', hint: '战斗 · 官军锐士',
         combat: {
-          enemy: 'cultivator',
-          win: { text: '官军的先锋是个练家子，被你打退了三里。\n\n义军第一次赢。头领在你面前跪下，你没拦住。', effects: { exp: 200, reputation: 50, karma: 20, flag: { 义军战功: true }, demon: 5 } },
+          enemy: 'cultivator', displayName: '官军先锋',
+          win: { text: '官军的先锋是个筑基修士，被你打退了三里。\n\n义军第一次赢。头领在你面前跪下，你没拦住。', effects: { exp: 200, reputation: 50, karma: 20, flag: { 义军战功: true }, demon: 5 } },
           lose: { text: '官军的阵法比你见过的都齐。你被围在中间，是靠义军几十个人用命换出来的。\n\n活下来的不到一半。', effects: { hp: -70, injury: 3, karma: 10, demon: 10 } },
         },
       },
@@ -1410,7 +1410,7 @@ export const WILD_EXPANSION = [
     choices: [
       {
         label: '把醉汉请出去', hint: '动手 · 轻',
-        outcome: { text: '你拎着那人的后领把他放到门外，动作很轻。他骂了两句，睡了。\n\n她唱完下台，从袖子里取出一张纸给你，上面是她自己写的词。', effects: { attrs: { 魅力: 2, 道心: 1 }, relation: { 歌女: 3 }, items: ['liaoshang_dan'] } },
+        outcome: { text: '你拎着那人的后领把他放到门外，动作很轻。他骂了两句，睡了。\n\n她唱完下台，从袖子里取出一张纸给你，上面是她自己写的词，纸里还裹着一粒伤药。', effects: { attrs: { 魅力: 2, 道心: 1 }, relation: { 歌女: 3 }, items: ['liaoshang_dan'] } },
       },
       {
         label: '听完，给一笔赏', hint: '花费 50 灵石',
@@ -1427,7 +1427,7 @@ export const WILD_EXPANSION = [
     choices: [
       {
         label: '坐下来聊', hint: '',
-        outcome: { text: '他讲了三十年前那场仗，讲得很平，没有一句抱怨。\n\n「死的都是好兵，」他说，「活着的都是运气好的。」他把补好的鞋递给你，不要钱。', effects: { attrs: { 道心: 2, 悟性: 1 }, exp: 40, items: ['liaoshang_dan'] } },
+        outcome: { text: '他讲了三十年前那场仗，讲得很平，没有一句抱怨。\n\n「死的都是好兵，」他说，「活着的都是运气好的。」他把补好的鞋递给你，不要钱，又摸出一粒军中带出来的伤药塞给你。', effects: { attrs: { 道心: 2, 悟性: 1 }, exp: 40, items: ['liaoshang_dan'] } },
       },
       {
         label: '问他怎么活下来的', hint: '悟性',
@@ -1529,7 +1529,7 @@ export const WILD_EXPANSION = [
       },
       {
         label: '问他要不要买家', hint: '江湖',
-        outcome: { text: '他给你引了一个人，蒙着脸。那人要买一样东西：一个筑基修士的命。\n\n你没有答应，也没有拒绝。你把价问了。', effects: { stones: 100, karma: -10, flag: { 有人买命: true } } },
+        outcome: { text: '他给你引了一个人，蒙着脸。那人要买一样东西：一个筑基修士的命。\n\n你没有答应，也没有拒绝。你把价问了，对方先塞给你一百灵石当定钱。', effects: { stones: 100, karma: -10, flag: { 有人买命: true } } },
       },
       { label: '什么也不买，记住这个地方', outcome: { text: '你走了一圈，把每个人的脸都记了。\n\n出门时掌柜的说：「仙师下次来，还是买糙米？」你说买。', effects: { attrs: { 神识: 2 }, flag: { 知黑市: true } } } },
     ],
@@ -1541,8 +1541,8 @@ export const WILD_EXPANSION = [
       {
         label: '答应下来', hint: '凶险 · 大功',
         combat: {
-          enemy: 'cultivator',
-          win: { text: '你夜里进了敌营，出来时衣服上有血。第二天敌军退了三十里。\n\n将军没有赏你，只是把自己的佩刀给了你。', effects: { exp: 220, reputation: 60, contribution: 20, items: ['liegong'], karma: -15, flag: { 军中功: true } } },
+          enemy: 'cultivator', displayName: '敌营护卫',
+          win: { text: '你夜里进了敌营，出来时衣服上有血。第二天敌军退了三十里。\n\n将军没有赏你，只是把自己年轻时用的一张弓给了你。', effects: { exp: 220, reputation: 60, contribution: 20, items: ['liegong'], karma: -15, flag: { 军中功: true } } },
           lose: { text: '帐里等着你的是三个修士。你被围在中间，靠一件护身符才脱身，那符碎了。', effects: { hp: -75, injury: 3, reputation: -20 } },
         },
       },
@@ -1563,7 +1563,7 @@ export const WILD_EXPANSION = [
         label: '在他旁边坐下', hint: '一月',
         cost: { month: 1 },
         outcome: {
-          text: '他跟你说了很多话，从他登基那天说起，说到最后一个大臣跑掉。\n\n「我以为天下是我的，」他说，「后来才知道，是天下借我用了几年。」他把空碗推给你，里面有一枚玉玺的碎片。',
+          text: '他跟你说了很多话，从他登基那天说起，说到最后一个大臣跑掉。\n\n「我以为天下是我的，」他说，「后来才知道，是天下借我用了几年。」他把空碗推给你，碗底压着一枚丹药，说是太医院最后一炉。',
           effects: { attrs: { 道心: 6, 悟性: 3 }, expPct: 0.35, items: ['jiuzhuan_dan'], flag: { 见过亡国之君: true } },
         },
       },
@@ -1608,7 +1608,7 @@ export const WILD_EXPANSION = [
         label: '坐下吃饭', hint: '吃不明的东西',
         roll: {
           p: 0.5, attrs: { 道心: 0.01, 气运: 0.006 },
-          success: { text: '饭咽下去很暖，暖到胃里就散了。你吃了三碗，抬头时四把椅子都空了。\n\n屋子开始透光，墙变薄，你从井口爬上去时，手里握着一枚干净的玉扣。', effects: { expPct: 0.2, attrs: { 根骨: 2 }, items: ['huiling_dan'], karma: 5 } },
+          success: { text: '饭咽下去很暖，暖到胃里就散了。你吃了三碗，抬头时四把椅子都空了。\n\n屋子开始透光，墙变薄，你从井口爬上去时，手里握着一枚温热的丹丸。', effects: { expPct: 0.2, attrs: { 根骨: 2 }, items: ['huiling_dan'], karma: 5 } },
           fail: { text: '第一口饭在嘴里变成了土。你吐出来，土又变成了饭。\n\n你退出屋门，井壁上全是手印，都是向下爬的。', effects: { hp: -35, demon: 10 } },
         },
       },
@@ -1657,7 +1657,7 @@ export const WILD_EXPANSION = [
       },
       {
         label: '把枯骨搬开', hint: '贪 · 有代价',
-        outcome: { text: '骨头一碰就散。你从骨灰里扒出一枚灰扑扑的珠子，握在手里发烫。\n\n你退出坛时，坛上的青铜鼎裂了一道缝。', effects: { items: ['xisui_dan'], karma: -12, demon: 8 } },
+        outcome: { text: '骨头一碰就散。你从骨灰里扒出一枚灰扑扑的丹丸，握在手里发烫。\n\n你退出坛时，坛上的青铜鼎裂了一道缝。', effects: { items: ['xisui_dan'], karma: -12, demon: 8 } },
       },
       { label: '原路退出去', outcome: { text: '你一级一级退上台阶，退到坛顶时鞠了一躬。\n\n身后没有动静。你走下台地时，天才刚亮。', effects: { attrs: { 道心: 2 }, exp: 50 } } },
     ],
@@ -1689,7 +1689,7 @@ export const WILD_EXPANSION = [
       {
         label: '说是', hint: '硬碰',
         combat: {
-          enemy: 'demon_general',
+          enemy: 'demon_general', displayName: '封石里的东西',
           win: { text: '它从缝里挤出来的只是一部分，你砍了三次才砍断。\n\n缝合上了。你的手在抖，但你没有退。', effects: { expPct: 0.6, attrs: { 根骨: 5, 道心: 4 }, karma: 25, title: '补缝人', flag: { 补过封印: true } } },
           lose: { text: '它的一只手按在你胸口，你听见三根肋骨同时断掉的声音。\n\n你被扔下山，落在雪里，雪被血染红了一小片。', effects: { hp: -100, injury: 3, demon: 20 } },
         },
@@ -1721,7 +1721,7 @@ export const WILD_EXPANSION = [
         label: '把镜子翻过来', hint: '危险',
         roll: {
           p: 0.4, attrs: { 气运: 0.012, 道心: 0.008 },
-          success: { text: '镜面翻上来，里面是这座殿，殿里没有人。\n\n你在镜子里站了很久，才发现自己为什么看不见自己——你站在镜子的这一面。你把镜子砸了，捡了一块碎片，很锋利。', effects: { items: ['canjian'], attrs: { 神识: 4 }, expPct: 0.25, demon: 5 } },
+          success: { text: '镜面翻上来，里面是这座殿，殿里没有人。\n\n你在镜子里站了很久，才发现自己为什么看不见自己——你站在镜子的这一面。你把镜子砸了，镜框里露出半截断剑，很锋利。', effects: { items: ['canjian'], attrs: { 神识: 4 }, expPct: 0.25, demon: 5 } },
           fail: { text: '镜子里有个人，正在翻镜子。他的手伸出来，抓住了你的手腕，指甲掐进肉里。\n\n你挣开了镜子，手腕上留了五个洞。', effects: { hp: -50, injury: 2, demon: 15 } },
         },
       },

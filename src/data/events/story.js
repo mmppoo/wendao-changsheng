@@ -2,12 +2,12 @@
 export const STORY_EVENTS = [
   {
     id: 'story_jade_1', title: '玉牌', pool: 'story', tier: 3, weight: 0, minRealm: 0,
-    text: '那枚刻着你名字的玉牌，又出现在你的枕边。\n\n你明明把它埋进了土里。',
+    text: '那枚刻着你名字的玉牌，又出现在你的枕边。\n\n你明明没有把它带出那座石洞。',
     choices: [
       {
         label: '握住它', hint: '',
         outcome: {
-          text: '玉牌发热，你听见一个很老的声音：\n\n「第九个了。」\n\n「什么第九个？」\n「第九个拿到这块牌的人。前八个，都死在筑基之前。」',
+          text: '玉牌发热，你听见一个很老的声音：\n\n「第九个了。」\n\n「什么第九个？」\n「第九个拿到这块牌的人。前八个，都没能活到寿终。」',
           effects: { flag: { 玉牌说话: true } },
           goto: 'story_jade_2',
         },
@@ -31,10 +31,10 @@ export const STORY_EVENTS = [
         outcome: { text: '「破不了。」它说，「除非你活得比它久。」\n\n「它是谁？」\n\n「它是写这块牌子的人。」', effects: { flag: { 玉牌来历: true } }, goto: 'story_jade_3' },
       },
       {
-        label: '把玉牌扔进火山', hint: '花费 200 灵石雇人',
+        label: '托人把玉牌扔进熔炉', hint: '花费 200 灵石雇人',
         require: 'stones >= 200', requireHint: '没有灵石',
         cost: { stones: 200 },
-        outcome: { text: '你雇了个散修，把玉牌扔进了南疆的火山口。\n\n三个月后，它又出现在你的枕边，边缘有一点焦。', effects: { demon: 5, flag: { 玉牌烧过: true } }, goto: 'story_jade_3' },
+        outcome: { text: '你托铜谷炉坊的匠人，把玉牌扔进了熔铜的炉膛。\n\n三个月后，它又出现在你的枕边，边缘有一点焦。', effects: { demon: 5, flag: { 玉牌烧过: true } }, goto: 'story_jade_3' },
       },
     ],
   },
@@ -77,7 +77,7 @@ export const STORY_EVENTS = [
         label: '找出真的那个', hint: '神识检定',
         roll: {
           p: 0.5, attrs: { 神识: 0.012 },
-          success: { text: '你闭上限，用神识一寸寸摸过去。第七面镜子是温的。\n\n你伸手进去，牵出一缕残魂。她看着你，眼泪掉下来：「长这么大了。」', effects: { attrs: { 神识: 5, 道心: 4 }, flag: { 母魂: true } }, goto: 'story_mother_3' },
+          success: { text: '你闭上眼，用神识一寸寸摸过去。第七面镜子是温的。\n\n你伸手进去，牵出一缕残魂。她看着你，眼泪掉下来：「长这么大了。」', effects: { attrs: { 神识: 5, 道心: 4 }, flag: { 母魂: true } }, goto: 'story_mother_3' },
           fail: { text: '你分不清。所有的镜子都在喊你。你在宫殿里转了很久，最后被血池的水推了出来。', effects: { hp: -60, demon: 10 } },
         },
       },
@@ -108,7 +108,7 @@ export const STORY_EVENTS = [
       {
         label: '读信', hint: '',
         outcome: {
-          text: '「我叫沈砚，筑基三百一十年，没能结丹。\n\n这地方是我一块一块搬出来的。我死之前把它留在这儿，谁进来归谁。\n\n只有一个条件：别让它荒了。」',
+          text: '「我筑基一百九十年，没能结丹。\n\n这地方是我一块一块搬出来的。我死之前把它留在这儿，谁进来归谁。\n\n只有一个条件：别让它荒了。」',
           effects: { flag: { 洞天: true }, attrs: { 道心: 3 } },
           goto: 'story_cave_2',
         },
@@ -137,15 +137,15 @@ export const STORY_EVENTS = [
   {
     id: 'story_lover_1', title: '一个人', pool: 'story', tier: 3, weight: 0, minRealm: 1,
     require: 'flag("道侣")',
-    text: '你回到洞府，看见她/他坐在灯下，正在补一件旧衣服。\n\n那件衣服是你三十年前穿的，早就不能穿了。',
+    text: '你回到洞府，看见她坐在灯下，正在补一件旧衣服。\n\n那件衣服是你很多年前穿的，早就不能穿了。',
     choices: [
       {
-        label: '坐下，陪她/他', hint: '',
-        outcome: { text: '你坐了一夜。她/他没说话，你也没说。\n\n天亮时，衣服补好了。针脚很密。', effects: { relation: { 道侣: 20 }, attrs: { 道心: 3 } } },
+        label: '坐下，陪她', hint: '',
+        outcome: { text: '你坐了一夜。她没说话，你也没说。\n\n天亮时，衣服补好了。针脚很密。', effects: { relation: { 道侣: 20 }, attrs: { 道心: 3 } } },
       },
       {
         label: '说：我要闭关了', hint: '',
-        outcome: { text: '她/他抬起头，笑了一下：「去吧。」\n\n你走到门口，听见针掉在地上的声音。', effects: { relation: { 道侣: -20 }, demon: 5 } },
+        outcome: { text: '她抬起头，笑了一下：「去吧。」\n\n你走到门口，听见针掉在地上的声音。', effects: { relation: { 道侣: -20 }, demon: 5 } },
       },
     ],
   },

@@ -108,7 +108,7 @@ const SCENARIO_GATES = {
   fs_29_hometown_ferry_scorn: { once: true, ok: (c) => HOME_REGIONS.includes(c.regionId) },
   fs_30_former_bully_reunion: { once: true, ok: () => true },
   fs_31_ancestral_hall_reckoning: { once: true, ok: (c) => hasFamily(c) && HOME_REGIONS.includes(c.regionId) },
-  fs_32_expelled_sect_return: { once: true, ok: (c) => c.originId === 'wanderer' || (c.betrayCount || 0) > 0 || Object.keys(c.sectBlacklist || {}).length > 0 },
+  fs_32_expelled_sect_return: { once: true, ok: (c) => (c.betrayCount || 0) > 0 || Object.keys(c.sectBlacklist || {}).length > 0 },
 };
 function scenarioAllowed(state, sc) {
   const gate = SCENARIO_GATES[sc.id];

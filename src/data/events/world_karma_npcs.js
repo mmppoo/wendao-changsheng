@@ -2536,7 +2536,7 @@ export const WORLD_KARMA_NPCS = [
   {
     id: 'wkn_law_sword_4', title: '剑道 · 无剑之境', pool: 'inner', tier: 5, weight: 5, minRealm: 5,
     once: true,
-    text: '炼虚闭关第七载，你忽觉手中纵是神兵仙剑，出招时仍有一丝「器」的滞重。丹田内剑道法则剧烈震鸣，似要冲破有形之剑的藩篱——草木、清风、乃至一念目光，为何不可为剑？',
+    text: '闭关第七载，你忽觉手中纵是神兵仙剑，出招时仍有一丝「器」的滞重。丹田内剑道法则剧烈震鸣，似要冲破有形之剑的藩篱——草木、清风、乃至一念目光，为何不可为剑？',
     choices: [
       {
         label: '散去周身所有剑形，尝试以纯念凝出无形法则之剑', hint: '悟性与道心检定 · 迈向无剑真境',
@@ -2617,7 +2617,7 @@ export const WORLD_KARMA_NPCS = [
         label: '采摘几株成熟灵草，就地以真火试炼一炉粗丹', hint: '以炼代悟 · 稳步提升',
         cost: { mp: 20 },
         outcome: {
-          text: '丹火明灭之间，虽然成丹仅有两枚培元丹，你对掌火分寸的拿捏却更圆融。',
+          text: '丹火明灭之间，虽然只成了一枚培元丹，你对掌火分寸的拿捏却更圆融。',
           effects: { lawExp: 32, lawId: 'pill', items: ['peiyuan_dan'], counter: { alchemy: 1 } },
         },
       },
@@ -2630,7 +2630,7 @@ export const WORLD_KARMA_NPCS = [
       {
         label: '驱逐毒兽，借地火天然阵势闭关参悟丹火法则', hint: '战斗 · 碧磷毒蟒 · 丹道大涨',
         combat: {
-          enemy: 'poison_python',
+          enemy: 'poison_python', matchRealm: 'player',
           win: {
             text: '毒蟒伏诛，你独坐九道地火之间观火焰色泽由赤转青再化白，顿悟天地造化入炉之妙，更在丹灶灰烬中翻出一枚遗留丹药！',
             effects: { lawExp: 65, lawId: 'pill', items: ['juling_dan', 'chiyang_shi'], attrs: { 悟性: 3, 根骨: 2 } },
@@ -2654,7 +2654,7 @@ export const WORLD_KARMA_NPCS = [
   {
     id: 'wkn_law_pill_3', title: '丹道 · 紫府自成炉', pool: 'inner', tier: 4, weight: 5, minRealm: 3,
     once: true,
-    text: '元婴吐纳之间，你忽生奇想：外鼎终有器限，若将自身紫府丹田视作太古神鼎，纳天地灵气为药、以元神真火日夜温养，岂非时时刻刻皆在炼就长生金丹？',
+    text: '吐纳之间，你忽生奇想：外鼎终有器限，若将自身紫府丹田视作太古神鼎，纳天地灵气为药、以元神真火日夜温养，岂非时时刻刻皆在炼就长生金丹？',
     choices: [
       {
         label: '以身试法，在紫府内引动真火自炼先天药气', hint: '根骨与悟性检定 · 危险却大造化',
@@ -2689,7 +2689,7 @@ export const WORLD_KARMA_NPCS = [
         label: '倾注自身丹道法则与灵力，试以造化真火唤醒枯林生机', hint: '耗灵力两月 · 悟造化丹道，业力大涨',
         cost: { mp: 70, month: 2 },
         outcome: {
-          text: '焦木咔嚓裂开，抽出三寸嫩绿新芽，转瞬化作十里青烟蔓延荒原！天地反哺一缕浩瀚生机功德，你丹道感悟暴涨，更拾得一滴古木凝出的建木灵枝。',
+          text: '焦木咔嚓裂开，抽出三寸嫩绿新芽，转瞬化作十里青烟蔓延荒原！天地反哺一缕浩瀚生机功德，你丹道感悟暴涨，更拾得一截古木新生的赤霞古木枝。',
           effects: { lawExp: 135, lawId: 'pill', items: ['kunlun_shenmu'], karma: 60, lifespan: 45, attrs: { 悟性: 5, 道心: 5 } },
         },
       },
@@ -2697,7 +2697,7 @@ export const WORLD_KARMA_NPCS = [
         label: '将那粒翠绿生机摄入玉瓶，炼作一炉绝品延寿圣丹', hint: '夺造化入药 · 得九转金丹',
         cost: { month: 2 },
         outcome: {
-          text: '焦木彻底化作飞灰，而你掌中凝成一枚香气震天的九转金丹，丹道火候精进神速，心底却微生一丝愧意。',
+          text: '焦木彻底化作飞灰，而你掌中凝成一枚香气扑鼻的九转续命丹，丹道火候精进神速，心底却微生一丝愧意。',
           effects: { lawExp: 110, lawId: 'pill', items: ['jiuzhuan_dan'], karma: -15, counter: { alchemy: 2 } },
         },
       },
@@ -2771,7 +2771,7 @@ export const WORLD_KARMA_NPCS = [
         roll: {
           p: 0.55, attrs: { 悟性: 0.015, 神识: 0.012 },
           success: {
-            text: '你连踏三步逆八卦步，石傀竟自动退让两侧！石林中心露出一座石台，静放着一卷《伏羲八卦阵简》残页与聚灵阵符。',
+            text: '你连踏三步逆八卦步，石傀竟自动退让两侧！石林中心露出一座石台，台面刻着半篇八卦阵简，旁边放着一张聚灵阵符。',
             effects: { lawExp: 65, lawId: 'array', items: ['juling_zhenfu'], attrs: { 悟性: 4, 神识: 3 } },
           },
           fail: {
@@ -2781,11 +2781,11 @@ export const WORLD_KARMA_NPCS = [
         },
       },
       {
-        label: '直接拔剑击碎古林石傀，以力破阵拆解其阵核', hint: '战斗 · 古林石傀 · 拆核悟阵',
+        label: '直接出手击碎古林石傀，以力破阵拆解其阵核', hint: '战斗 · 古林石傀 · 拆核悟阵',
         combat: {
-          enemy: 'stone_golem',
+          enemy: 'stone_golem', matchRealm: 'player', displayName: '古林石傀',
           win: {
-            text: '石傀崩塌后露出胸口一枚精致的八卦阵核，你细细拆解其中灵纹，阵道造诣大进！',
+            text: '石傀崩塌后露出胸口一枚精致的八卦阵核，你细细拆解其中灵纹，阵道造诣大进，阵核上嵌着的灵石也一并收了！',
             effects: { lawExp: 58, lawId: 'array', stones: 320, attrs: { 悟性: 3, 根骨: 2 } },
           },
           lose: {
@@ -2799,7 +2799,7 @@ export const WORLD_KARMA_NPCS = [
   {
     id: 'wkn_law_array_3', title: '阵道 · 一念成阵', pool: 'inner', tier: 4, weight: 5, minRealm: 4,
     once: true,
-    text: '化神闭关之际，你凝视洞府四周密布的阵旗阵盘，忽然生出明悟：低阶阵修靠铁旗玉盘布阵，动辄耗时半日；若能以神识直接勾连天地灵机，抬手虚划即成困杀大阵，何须外物？',
+    text: '闭关之际，你凝视洞府四周密布的阵旗阵盘，忽然生出明悟：低阶阵修靠铁旗玉盘布阵，动辄耗时半日；若能以神识直接勾连天地灵机，抬手虚划即成困杀大阵，何须外物？',
     choices: [
       {
         label: '撤去洞府所有阵旗，尝试以纯神识凌空结成四象护阵', hint: '神识与悟性检定 · 踏入无旗成阵之境',
@@ -2848,7 +2848,7 @@ export const WORLD_KARMA_NPCS = [
       {
         label: '趁魔物被残阵虚弱，主动踏入阵心正面斩魔', hint: '战斗 · 域外虚空魔 · 阵中破敌',
         combat: {
-          enemy: 'void_fiend',
+          enemy: 'void_fiend', displayName: '域外虚空魔',
           win: {
             text: '你借四象残光步步压迫，亲手斩灭虚空魔！魔核碎裂处留下一枚晶莹虚空晶与完整的太古阵图铭刻。',
             effects: { lawExp: 140, lawId: 'array', items: ['xukong_jing'], expPct: 0.3, karma: 60 },
@@ -2928,9 +2928,9 @@ export const WORLD_KARMA_NPCS = [
       {
         label: '御空直冲绝壁，与裂云雷鹏血战夺雷液', hint: '战斗 · 裂云雷鹏 · 雷霆法则大进',
         combat: {
-          enemy: 'thunder_roc',
+          enemy: 'thunder_roc', displayName: '裂云雷鹏',
           win: {
-            text: '雷鹏哀鸣坠谷，你仰首饮下大半汪雷淬灵液！全身骨节噼啪作响，雷意奔腾如江河！',
+            text: '雷鹏哀鸣坠谷，你仰首饮下大半汪雷淬灵液，余下的凝成一枚紫霄雷元丹！全身骨节噼啪作响，雷意奔腾如江河！',
             effects: { lawExp: 70, lawId: 'thunder', items: ['leiyuan_dan'], expPct: 0.24, attrs: { 根骨: 4 } },
           },
           lose: {
@@ -2952,7 +2952,7 @@ export const WORLD_KARMA_NPCS = [
   {
     id: 'wkn_law_thunder_3', title: '雷霆 · 雷池洗心魔', pool: 'inner', tier: 4, weight: 5, minRealm: 4,
     once: true,
-    text: '化神入定之际，你以神识演化出一座雷霆内景。紫电煌煌照彻识海暗角，往日潜藏在心底的阴翳、怨念与畏惧在雷光下无所遁形，发出凄厉尖啸！',
+    text: '入定之际，你以神识演化出一座雷霆内景。紫电煌煌照彻识海暗角，往日潜藏在心底的阴翳、怨念与畏惧在雷光下无所遁形，发出凄厉尖啸！',
     choices: [
       {
         label: '引九天至阳正雷轰入自身识海，连心魔带杂念一并劈碎', hint: '道心检定 · 涤魔悟雷',
@@ -3108,7 +3108,7 @@ export const WORLD_KARMA_NPCS = [
       {
         label: '以空间感知预判其闪现落点，正面斩杀裂界暗影', hint: '战斗 · 裂界暗影 · 血战悟虚空',
         combat: {
-          enemy: 'void_stalker',
+          enemy: 'void_stalker', displayName: '裂界暗影',
           win: {
             text: '暗影尚未完全现身便被你一击封死虚空退路，当场崩解作一捧璀璨空间晶屑，凝出一枚稀世虚空晶！',
             effects: { lawExp: 115, lawId: 'space', items: ['xukong_jing'], expPct: 0.28, attrs: { 神识: 5, 悟性: 4 } },
@@ -3219,7 +3219,7 @@ export const WORLD_KARMA_NPCS = [
     ],
   },
   {
-    id: 'wkn_law_time_2', title: '光阴 · 古寺漏刻残碑', pool: 'wild', tier: 3, weight: 6, minRealm: 2,
+    id: 'wkn_law_time_2', title: '光阴 · 古观漏刻残碑', pool: 'wild', tier: 3, weight: 6, minRealm: 2,
     text: '深山塌陷的千年古观里，一座青铜水漏竟然至今仍在滴水——更诡异的是，水珠滴落的速度忽快忽慢，靠近水漏三尺内的野花一息盛开、一息枯萎，而铜漏下的青石却光洁如新！',
     choices: [
       {
@@ -3249,7 +3249,7 @@ export const WORLD_KARMA_NPCS = [
   {
     id: 'wkn_law_time_3', title: '光阴 · 南柯百年梦', pool: 'inner', tier: 4, weight: 5, minRealm: 4,
     once: true,
-    text: '化神入定不过半炷香，你却在识海里骤然跌入一场长达百年的梦境：从垂髫学步到白发垂暮，娶妻生子、送别故交，最后卧于病榻合眼——醒来时炉中沉香才燃了不到一寸！',
+    text: '入定不过半炷香，你却在识海里骤然跌入一场长达百年的梦境：从垂髫学步到白发垂暮，娶妻生子、送别故交，最后卧于病榻合眼——醒来时炉中沉香才燃了不到一寸！',
     choices: [
       {
         label: '趁梦境未散，逆推那百年时光如何在半寸香火间折叠', hint: '悟性与神识检定 · 光阴法则骤进',
@@ -3397,7 +3397,7 @@ export const WORLD_KARMA_NPCS = [
       {
         label: '与青铜观星古守卫硬撼一场，凭实力取走星宫传承', hint: '战斗 · 观星古守卫 · 获玉简与星道大悟',
         combat: {
-          enemy: 'star_golem',
+          enemy: 'star_golem', displayName: '观星古守卫',
           win: {
             text: '古守卫轰然跪倒化作星光散去！你踏上星台捧起玉简，漫天银辉倾泻而下为你灌顶！',
             effects: { lawExp: 115, lawId: 'star', items: ['yujian_xingchen'], expPct: 0.28, attrs: { 神识: 5, 悟性: 4 } },
@@ -3462,7 +3462,7 @@ export const WORLD_KARMA_NPCS = [
   {
     id: 'wkn_law_star_5', title: '星辰 · 丹田辟星海', pool: 'inner', tier: 6, weight: 4, minRealm: 7,
     once: true,
-    text: '大乘圆满之夜，你仰望苍穹三百六十五颗主星，忽觉丹田气海与九天银河本是一体。若能在紫府方寸之间开辟出一座自转不息的微缩星海，从此法力便如群星恒耀，永无枯竭之忧！',
+    text: '这一夜，你仰望苍穹三百六十五颗主星，忽觉丹田气海与九天银河本是一体。若能在紫府方寸之间开辟出一座自转不息的微缩星海，从此法力便如群星恒耀，永无枯竭之忧！',
     choices: [
       {
         label: '引周天主星齐齐垂光，于紫府丹田开辟微缩星海', hint: '神识与根骨检定 · 星辰圆满之契',
@@ -3550,12 +3550,12 @@ export const WORLD_KARMA_NPCS = [
   {
     id: 'wkn_law_karma_3', title: '因果 · 幻界心魔尊', pool: 'inner', tier: 5, weight: 5, minRealm: 5,
     once: true,
-    text: '炼虚闭关之际，一条漆黑因果丝线竟沿着你昔年斩杀强敌留下的怨念悄然钻入识海，在紫府深处凝成一尊冷笑连连的幻界心魔尊！「你欠下的债、你踩过的尸骨，今日该一并清算了！」',
+    text: '闭关之际，一条漆黑因果丝线竟沿着你昔年斩杀强敌留下的怨念悄然钻入识海，在紫府深处凝成一尊冷笑连连的幻界心魔尊！「你欠下的债、你踩过的尸骨，今日该一并清算了！」',
     choices: [
       {
         label: '不避不逃，以因果法则正面迎战幻界心魔尊', hint: '战斗 · 幻界心魔尊 · 斩尽旧债',
         combat: {
-          enemy: 'mirror_demon',
+          enemy: 'mirror_demon', displayName: '幻界心魔尊',
           win: {
             text: '心魔尊在清冽因果神光中寸寸瓦解！过往所有冤仇丝线尽数斩断化作精纯法则养料，你破关成算陡升！',
             effects: { lawExp: 135, lawId: 'karma', demon: -35, breakBonus: 16, attrs: { 道心: 6, 气运: 5 }, flag: { 斩因果心魔: true } },
@@ -3725,7 +3725,7 @@ export const WORLD_KARMA_NPCS = [
       {
         label: '不借外宝，以自身血气战意正面迎击修罗古战魔', hint: '巅峰战斗 · 修罗古战魔 · 血骨重生',
         combat: {
-          enemy: 'crimson_asura',
+          enemy: 'crimson_asura', displayName: '修罗古战魔',
           win: {
             text: '修罗战魔轰然单膝叩首，化作一道赤金战纹烙入你胸膛！你气血奔腾如太古天河，滴血便蕴万钧伟力！',
             effects: { lawExp: 160, lawId: 'blood', items: ['duangu_dan', 'longxue_jing'], expPct: 0.32, attrs: { 根骨: 7, 道心: 5 }, title: '修罗血骨' },
@@ -3740,7 +3740,7 @@ export const WORLD_KARMA_NPCS = [
         label: '在殿外体悟修罗雕像上凝固万年的战意呼吸，不冒死险', hint: '观战意悟血海 · 稳步大进',
         cost: { month: 2 },
         outcome: {
-          text: '你凝视雕像半月，终于懂了修罗战意并非盲目嗜杀，而是明知必死仍敢挥拳的决绝。',
+          text: '你凝视雕像两月，终于懂了修罗战意并非盲目嗜杀，而是明知必死仍敢挥拳的决绝。',
           effects: { lawExp: 95, lawId: 'blood', attrs: { 根骨: 4, 道心: 4 } },
         },
       },
@@ -3870,7 +3870,7 @@ export const WORLD_KARMA_NPCS = [
   {
     id: 'wkn_law_chaos_4', title: '混沌 · 万法熔一炉', pool: 'inner', tier: 6, weight: 5, minRealm: 6,
     once: true,
-    text: '合体闭关之际，你察觉自己所修诸般法则——无论剑意凌厉、雷霆刚猛，抑或光阴幽深——在更高境界上竟然彼此掣肘。一个大胆到近乎疯狂的念头浮上心头：何不以混沌为炉，将万法尽数熔归一点？',
+    text: '闭关之际，你察觉自己所修诸般法则——无论剑意凌厉、雷霆刚猛，抑或光阴幽深——在更高境界上竟然彼此掣肘。一个大胆到近乎疯狂的念头浮上心头：何不以混沌为炉，将万法尽数熔归一点？',
     choices: [
       {
         label: '果断散开诸般法则壁垒，以神魂强行熔铸混沌元胎', hint: '悟性与道心检定 · 极险却可铸无上根基',
@@ -3936,7 +3936,7 @@ export const WORLD_KARMA_NPCS = [
     id: 'wkn_mortal_1', title: '红尘 · 二百年前的一碗粥', pool: 'world', tier: 3, weight: 6, minRealm: 2,
     require: 'age >= 120',
     once: true,
-    text: '路过一座早已改了国号的江畔小城，你在老字号米铺外听见一名白发老掌柜正指着梁上一方发黑的旧木牌教训孙儿：「祖上闹大饥荒时，是一位路过的青衫仙师施了一月米粥救活咱们一族！这行善的规矩，传十代也不许断！」\n\n你抬头看清旧木牌上模糊的轮廓，忽觉喉头微滞——那已是两百年前一场顺手而为的旧事。',
+    text: '路过一座早已改了国号的江畔小城，你在老字号米铺外听见一名白发老掌柜正指着梁上一方发黑的旧木牌教训孙儿：「祖上闹大饥荒时，是一位路过的青衫仙师施了一月米粥救活咱们一族！这行善的规矩，传十代也不许断！」\n\n你抬头看清旧木牌上模糊的轮廓，忽觉喉头微滞——那已是许多年前一场顺手而为的旧事。',
     choices: [
       {
         label: '不露仙迹，以凡人旅者之姿买一斗新米留下一块碎银', hint: '静观善果 · 道心与业力大进',
@@ -3960,17 +3960,17 @@ export const WORLD_KARMA_NPCS = [
     text: '中原大旱三年，千里赤地龟裂如枯骨。州府城外搭起三丈青石祈雨坛，白发老刺史脱去官袍赤脚跪在烈日下三日三夜，额头磕出血痂，身后数万百姓齐声哭求苍天降霖。',
     choices: [
       {
-        label: '暗踏云端施法引来千里云气，替黎民降下一场透雨', hint: '耗损灵力气血 · 惊天功德，声望业力暴涨',
+        label: '暗中施法引来远处云气，替黎民降下一场透雨', hint: '耗损灵力气血 · 惊天功德，声望业力暴涨',
         cost: { mp: 45, hp: 20, month: 1 },
         outcome: {
-          text: '雷声滚滚，倾盆甘霖骤然洗刷焦土！数万百姓在雨中放声痛哭叩首，你收袖立于云海之上，只觉胸中一股清正浩然之气冲散所有心魔。',
+          text: '雷声滚滚，倾盆甘霖骤然洗刷焦土！数万百姓在雨中放声痛哭叩首，你收袖立于远处山头，只觉胸中一股清正浩然之气冲散所有心魔。',
           effects: { karma: 65, reputation: 50, demon: -18, attrs: { 道心: 4, 气运: 3 } },
         },
       },
       {
-        label: '先查清大旱根由——原来是一头水煞妖物堵死了上游地脉', hint: '战斗 · 溪涧水煞 · 治本除害',
+        label: '先去上游查清大旱的根由', hint: '战斗 · 溪涧水煞 · 治本除害',
         combat: {
-          enemy: 'creek_spirit',
+          enemy: 'creek_spirit', matchRealm: 'player', displayName: '堵脉水煞',
           win: {
             text: '斩除暗中作祟的水煞，上游地下灵泉轰然复涌！不用逆天强求云雨，田渠自满，天地因果清正无损。',
             effects: { karma: 75, reputation: 60, expPct: 0.22, attrs: { 道心: 5, 悟性: 2 } },
@@ -3992,7 +3992,7 @@ export const WORLD_KARMA_NPCS = [
   },
   {
     id: 'wkn_mortal_3', title: '红尘 · 寒窗状元郎', pool: 'world', tier: 2, weight: 6, minRealm: 0,
-    text: '春闱放榜之日，京城朱雀长街十里鞭炮震天。状元郎骑高头大马穿红袍游街，意气风发。人群边缘你却一眼认出——十年前雪夜冻僵在破庙里、靠你半块干粮和一丸驱寒草药捡回性命的穷书生，如今竟已位极人臣之始。',
+    text: '春闱放榜之日，京城朱雀长街十里鞭炮震天。状元郎骑高头大马穿红袍游街，意气风发。人群边缘你却一眼认出——前些年雪夜冻僵在破庙里、靠你半块干粮和一丸驱寒草药捡回性命的穷书生，如今竟已高中状元。',
     choices: [
       {
         label: '在茶楼二层遥举清茶一盏，不打扰他的人间锦绣', hint: '笑看尘缘 · 涤荡心魔',
@@ -4047,7 +4047,7 @@ export const WORLD_KARMA_NPCS = [
         },
       },
       {
-        label: '取出一枚益寿丹药化入粗茶递给他，愿替旧友多留十年阳寿', hint: '需疗伤丹或培元丹 · 留住凡间灯火',
+        label: '取出一枚疗伤丹化入粗茶递给他，替旧友调养身子', hint: '需疗伤丹或培元丹 · 留住凡间灯火',
         require: 'has("liaoshang_dan")', requireHint: '行囊中并无疗伤丹',
         cost: { item: 'liaoshang_dan' },
         outcome: {
@@ -4124,7 +4124,7 @@ export const WORLD_KARMA_NPCS = [
     id: 'wkn_mortal_8', title: '红尘 · 无名石像庙', pool: 'world', tier: 3, weight: 5, minRealm: 2,
     require: 'reputation >= 80',
     once: true,
-    text: '偏远山坳里多了一座简陋的青砖小庙，香火却旺得惊人。你好奇推门进去，竟被供桌上的石像震在原地——虽然匠人手艺粗糙，可那袭衣袍、那柄长剑的轮廓，分明就是数十年前你斩妖救村时的模样！',
+    text: '偏远山坳里多了一座简陋的青砖小庙，香火却旺得惊人。你好奇推门进去，竟被供桌上的石像震在原地——虽然匠人手艺粗糙，可那袭衣袍、那柄长剑的轮廓，分明就是当年你斩妖救村时的模样！',
     choices: [
       {
         label: '默然受下三缕纯净香火愿力，反以神识庇佑山村丰年', hint: '愿力滋养神魂 · 神识与气运大涨',
@@ -4232,9 +4232,9 @@ export const WORLD_KARMA_NPCS = [
     text: '秋雨绵绵的乡间小路上，一支简陋得只有四个轿夫的迎亲队伍正踩着泥水前行。新郎淋得像落汤鸡，却把唯一一把油纸伞死死遮在花轿帘缝上，嘴里还笑着喊：「快到了，灶上炖着姜汤呢！」',
     choices: [
       {
-        label: '暗袖一挥，替这支迎亲队伍隔开十里风雨直到村口', hint: '成人之美 · 心情舒朗',
+        label: '暗中运起灵力，替这支迎亲队伍遮一路风雨', hint: '成人之美 · 心情舒朗',
         outcome: {
-          text: '新郎惊奇地发现头顶乌云竟裂开一圈晴光，一路欢呼着把新娘背进家门。你也忍不住笑出声来，眉间积郁散去大半。',
+          text: '新郎惊奇地发现落在轿顶的雨忽然稀了，一路欢呼着把新娘背进家门。你也忍不住笑出声来，眉间积郁散去大半。',
           effects: { karma: 22, demon: -10, attrs: { 魅力: 2, 气运: 2 } },
         },
       },
@@ -4252,7 +4252,7 @@ export const WORLD_KARMA_NPCS = [
     text: '曾经统一中原八百年的大周皇朝早已淹没在史书里。荒草漫过皇陵神道，几名盗墓邪修正在用腐尸毒雾逼退守陵的最后一位老卒，妄图掘开地宫盗取传国龙气玉玺！',
     choices: [
       {
-        label: '拔剑驱杀盗墓邪修，护住前朝皇陵安宁', hint: '战斗 · 怨魂 · 护陵得龙气反馈',
+        label: '出手驱杀盗墓邪修，护住前朝皇陵安宁', hint: '战斗 · 怨魂 · 护陵得龙气反馈',
         combat: {
           enemy: 'ghost',
           win: {
@@ -4340,7 +4340,7 @@ export const WORLD_KARMA_NPCS = [
   },
   {
     id: 'wkn_mortal_18', title: '红尘 · 琴楼画师', pool: 'world', tier: 2, weight: 6, minRealm: 1,
-    text: '秦淮秋月如水，画舫上名动京师的才女正对江挥毫，画的却不是风月仕女，而是一幅苍茫孤寂的《万里独行问道图》。画中山崖上那个背影竟与你有七分神似。',
+    text: '临河秋月如水，画舫上名动京师的才女正对江挥毫，画的却不是风月仕女，而是一幅苍茫孤寂的《万里独行问道图》。画中山崖上那个背影竟与你有七分神似。',
     choices: [
       {
         label: '登舟替她在画角题下一句问道诗，赠一缕灵墨添神', hint: '风雅尘缘 · 魅力悟性皆涨',
@@ -4373,7 +4373,7 @@ export const WORLD_KARMA_NPCS = [
         label: '取走国库中两件凡人无用的上古灵材，换赐新朝百年风调雨顺阵', hint: '各取所需 · 获灵材与阵道感悟',
         cost: { mp: 45 },
         outcome: {
-          text: '皇帝大喜过望，亲手奉上宫中珍藏的玄铁与百年灵草，而你随手布下的润土小阵保了京畿百年丰稔。',
+          text: '皇帝大喜过望，亲手奉上宫中珍藏的玄铁与千年灵草，而你随手布下的润土小阵保了京畿百年丰稔。',
           effects: { items: ['xuantie', 'qiannian_lingcao'], lawExp: 38, lawId: 'array', karma: 40 },
         },
       },
@@ -4453,19 +4453,19 @@ export const WORLD_KARMA_NPCS = [
     id: 'wkn_mortal_23', title: '红尘 · 千年老城换新颜', pool: 'world', tier: 4, weight: 5, minRealm: 4,
     require: 'age >= 200',
     once: true,
-    text: '距你上一次踏足这座中州大城，已过去了整整两百五十载。当年繁华的朱雀桥已塌成河底乱石，城门换了三茬铁匾，连口音都变得陌生。唯独城北那棵老银杏树又粗了一围，树下卖糖人的摊子，依然围满笑闹的稚童。',
+    text: '距你上一次踏足这座中州大城，已过去了整整一百五十载。当年繁华的朱雀桥已塌成河底乱石，城门换了三茬铁匾，连口音都变得陌生。唯独城北那棵老银杏树又粗了一围，树下卖糖人的摊子，依然围满笑闹的稚童。',
     choices: [
       {
         label: '买一支糖人靠在银杏树下，静静体会沧海桑田', hint: '以长生眼观红尘 · 光阴法则大悟',
         outcome: {
-          text: '糖丝甜得发腻，和两百五十年前一模一样。皇朝会灭、仙宗会衰，唯有这生生不息的人间烟火永不熄灭。你刹那明悟，光阴法则骤进！',
+          text: '糖丝甜得发腻，和一百五十年前一模一样。皇朝会灭、仙宗会衰，唯有这生生不息的人间烟火永不熄灭。你刹那明悟，光阴法则骤进！',
           effects: { lawExp: 75, lawId: 'time', demon: -22, attrs: { 道心: 6, 悟性: 5 }, lifespan: 25 },
         },
       },
       {
         label: '寻访当年银杏树下那户茶农的后人，暗赐一门养生吐纳法', hint: '绵延善缘 · 业力气运齐涨',
         outcome: {
-          text: '当年茶农的第七代孙如今开了间小书铺。你借买书之名留下一册手抄《吐纳养生诀》，飘然远去。',
+          text: '当年茶农的第五代孙如今开了间小书铺。你借买书之名留下一册手抄《吐纳养生诀》，飘然远去。',
           effects: { karma: 65, attrs: { 气运: 5, 道心: 4 }, lawExp: 45, lawId: 'karma' },
         },
       },
@@ -4483,7 +4483,7 @@ export const WORLD_KARMA_NPCS = [
         },
       },
       {
-        label: '下船时悄悄把一块灵石换作十两足色雪花银留在船头', hint: '厚赏船资 · 积善成德',
+        label: '下船时悄悄把灵石换成的十两足色雪花银留在船头', hint: '厚赏船资 · 积善成德',
         cost: { stones: 15 },
         outcome: {
           text: '老船夫发现白银时你早已隐入江雾。这十两银子够他安稳养老，不必再冒寒风摆渡。',
@@ -4499,7 +4499,7 @@ export const WORLD_KARMA_NPCS = [
       {
         label: '截杀于密林之外，不让妖血沾污集镇半寸瓦片', hint: '战斗 · 嗜血蝠妖 · 守护三千生灵',
         combat: {
-          enemy: 'blood_bat',
+          enemy: 'blood_bat', displayName: '吸血妖蝠',
           win: {
             text: '剑光无声斩落蝠妖，整场恶战未曾惊醒镇中一名睡梦里的婴孩。清晨鸡鸣响起，炊烟袅袅升空，你收剑拂衣而去。',
             effects: { karma: 65, reputation: 45, expPct: 0.22, attrs: { 道心: 4, 气运: 3 } },
@@ -4547,7 +4547,7 @@ export const WORLD_KARMA_NPCS = [
     text: '荒野驿馆的冷雨夜里，一名衣衫破旧却气度端雅的年轻女子拿出祖传的古铜宝镜，恳请你替她暗杀篡位弑父的新朝权臣。你一眼认出那面古铜镜竟是一件蒙尘的玄阶法器——清明照妖镜！',
     choices: [
       {
-        label: '不涉凡间皇权屠戮，但查明那权臣竟乃妖邪附身，毅然替天除妖', hint: '以神识察真相 · 除妖得清明照妖镜',
+        label: '不替她行刺，先借铜镜去照一照那权臣的底细', hint: '以神识察真相 · 除妖得清明照妖镜',
         roll: {
           p: 0.56, attrs: { 神识: 0.014, 道心: 0.01 },
           success: {
@@ -4555,7 +4555,7 @@ export const WORLD_KARMA_NPCS = [
             effects: { items: ['qingming_jing'], karma: 60, reputation: 45, attrs: { 神识: 3, 道心: 3 } },
           },
           fail: {
-            text: '妖邪察觉铜镜威压提前遁走，虽未斩绝后患，却也保住女子性命、解了京城大祸。',
+            text: '妖邪察觉铜镜威压提前遁走，虽未斩绝后患，却也保住了女子性命。她把仅剩的盘缠塞给你作谢。',
             effects: { karma: 35, attrs: { 道心: 2 }, stones: 240 },
           },
         },
@@ -4597,7 +4597,7 @@ export const WORLD_KARMA_NPCS = [
 
   {
     id: 'wkn_demon_1', title: '心魔 · 归家幻灶', pool: 'inner', tier: 2, weight: 6, minRealm: 1,
-    text: '入定深处，冷寂的石室忽然变成了你记忆里最温暖的旧屋。灶膛里柴火噼啪作响，桌上热腾腾摆着你最爱吃的三碟小菜，门帘一掀，故去多年的亲人笑着喊你回来吃饭，仿佛百余年修仙苦寒只是一场噩梦。',
+    text: '入定深处，冷寂的石室忽然变成了你记忆里最温暖的旧屋。灶膛里柴火噼啪作响，桌上热腾腾摆着你最爱吃的三碟小菜，门帘一掀，故去多年的亲人笑着喊你回来吃饭，仿佛这些年修仙的苦寒只是一场噩梦。',
     choices: [
       {
         label: '含笑坐下吃完这顿幻境热饭，随后起身亲手推开幻门', hint: '道心检定 · 念旧而不沉沦',
@@ -4699,14 +4699,14 @@ export const WORLD_KARMA_NPCS = [
   },
   {
     id: 'wkn_demon_5', title: '心魔 · 双影分身', pool: 'inner', tier: 4, weight: 5, minRealm: 3,
-    text: '元婴出窍内视紫府，你骤然发现蒲团上坐着两个一模一样的自己——左边的你眉目澄静、手捧清莲；右边的你唇角带血、双目赤红，正笑吟吟招手：「别装圣人了，你心里最想做的那些事，我替你全干了如何？」',
+    text: '神魂出窍内视紫府，你骤然发现蒲团上坐着两个一模一样的自己——左边的你眉目澄静、手捧清莲；右边的你唇角带血、双目赤红，正笑吟吟招手：「别装圣人了，你心里最想做的那些事，我替你全干了如何？」',
     choices: [
       {
         label: '引两道身影合二为一：「善念是我，恶念亦是我，俱受本心统御！」', hint: '道心与悟性检定 · 统合阴影，大破魔障',
         roll: {
           p: 0.54, attrs: { 道心: 0.015, 悟性: 0.014 },
           success: {
-            text: '红白双影剧烈震颤后彻底融入元婴本体！从此你不再畏惧心底幽暗，反倒将其炼作无坚不摧的魄力！',
+            text: '红白双影剧烈震颤后彻底融入你的本体！从此你不再畏惧心底幽暗，反倒将其炼作无坚不摧的魄力！',
             effects: { demon: -28, attrs: { 道心: 7, 神识: 4 }, expPct: 0.24, flag: { 统合心影: true } },
           },
           fail: {
@@ -4718,9 +4718,9 @@ export const WORLD_KARMA_NPCS = [
       {
         label: '拔出神识之剑，亲手斩杀右侧赤目恶影', hint: '战斗 · 心魔 · 斩邪存正',
         combat: {
-          enemy: 'heart_demon',
+          enemy: 'heart_demon', displayName: '赤目恶影',
           win: {
-            text: '恶影在清光中灰飞烟灭，元婴通体澄净无瑕！虽少了几分狠辣，道心却纯粹得如同冰晶。',
+            text: '恶影在清光中灰飞烟灭，神魂通体澄净无瑕！虽少了几分狠辣，道心却纯粹得如同冰晶。',
             effects: { demon: -26, karma: 30, attrs: { 道心: 6 }, expPct: 0.2 },
           },
           lose: {
@@ -4734,7 +4734,7 @@ export const WORLD_KARMA_NPCS = [
   {
     id: 'wkn_demon_6', title: '心魔 · 无尽独行路', pool: 'inner', tier: 3, weight: 5, minRealm: 3,
     require: 'age >= 100',
-    text: '百年枯坐醒来，你梦见自己走在一片无边无际的白雪荒原上，回头看去，身后所有熟悉的人——师长、挚友、劲敌、凡间故交——全都化作一个个模糊的小黑点被甩在风雪里，越走越冷，越走越空。',
+    text: '一场长关醒来，你梦见自己走在一片无边无际的白雪荒原上，回头看去，身后所有熟悉的人——师长、挚友、劲敌、凡间故交——全都化作一个个模糊的小黑点被甩在风雪里，越走越冷，越走越空。',
     choices: [
       {
         label: '在雪地里停下脚步，把每一位故人的名字默念一遍再继续前行', hint: '铭记羁绊 · 破除孤寒魔障',
@@ -4828,7 +4828,7 @@ export const WORLD_KARMA_NPCS = [
   },
   {
     id: 'wkn_demon_10', title: '心魔 · 灵根之怨', pool: 'inner', tier: 3, weight: 5, minRealm: 1,
-    text: '识海深处刮起阴冷酸风，一个尖刻声音不断质问你：「看看那些天灵根、混沌体，闭眼都能一日千里！你拼死拼活几十年才摸到门槛，老天本就不公，何不干脆堕入魔道把天骄们的灵根活剥过来？」',
+    text: '识海深处刮起阴冷酸风，一个尖刻声音不断质问你：「看看那些天灵根、混沌体，闭眼都能一日千里！你拼死拼活才摸到门槛，老天本就不公，何不干脆堕入魔道把天骄们的灵根活剥过来？」',
     choices: [
       {
         label: '稳稳按住丹田：「资质决定起点，心性才决定谁能走到终点！」', hint: '道心检定 · 彻底粉碎嫉妒心魔',
@@ -5036,12 +5036,12 @@ export const WORLD_KARMA_NPCS = [
   {
     id: 'wkn_demon_18', title: '心魔 · 万劫心魔皇临', pool: 'inner', tier: 6, weight: 4, minRealm: 7,
     once: true,
-    text: '大乘冲关前夕，整片识海骤然熄灭所有光明！一尊凝聚了古今所有渡劫败亡者绝望、怨恨与恐惧的万劫心魔皇降临紫府，冷笑震颤元神：「无数惊才绝艳之辈都死在最后一步，你凭什么觉得自己能活？」',
+    text: '冲关前夕，整片识海骤然熄灭所有光明！一尊凝聚了古今所有渡劫败亡者绝望、怨恨与恐惧的万劫心魔皇降临紫府，冷笑震颤元神：「无数惊才绝艳之辈都死在最后一步，你凭什么觉得自己能活？」',
     choices: [
       {
         label: '燃尽毕生道心之火，于识海绝巅正面死战万劫心魔皇', hint: '终极心魔之战 · 万劫心魔皇 · 破则百魔不侵',
         combat: {
-          enemy: 'karmic_demon_lord',
+          enemy: 'karmic_demon_lord', displayName: '万劫心魔皇',
           win: {
             text: '万劫心魔皇在澄澈如日的道心神光中彻底灰飞烟灭！你紫府生出不灭金辉，此后渡劫再无心魔敢近半步！',
             effects: { demon: -100, breakBonus: 30, expPct: 0.35, attrs: { 道心: 12, 神识: 8 }, title: '万劫不磨', flag: { 斩万劫魔皇: true } },
@@ -5053,7 +5053,7 @@ export const WORLD_KARMA_NPCS = [
         },
       },
       {
-        label: '祭出天道莲或冰心丹辅以无上清心道韵，稳固紫府徐徐炼化魔皇', hint: '需冰心雪莲丹 · 智化大劫',
+        label: '服下冰心雪莲丹，以清心道韵稳固紫府，徐徐炼化魔皇', hint: '需冰心雪莲丹 · 智化大劫',
         require: 'has("bingxin_dan")', requireHint: '行囊中并无冰心雪莲丹',
         cost: { item: 'bingxin_dan', month: 2 },
         outcome: {
@@ -5099,7 +5099,7 @@ export const WORLD_KARMA_NPCS = [
   {
     id: 'wkn_trib_2', title: '天象 · 三尸初显之善尸', pool: 'inner', tier: 5, weight: 5, minRealm: 5,
     once: true,
-    text: '炼虚极境入定，你泥丸宫中竟悄然浮出一道身披白袍、面容慈悲与你一模一样的虚影——那是太古大能口中的「善尸」！它合掌轻叹：「你救人太多、怜悯太重，带着这些沉重慈悲，怎能轻身登仙？」',
+    text: '入定极深时，你泥丸宫中竟悄然浮出一道身披白袍、面容慈悲与你一模一样的虚影——那是太古大能口中的「善尸」！它合掌轻叹：「你救人太多、怜悯太重，带着这些沉重慈悲，怎能轻身登仙？」',
     choices: [
       {
         label: '「慈悲并非累赘，而是我异于无情仙官的脊梁——斩去执拗，留其本心！」', hint: '悟性与道心检定 · 善尸明悟',
@@ -5129,12 +5129,12 @@ export const WORLD_KARMA_NPCS = [
   {
     id: 'wkn_trib_3', title: '天象 · 三尸初显之恶尸', pool: 'inner', tier: 5, weight: 5, minRealm: 6,
     once: true,
-    text: '合体闭关第七月，丹田杀机骤爆，一道身披玄甲、眉目冷戾的赤瞳虚影破体而出——正是潜藏识海深处的「恶尸」！它手握你最惯用的兵器，森然大笑：「斩我？没有我的狠绝与贪婪，你早死在炼气期荒野里了！」',
+    text: '闭关第七月，丹田杀机骤爆，一道身披玄甲、眉目冷戾的赤瞳虚影破体而出——正是潜藏识海深处的「恶尸」！它手握你最惯用的兵器，森然大笑：「斩我？没有我的狠绝与贪婪，你早死在炼气期荒野里了！」',
     choices: [
       {
         label: '以神魂迎战恶尸化身，用绝对实力令其臣服归鞘', hint: '战斗 · 心魔 · 伏魔证恶尸',
         combat: {
-          enemy: 'heart_demon',
+          enemy: 'heart_demon', displayName: '恶尸',
           win: {
             text: '玄甲恶尸轰然单膝叩地，化作一缕凌厉无双的玄金战意归入气海！从此杀伐由心、暴戾不侵！',
             effects: { expPct: 0.32, lawExp: 100, lawId: 'blood', demon: -25, breakBonus: 16, attrs: { 根骨: 7, 道心: 6 }, flag: { 伏恶尸: true } },
@@ -5267,7 +5267,7 @@ export const WORLD_KARMA_NPCS = [
   },
   {
     id: 'wkn_trib_8', title: '天象 · 断柱天河倒挂', pool: 'wild', tier: 5, weight: 5, minRealm: 5,
-    text: '极北冰原夜空突然撕开一道银白裂口，汹涌的九天银河之水竟然倒挂垂落三千丈！水幕之中隐约浮现出一根刻满仙文却从中断裂的擎天玉柱——传闻那是万年前仙战崩塌的天庭旧柱！',
+    text: '极北冰原夜空突然撕开一道银白裂口，汹涌的九天银河之水竟然倒挂垂落三千丈！水幕之中隐约浮现出一根刻满仙文却从中断裂的擎天玉柱——传闻那是上古大能撑天时折断的一截旧柱。',
     choices: [
       {
         label: '顶着倒挂天河重压飞近断柱，拓印仙柱上残留的太古大道铭文', hint: '根骨与神识检定 · 获混沌星辰大悟',
@@ -5275,7 +5275,7 @@ export const WORLD_KARMA_NPCS = [
         roll: {
           p: 0.54, attrs: { 根骨: 0.015, 神识: 0.014 },
           success: {
-            text: '天河仙水冲刷肉身带来剧痛却洗尽凡垢！你成功记下柱身半篇太古仙铭，连带捞起一瓶珍贵太虚炼神丹！',
+            text: '天河仙水冲刷肉身带来剧痛却洗尽凡垢！你成功记下柱身半篇太古仙铭，连带捞起一枚珍贵的太虚炼神丹！',
             effects: { items: ['lianxu_dan'], lawExp: 110, lawId: 'chaos', attrs: { 根骨: 6, 神识: 5 }, expPct: 0.28 },
           },
           fail: {
@@ -5330,7 +5330,7 @@ export const WORLD_KARMA_NPCS = [
   {
     id: 'wkn_trib_10', title: '天象 · 紫气东来三万里', pool: 'inner', tier: 5, weight: 5, minRealm: 6,
     once: true,
-    text: '合体境闭关百日后的黎明，你推开洞府石门，竟见东方天际铺开三万里绵延不绝的鸿蒙紫气！紫气并非无主飘荡，而是隐隐朝你所在山峰缓缓倾泻，群山灵鹤齐鸣盘旋——此乃大乘将近、天道初认之祥瑞！',
+    text: '闭关百日后的黎明，你推开洞府石门，竟见东方天际铺开三万里绵延不绝的鸿蒙紫气！紫气并非无主飘荡，而是隐隐朝你所在山峰缓缓倾泻，群山灵鹤齐鸣盘旋——此乃大境将近、天道初认之祥瑞！',
     choices: [
       {
         label: '立于绝巅大袖迎风，鲸吞三万里鸿蒙紫气淬炼混元法身', hint: '千载难逢 · 修为与突破成算暴涨',

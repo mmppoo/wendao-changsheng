@@ -446,7 +446,7 @@ export const WORLD_REGIONS_LOW = [
     weight: 0,
     minRealm: 0,
     maxRealm: 2,
-    text: (s) => `邪祭既毁，十里幽篁的冷雾如雪消融，第一缕晨光斜斜洒进竹院。青衣女子立于晨风之中，身形渐化点点翠绿萤火。\n\n她将一枚温润竹简轻轻置于石桌：「${s.flags['幽篁赠丹结缘'] ? '蒙道友仁心相待，妾身执念已了。' : '大仇得报，滞留人世的因果总算尽了。'}此乃我师门养气秘传，另有一件青木软甲沉于潭底，愿助道友仙途长安。」`,
+    text: (s) => `邪祭既毁，十里幽篁的冷雾如雪消融，第一缕晨光斜斜洒进竹院。青衣女子立于晨风之中，身形渐化点点翠绿萤火。\n\n她将一枚温润竹简轻轻置于石桌：「${s.flags['幽篁赠丹结缘'] ? '蒙道友仁心相待，妾身执念已了。' : '大仇得报，滞留人世的因果总算尽了。'}此乃我师门辨药养气的心得，另有一件青木软甲沉于潭底，愿助道友仙途长安。」`,
     choices: [
       {
         label: '恭敬接过竹简与青木软甲，目送残魂往生',
@@ -806,13 +806,13 @@ export const WORLD_REGIONS_LOW = [
           p: 0.54,
           attrs: { 根骨: 0.012, 神识: 0.014 },
           success: {
-            text: '井水寒彻骨髓，你在井壁三丈处摸到一只嵌入石缝的铜筒，内藏一枚回灵丹与一块古玉碎片，水气滋养得你神清气爽。',
+            text: '井水寒彻骨髓，你在井壁三丈处摸到一只嵌入石缝的铜筒，内藏一枚回灵丹与一枚嵌着青翠灵玉的古戒，水气滋养得你神清气爽。',
             effects: { items: ['huiling_dan', 'biling_jie'], exp: 65 },
           },
           fail: {
             text: '刚潜入丈许，井底阴寒骤然化作水煞缠住脚踝！',
             combat: {
-              enemy: 'creek_spirit',
+              enemy: 'creek_spirit', displayName: '井底水煞',
               win: {
                 text: '剑气剖开井水，水煞哀嚎消散，井底露出一堆前人投下的祈福灵石。',
                 effects: { stones: 78, exp: 70 },
@@ -946,7 +946,7 @@ export const WORLD_REGIONS_LOW = [
         hint: '举手行善 · 得功德与石龛福缘',
         cost: { mp: 20 },
         outcome: {
-          text: '松木横架激流，恰好几名背柴山民路过，连声道谢。你顺道扶正倾斜的石龛，竟从底座滚出一枚圆润的宁气丹。',
+          text: '松木横架激流，恰好几名背柴山民路过，连声道谢。你顺道扶正倾斜的石龛，竟从底座滚出一枚圆润的凝气丹。',
           effects: { items: ['ningqi_dan'], karma: 16, reputation: 8 },
         },
       },
@@ -1450,7 +1450,7 @@ export const WORLD_REGIONS_LOW = [
         hint: '耗 20 灵力 · 助灵物化龙积大善缘',
         cost: { mp: 20 },
         outcome: {
-          text: '赤鲤借你柔劲一跃冲破冰帘，于半空清啸一声竟吐出一颗水润灵珠落入你掌中，旋即顺上游灵泉远去。',
+          text: '赤鲤借你柔劲一跃冲破冰帘，于半空清啸一声竟尾鳍一扫，将潭底一只前人遗落的药囊拍上岸来，旋即顺上游灵泉远去。囊中是一枚回灵丹与一枚凝气丹。',
           effects: { items: ['huiling_dan', 'ningqi_dan'], karma: 16, attrs: { 气运: 2 }, exp: 65 },
         },
       },
@@ -1516,7 +1516,7 @@ export const WORLD_REGIONS_LOW = [
           p: 0.54,
           attrs: { 神识: 0.015, 气运: 0.01 },
           success: {
-            text: '石龟颌下果然有一处机括！轻按三寸，吐出一只油纸小盒，内藏两枚凝气丹与三十块灵石。',
+            text: '石龟颌下果然有一处机括！轻按三寸，吐出一只油纸小盒，内藏一枚凝气丹、一枚培元丹与三十块灵石。',
             effects: { items: ['ningqi_dan', 'peiyuan_dan'], stones: 30 },
           },
           fail: {
@@ -1810,7 +1810,7 @@ export const WORLD_REGIONS_LOW = [
         label: '重钉铜钉，择高燥阳坡将其重新安葬',
         hint: '平息阴患 · 获大功德与防身护符',
         outcome: {
-          text: '你运力将七枚铜钉尽数敲回，移棺葬于向阳松坡。棺底泥沙中滑出一枚温润古玉佩，既无怨煞，反似故人答谢。',
+          text: '你运力将七枚铜钉尽数敲回，移棺葬于向阳松坡。棺底泥沙中滑出一张金刚护身符与一枚培元丹，既无怨煞，反似故人答谢。',
           effects: { items: ['jingang_fu', 'peiyuan_dan'], karma: 20, demon: -8 },
         },
       },
@@ -1818,9 +1818,9 @@ export const WORLD_REGIONS_LOW = [
         label: '撬开棺盖一观，看是否乃古修坐化遗棺',
         hint: '冒险开棺 · 恐惊阴煞',
         combat: {
-          enemy: 'creek_spirit',
+          enemy: 'creek_spirit', displayName: '棺中阴煞',
           win: {
-            text: '棺中阴煞扑出即被你剑光斩散。待寒雾落尽，棺内枯骨旁竟放着一瓶完好无损的宁气丹与一袋灵石。',
+            text: '棺中阴煞扑出即被你剑光斩散。待寒雾落尽，棺内枯骨旁竟放着一枚完好的凝气丹、一张护心符与一袋灵石。',
             effects: { items: ['ningqi_dan', 'huxin_fu'], stones: 65, karma: -10 },
           },
           lose: {
@@ -2149,7 +2149,7 @@ export const WORLD_REGIONS_LOW = [
         hint: '消耗疗伤丹 · 雪夜暖人心',
         cost: { item: 'liaoshang_dan' },
         outcome: {
-          text: '姜汤入腹，老兵断臂处隐痛顿消。他沉默良久，自怀里掏出一张泛黄皮革递给你——竟是他早年随商队进山时画下的灵草秘点图，另附两张神行符。',
+          text: '姜汤入腹，老兵断臂处隐痛顿消。他沉默良久，自怀里掏出一张泛黄皮革递给你——竟是他早年随商队进山时画下的灵草秘点图，另附一张神行符。',
           effects: { items: ['lingcao', 'shenxing_fu'], karma: 15, attrs: { 魅力: 1 }, exp: 60 },
         },
       },
@@ -2311,7 +2311,7 @@ export const WORLD_REGIONS_LOW = [
         hint: '耗 50 灵石 · 开匣吉凶难料',
         cost: { stones: 50 },
         outcome: {
-          text: '解开红绳，木匣中竟卧着两张镇魔破邪符与一枚碧血生肌丹，还夹着一张通往鬼市深处密室的赤铜令牌！',
+          text: '解开红绳，木匣中竟卧着一张镇魔破邪符与一枚碧血生肌丹，还夹着一张通往鬼市深处密室的赤铜令牌！',
           effects: { items: ['poxie_fu', 'bixue_dan'], flag: { 鬼市得密室令: true } },
           goto: 'wrl_lx_ghost_3',
         },
@@ -2333,7 +2333,7 @@ export const WORLD_REGIONS_LOW = [
         label: '冷笑拔剑，于暗渠水光中正面杀出一条血路',
         hint: '以杀立威 · 战筑基断魂刀客',
         combat: {
-          enemy: 'blade_rogue',
+          enemy: 'blade_rogue', displayName: '鬼市劫修',
           win: {
             text: '剑光映亮漆黑暗渠，为首刀客胸口中剑坠入黑水，余党肝胆俱裂仓皇遁走。你在其尸身摸出一方刻着「冥灯」二字的暗市密令。',
             effects: { stones: 140, items: ['ningqi_dan'], reputation: 12, flag: { 鬼市暗渠反杀: true } },
@@ -2824,7 +2824,7 @@ export const WORLD_REGIONS_LOW = [
         label: '趁乱在丹房窗台顺手拾走几粒崩出来的残丹',
         hint: '浑水摸鱼 · 损德获微利',
         outcome: {
-          text: '你趁众人忙于救火，飞快捡起两枚熏黑却药性犹存的培元丹揣入怀中，转身混入人群。',
+          text: '你趁众人忙于救火，飞快捡起一枚熏黑却药性犹存的培元丹和几块碎灵石揣入怀中，转身混入人群。',
           effects: { items: ['peiyuan_dan'], stones: 20, karma: -12, demon: 3 },
         },
       },
@@ -3049,7 +3049,7 @@ export const WORLD_REGIONS_LOW = [
     text: '城北铁匠巷尽头，叮当打铁声昼夜不歇。一名赤膊独眼老铁匠正用铁钳夹着一块烧得通红的玄铁反复锻打，见你腰悬佩剑走过，忽然停锤问道：「小子，你的剑沾过血么？敢不敢借老夫的寒水淬一淬锋芒？」',
     choices: [
       {
-        label: '付六十灵石与一块玄铁，请老铁匠替自己重淬佩剑',
+        label: '付六十灵石，请老铁匠替自己重淬佩剑',
         hint: '耗 60 灵石 · 悟剑锋之理并获兵刃',
         cost: { stones: 60 },
         outcome: {
@@ -3058,7 +3058,7 @@ export const WORLD_REGIONS_LOW = [
         },
       },
       {
-        label: '挽袖替老铁匠拉半月风箱，以劳换艺',
+        label: '挽袖替老铁匠拉一个月风箱，以劳换艺',
         hint: '耗一月 · 炼体悟剑兼得锻造酬金',
         cost: { month: 1 },
         outcome: {
@@ -3341,10 +3341,10 @@ export const WORLD_REGIONS_LOW = [
     weight: 3,
     minRealm: 0,
     maxRealm: 3,
-    text: '城西演武场角落坐着一名满身旧疤的中年汉子，身边插着一柄豁口的铁剑，面前摆着个破碗却不讨钱，只写着「十灵石接我三剑，接住者赠《青山十三剑》全谱」。围观散修皆知他曾是筑基好手，如今丹田受损跌落炼气，剑意却仍凶狠得吓人。',
+    text: '城西演武场角落坐着一名满身旧疤的中年汉子，身边插着一柄豁口的铁剑，面前摆着个破碗却不讨钱，只写着「十灵石接我三剑，只比剑招、不动灵力，接住者赠《青山十三剑》全谱」。围观散修皆知他曾是筑基好手，如今丹田受损跌落炼气，剑意却仍凶狠得吓人。',
     choices: [
       {
-        label: '丢下十块灵石，拔剑硬接他三记杀剑',
+        label: '丢下十块灵石，收住灵力，拔剑硬接他三记杀剑',
         hint: '耗 10 灵石 · 根骨与悟性检定',
         cost: { stones: 10 },
         roll: {
@@ -3488,7 +3488,7 @@ export const WORLD_REGIONS_LOW = [
           p: 0.58,
           attrs: { 悟性: 0.015, 气运: 0.014 },
           success: {
-            text: '真元一催，绿锈剥落！炉腹竟藏着一枚古代丹师封存的聚灵丹与半卷炼丹手记，连炉身都隐隐残留着清明灵韵。',
+            text: '真元一催，绿锈剥落！炉腹竟藏着一枚古代丹师封存的聚灵丹，与一面巴掌大小、灵韵清明的照妖古镜。',
             effects: { items: ['juling_dan', 'qingming_jing'], lawExp: 10, lawId: 'pill' },
           },
           fail: {
@@ -3627,7 +3627,7 @@ export const WORLD_REGIONS_LOW = [
         label: '散场后潜入后台查探，破除迷魂妖法',
         hint: '斩妖除祟 · 战溪涧水煞或邪修',
         combat: {
-          enemy: 'creek_spirit',
+          enemy: 'creek_spirit', displayName: '戏服水魅',
           win: {
             text: '原是一只附于古戏服上的水魅借戏声采补阳气！你一剑劈碎古戏服，戏班班主吓得跪地磕头，献上珍藏的清心丹与百块灵石酬谢。',
             effects: { items: ['qingxin_dan'], stones: 95, karma: 18, reputation: 14 },
@@ -3639,7 +3639,7 @@ export const WORLD_REGIONS_LOW = [
         },
       },
       {
-        label: '以清明照妖镜或神识在台下暗施镇魂音，不动声色逼走阴魅',
+        label: '以神识在台下暗施镇魂音，不动声色逼走阴魅',
         hint: '神识 ≥ 14 · 润物无声化灾厄',
         require: 'char.attrs.神识 >= 14',
         requireHint: '神识不足十四，难以隔空震慑水魅',
@@ -3759,7 +3759,7 @@ export const WORLD_REGIONS_LOW = [
         require: 'char.attrs.悟性 >= 13',
         requireHint: '悟性不足十三，难以窥破药方瑕疵',
         outcome: {
-          text: '丹师闻言如遭醍醐灌顶，反复核对药渣后大笑三声，拱手奉上一瓶成品宁气丹与八十灵石拜师礼般的谢金！',
+          text: '丹师闻言如遭醍醐灌顶，反复核对药渣后大笑三声，拱手奉上一瓶凝气丹、一瓶培元丹与八十灵石拜师礼般的谢金！',
           effects: { items: ['ningqi_dan', 'peiyuan_dan'], stones: 80, lawExp: 12, lawId: 'pill' },
         },
       },
@@ -3847,9 +3847,9 @@ export const WORLD_REGIONS_LOW = [
         label: '将计就计赴乱葬岗一探究竟，截胡黑道交易',
         hint: '胆大心细 · 战断魂刀客',
         combat: {
-          enemy: 'blade_rogue',
+          enemy: 'blade_rogue', displayName: '魔修暗桩头目',
           win: {
-            text: '乱葬岗中两拨魔修暗桩正交接灵材，被你突然杀出打得措手不及！你斩杀头目缴获灵石与一卷残简，潇洒离去。',
+            text: '乱葬岗中两拨魔修暗桩正交接灵材，被你突然杀出打得措手不及！你斩杀头目缴获灵石、一枚妖兽内丹与一瓶碧血生肌丹，潇洒离去。',
             effects: { stones: 150, items: ['yaoshou_neidan', 'bixue_dan'], karma: 10 },
           },
           lose: {
@@ -3944,9 +3944,9 @@ export const WORLD_REGIONS_LOW = [
         label: '凌空一剑格开护卫杀招，护住青年听明是非',
         hint: '救人于危 · 战筑基修士',
         combat: {
-          enemy: 'cultivator',
+          enemy: 'cultivator', displayName: '周家供奉',
           win: {
-            text: '花轿中沈家小姐果然掀帘而出，泣泪揭露族老强卖联姻之丑闻！满城哗然，周家颜面扫地撤回仪仗。二人双双拜谢，赠你一枚碧灵聚气戒与厚重灵石远走高飞。',
+            text: '花轿中沈家小姐果然掀帘而出，泣泪揭露族老强卖联姻之丑闻！满城哗然，周家颜面扫地撤回仪仗。二人双双拜谢，赠你一枚碧灵聚气戒、一枚冰肌驻颜丹与厚重灵石远走高飞。',
             effects: { items: ['biling_jie', 'zhuyan_dan'], stones: 80, karma: 22, reputation: 18 },
           },
           lose: {
@@ -4186,9 +4186,9 @@ export const WORLD_REGIONS_LOW = [
         label: '正面击碎古林石傀，强闯丹庙中殿',
         hint: '硬撼石傀 · 战古林石傀',
         combat: {
-          enemy: 'stone_golem',
+          enemy: 'stone_golem', displayName: '守廊石傀',
           win: {
-            text: '石傀胸膛灵核崩裂，轰然化作满地青石碎块。你从碎石间拾得两块精纯灵石与半枚镇阵玉符，中殿大门随即洞开。',
+            text: '石傀胸膛灵核崩裂，轰然化作满地青石碎块。你从碎石间拾得一堆精纯灵石与一块玄铁灵核，中殿大门随即洞开。',
             effects: { stones: 180, items: ['xuantie'], exp: 210, flag: { 碧庙破傀入殿: true } },
             goto: 'wrl_ys_temple_3',
           },
@@ -4212,7 +4212,7 @@ export const WORLD_REGIONS_LOW = [
           fail: {
             text: '手印慢了半拍，石傀双拳已至面门，避无可避！',
             combat: {
-              enemy: 'stone_golem',
+              enemy: 'stone_golem', displayName: '守廊石傀',
               win: {
                 text: '险之又险震毁石傀关节，终于杀入中殿。',
                 effects: { stones: 150, exp: 190 },
@@ -4237,13 +4237,13 @@ export const WORLD_REGIONS_LOW = [
     weight: 0,
     minRealm: 1,
     maxRealm: 4,
-    text: '中殿中央矗立着一座丈高碧玉药鼎，鼎盖微启，七朵色泽各异的虚幻毒花在鼎口沉浮吐香。香风入鼻甜美异常，却暗藏蚀魂幻毒。\n\n药鼎后方阴影里，一缕披着翡翠羽衣的筑基怨魂正冷冷注视着你，声音空洞：「闯庙者，要么留下半身精血温养药鼎，要么以神魂接我一缕七花幻瘴！」',
+    text: '中殿中央矗立着一座丈高碧玉药鼎，鼎盖微启，七朵色泽各异的虚幻毒花在鼎口沉浮吐香。香风入鼻甜美异常，却暗藏蚀魂幻毒。\n\n药鼎后方阴影里，一缕披着翡翠羽衣的怨魂正冷冷注视着你，声音空洞：「闯庙者，要么留下半身精血温养药鼎，要么以神魂接我一缕七花幻瘴！」',
     choices: [
       {
         label: '祭出破邪灵力正面斩杀翡翠怨魂',
         hint: '破邪除祟 · 战怨魂',
         combat: {
-          enemy: 'ghost',
+          enemy: 'ghost', displayName: '翡翠怨魂',
           win: {
             text: '怨魂在凛冽正气下发出凄厉长啸，散作漫天青绿光点。七花药鼎嗡鸣一声彻底平静下来，鼎内丹香纯澈无毒！',
             effects: { exp: 230, karma: 14, flag: { 碧庙斩魂平鼎: true } },
@@ -4294,7 +4294,7 @@ export const WORLD_REGIONS_LOW = [
     weight: 0,
     minRealm: 1,
     maxRealm: 4,
-    text: (s) => `碧玉药鼎缓缓沉降，露出鼎心珍藏的三件古修遗宝：一卷散发幽幽草木清香的《七花凝露经》真本、两枚历千年未散药性的聚灵宝丹与大还丹，以及一株生机磅礴的千年灵草。\n\n${s.flags['碧庙感化丹魂'] || s.flags['碧庙超度丹魂'] ? '庙顶琉璃瓦洒下柔和翠光，似是上古庙主最后一份无私馈赠。' : '整座沉渊古庙因失去主阵维持已开始微微震颤，需速作决断离去！'}`,
+    text: (s) => `碧玉药鼎缓缓沉降，露出鼎心珍藏的三件古修遗宝：一卷散发幽幽草木清香的《七花凝露经》真本、一匣历千年未散药性的宝丹，以及一株生机磅礴的千年灵草。\n\n${s.flags['碧庙感化丹魂'] || s.flags['碧庙超度丹魂'] ? '庙顶琉璃瓦洒下柔和翠光，似是上古庙主最后一份无私馈赠。' : '整座沉渊古庙因失去主阵维持已开始微微震颤，需速作决断离去！'}`,
     choices: [
       {
         label: '收下《七花凝露经》与千年灵草，携碧庙丹道传承出渊',
@@ -4418,7 +4418,7 @@ export const WORLD_REGIONS_LOW = [
         label: '持剑逆声波而上，斩杀领头嗜血蝠妖',
         hint: '正面力战 · 战嗜血蝠妖',
         combat: {
-          enemy: 'blood_bat',
+          enemy: 'blood_bat', displayName: '嗜血蝠王',
           win: {
             text: '血蝠头领哀鸣坠地，群蝠失了统率轰然四散！你在血厅石缝间寻得一枚泛着灵光的妖兽内丹。',
             effects: { items: ['yaoshou_neidan'], stones: 160, exp: 200, flag: { 妖巢斩血蝠: true } },
@@ -4993,10 +4993,10 @@ export const WORLD_REGIONS_LOW = [
         },
       },
       {
-        label: '远远以神识临摹电蛇游走轨迹，采一截外围焦木',
+        label: '远远以神识临摹电蛇游走轨迹',
         hint: '稳妥悟雷 · 安全收获',
         outcome: {
-          text: '雷霆刚烈无俦，你不敢强行近身，只在雷圈之外细观电纹三日，亦有所获。',
+          text: '雷霆刚烈无俦，你不敢强行近身，只在雷圈之外细观电纹三日，亦有所获，临走照着电纹画成了一张掌心五雷符。',
           effects: { items: ['zhangxin_leifu'], lawExp: 12, lawId: 'thunder', exp: 135 },
         },
       },
@@ -5017,7 +5017,7 @@ export const WORLD_REGIONS_LOW = [
         label: '速灌两大葫芦猴儿酒，迎战冲回洞口的通臂灵猿',
         hint: '贪酒硬闯 · 战通臂灵猿',
         combat: {
-          enemy: 'spirit_ape',
+          enemy: 'spirit_ape', displayName: '通臂猿王',
           win: {
             text: '击退暴怒猴王后你痛饮一碗猴儿酒，醇厚果灵化作澎湃真元涌入气海，气血修为双双暴涨！',
             effects: { expPct: 0.22, hpPct: 0.4, lifespan: 3, stones: 110 },
@@ -5029,11 +5029,11 @@ export const WORLD_REGIONS_LOW = [
         },
       },
       {
-        label: '留下两枚培元丹放在洞口石台上，只取一小杯猴儿酒便退',
+        label: '留下一枚培元丹放在洞口石台上，只取一小杯猴儿酒便退',
         hint: '消耗培元丹 · 以礼换酒',
         cost: { item: 'peiyuan_dan' },
         outcome: {
-          text: '老灵猿归来嗅见丹香大喜，竟主动抓起两颗罕见百年灵果抛给你作回礼！',
+          text: '老灵猿归来嗅见丹香大喜，竟从洞里抓出一株千年灵草抛给你作回礼！',
           effects: { expPct: 0.2, items: ['qiannian_lingcao'], karma: 14, attrs: { 气运: 1 } },
         },
       },
@@ -5190,7 +5190,7 @@ export const WORLD_REGIONS_LOW = [
         label: '查验洞府丹室与储物石柜，收取前辈遗留资粮',
         hint: '寻觅实利 · 得丹药与灵石',
         outcome: {
-          text: '石柜内整整齐齐放着聚灵丹、清心丹与两百余块上品灵石，还有两张护身符箓，令你身家立厚。',
+          text: '石柜内整整齐齐放着聚灵丹、清心丹与两百余块上品灵石，还有一张护心符，令你身家立厚。',
           effects: { items: ['juling_dan', 'qingxin_dan', 'huxin_fu'], stones: 210, exp: 130 },
         },
       },
@@ -5211,9 +5211,9 @@ export const WORLD_REGIONS_LOW = [
         label: '怒喝拔剑杀退魔修，救下母子灵鹿',
         hint: '正道慈悲 · 战断魂刀客',
         combat: {
-          enemy: 'blade_rogue',
+          enemy: 'blade_rogue', displayName: '魔道散修',
           win: {
-            text: '魔修伏诛，母鹿低头轻蹭你掌心，竟主动震落另一半晶莹灵角赠你作谢，随后领着幼鹿奔入翠林深处。',
+            text: '魔修伏诛，母鹿低头轻蹭你掌心，用残角从灌木下拱出一株千年灵草与一只前人遗落的丹瓶赠你作谢，随后领着幼鹿奔入翠林深处。',
             effects: { items: ['qiannian_lingcao', 'bixue_dan'], karma: 26, lifespan: 4, exp: 185 },
           },
           lose: {
@@ -5541,7 +5541,7 @@ export const WORLD_REGIONS_LOW = [
         combat: {
           enemy: 'blood_bat',
           win: {
-            text: '除尽妖蝠后你在滴水声中静坐七日，灵力流转前所未有地顺畅，更在石乳池底捞出一块灵玉！',
+            text: '除尽妖蝠后你在滴水声中静坐七日，灵力流转前所未有地顺畅，更在石乳池底捞出一枚前人遗落的回灵丹！',
             effects: { expPct: 0.2, stones: 150, items: ['huiling_dan'], attrs: { 神识: 1 } },
           },
           lose: {
@@ -5645,13 +5645,13 @@ export const WORLD_REGIONS_LOW = [
     weight: 4,
     minRealm: 1,
     maxRealm: 4,
-    text: '苍翠山谷震天动地！两头毛色一金一黑的筑基通臂灵猿正为争夺崖畔一株赤霞朱果展开生死搏杀，拳风扫断十余棵合抱古树，此刻双双浴血气喘，已至强弩之末！',
+    text: '苍翠山谷震天动地！两头毛色一金一黑的通臂灵猿正为争夺崖畔一株赤霞朱果展开生死搏杀，拳风扫断十余棵合抱古树，此刻双双浴血气喘，已至强弩之末！',
     choices: [
       {
         label: '坐山观虎斗，待两败俱伤时飞身摘果并斩残猿',
         hint: '鹬蚌相争 · 战重伤通臂灵猿',
         combat: {
-          enemy: 'spirit_ape',
+          enemy: 'spirit_ape', displayName: '金毛灵猿',
           win: {
             text: '黑猿逃窜，金猿力竭伏诛！你独享三枚赤霞朱果与完整妖兽内丹，修为暴涨如潮！',
             effects: { expPct: 0.24, items: ['yaoshou_neidan', 'juling_dan'], karma: -6 },
@@ -6006,7 +6006,7 @@ export const WORLD_REGIONS_LOW = [
           p: 0.58,
           attrs: { 气运: 0.015, 神识: 0.012 },
           success: {
-            text: '玉盘下竟压着一小袋银光闪烁的星辰砂与两张护心符，堪称意外横财！',
+            text: '玉盘下竟压着一小袋银光闪烁的磁砂与一张护心符，堪称意外横财！',
             effects: { items: ['xingchen_sha', 'huxin_fu'], exp: 130 },
           },
           fail: {
@@ -6310,7 +6310,7 @@ export const WORLD_REGIONS_LOW = [
     weight: 0,
     minRealm: 2,
     maxRealm: 5,
-    text: '中舱灯火迷离，摆着数十座以鲸骨雕成的摊位。摊主皆是面色青白、衣着古朴的前朝海客残灵，案上陈列着许多早已在现世绝迹的深海秘珍：万年碧海玄冰髓、刻有空间秘纹的沉船铁匣、还有一瓶贴着金丹印记的养神玉清丹。',
+    text: '中舱灯火迷离，摆着数十座以鲸骨雕成的摊位。摊主皆是面色青白、衣着古朴的前朝海客残灵，案上陈列着许多早已在现世绝迹的深海秘珍：万年玄冰髓、刻有空间秘纹的沉船铁匣、还有一瓶贴着结丹印记的养神玉清丹。',
     choices: [
       {
         label: '支付三百灵石，买下那只刻满空间古纹的沉船铁匣',
@@ -6332,7 +6332,7 @@ export const WORLD_REGIONS_LOW = [
         },
       },
       {
-        label: '以一株千年灵草或两百五十灵石，换取碧海玄冰髓与冰心雪莲丹',
+        label: '以两百五十灵石换取玄冰髓与冰心雪莲丹',
         hint: '耗 250 灵石 · 换取克魔清心重宝',
         cost: { stones: 250 },
         outcome: {
@@ -6521,7 +6521,7 @@ export const WORLD_REGIONS_LOW = [
         label: '拔剑相迎孤鸿剑修，以剑道高低决定谁先落子',
         hint: '剑修论锋 · 战孤鸿剑修',
         combat: {
-          enemy: 'sword_rogue',
+          enemy: 'sword_rogue', displayName: '孤鸿剑客',
           win: {
             text: '孤鸿一剑虽绝，仍逊你半分锐气！斗笠剑客收剑入鞘，朗笑拱手：「道友剑心通明，这盘残棋合该归你！」说罢踏浪潇洒离去。',
             effects: { lawExp: 22, lawId: 'sword', reputation: 22, exp: 650, flag: { 潮屿剑胜孤鸿: true } },
@@ -6547,7 +6547,7 @@ export const WORLD_REGIONS_LOW = [
           fail: {
             text: '孤鸿剑客性情孤僻冷哼道：「大道独行，岂容分润？」拔剑直刺你面门！',
             combat: {
-              enemy: 'sword_rogue',
+              enemy: 'sword_rogue', displayName: '孤鸿剑客',
               win: {
                 text: '剑锋相交激起漫天星火，你终以一招险胜，独享石亭机缘！',
                 effects: { lawExp: 18, lawId: 'sword', exp: 600 },
@@ -6816,20 +6816,20 @@ export const WORLD_REGIONS_LOW = [
     weight: 3,
     minRealm: 2,
     maxRealm: 5,
-    text: '穿过滚烫的海底火山裂谷，前方百丈水温竟骤降如极北万年冰原！海底幽蓝裂隙中不断喷涌着刺骨寒流，缝壁凝结着晶莹剔透的「碧海玄冰髓」，寒气甚至将半里外的海水冻成倒悬冰柱。',
+    text: '穿过滚烫的海底火山裂谷，前方百丈水温竟骤降如极北万年冰原！海底幽蓝裂隙中不断喷涌着刺骨寒流，缝壁凝结着晶莹剔透的「玄冰髓」，寒气甚至将半里外的海水冻成倒悬冰柱。',
     choices: [
       {
-        label: '鼓荡金丹真元顶寒入渊，采掘两块万年碧海玄冰髓',
+        label: '鼓荡丹田真元顶寒入渊，采掘两块万年玄冰髓',
         hint: '根骨检定 · 极寒取珍',
         roll: {
           p: 0.58,
           attrs: { 根骨: 0.015, 道心: 0.012 },
           success: {
-            text: '寒气虽令经脉结霜，你却咬牙硬扛采得两块极品碧海玄冰髓！事后运功化寒，肉身抗寒与灵力精纯度俱增！',
+            text: '寒气虽令经脉结霜，你却咬牙硬扛采得两块极品玄冰髓！事后运功化寒，肉身抗寒与灵力精纯度俱增！',
             effects: { items: ['bihai_xuanbing', 'bihai_xuanbing'], exp: 480, attrs: { 根骨: 2 } },
           },
           fail: {
-            text: '玄冰寒脉骤然喷发，将你冻伤击退十丈，仅仓促削下半块冰髓与冰心凝霜。',
+            text: '玄冰寒脉骤然喷发，将你冻伤击退十丈，仅仓促摘得一枚冰心雪莲丹。',
             effects: { hp: -150, items: ['bingxin_dan'], exp: 320 },
           },
         },
@@ -6864,7 +6864,7 @@ export const WORLD_REGIONS_LOW = [
     choices: [
       {
         label: '欣然落岛抱拳，与听涛岛金丹长老切磋剑术',
-        hint: '高阶论剑 · 战金丹长老',
+        hint: '高阶论剑 · 战结丹长老',
         combat: {
           enemy: 'jindan_elder',
           win: {
@@ -7067,7 +7067,7 @@ export const WORLD_REGIONS_LOW = [
         combat: {
           enemy: 'ancient_puppet',
           win: {
-            text: '轰开主控室青铜门，石桌上赫然摊开一卷《千机八阵图录》与数张缩地成寸符！此番收获堪称逆天！',
+            text: '轰开主控室青铜门，石桌上赫然摊开一卷《千机八阵图录》与一张缩地成寸符与一包磁砂！',
             effects: {
               items: ['suodi_fu', 'xingchen_sha'],
               lawExp: 24,
@@ -7091,7 +7091,7 @@ export const WORLD_REGIONS_LOW = [
           p: 0.62,
           attrs: { 神识: 0.015, 悟性: 0.012 },
           success: {
-            text: '你绕开警戒范围拆下两枚完好阵核与一小盒星辰砂，毫发无损扬长而去。',
+            text: '你绕开警戒范围拆下两枚完好阵核与一小盒磁砂，毫发无损扬长而去。',
             effects: { items: ['xingchen_sha', 'juling_zhenfu'], stones: 320, exp: 380 },
           },
           fail: {
@@ -7202,7 +7202,7 @@ export const WORLD_REGIONS_LOW = [
           p: 0.6,
           attrs: { 道心: 0.016, 魅力: 0.012 },
           success: {
-            text: '剑啸与鲛歌竟融作一曲荡气回肠的沧海清音！过路灵舟顿时清醒避开暗礁，银鳞鲛女亦止歌微笑，抛来三颗价值连城的冰心鲛珠潜入深海。',
+            text: '剑啸与鲛歌竟融作一曲荡气回肠的沧海清音！过路灵舟顿时清醒避开暗礁，银鳞鲛女亦止歌微笑，抛来一枚冰心雪莲丹、一块玄冰髓与一捧鲛珠，随即潜入深海。',
             effects: { items: ['bingxin_dan', 'bihai_xuanbing'], stones: 380, karma: 20, exp: 460 },
           },
           fail: {
@@ -7236,9 +7236,9 @@ export const WORLD_REGIONS_LOW = [
         label: '跃上巨锚斩退珊瑚妖将，参悟断链处万年不散的上古剑意',
         hint: '夺宝悟剑 · 战珊瑚妖将',
         combat: {
-          enemy: 'coral_demon',
+          enemy: 'coral_demon', displayName: '珊瑚妖将',
           win: {
-            text: '珊瑚妖将负伤遁海！你独坐巨锚顶端，细细体悟断链处那一剑截断星舟的霸绝锋芒，剑道感悟飙升，顺手削走一块深海星铁！',
+            text: '珊瑚妖将负伤遁海！你独坐巨锚顶端，细细体悟断链处那一剑截断星舟的霸绝锋芒，剑道感悟飙升，顺手刮下一包附在锚上的磁砂！',
             effects: { lawExp: 26, lawId: 'sword', items: ['xingchen_sha'], stones: 500, exp: 560 },
           },
           lose: {
@@ -7303,7 +7303,7 @@ export const WORLD_REGIONS_LOW = [
     weight: 3,
     minRealm: 2,
     maxRealm: 5,
-    text: '海底火山地热裂口旁，竟凿有一座借助地火炼丹的上古洞府。禁制因岁月流逝已破开一道豁口，滚烫硫磺气息中透出沁人心脾的浓郁丹香，石架上残留着数枚火候极佳的结金期宝丹！',
+    text: '海底火山地热裂口旁，竟凿有一座借助地火炼丹的上古洞府。禁制因岁月流逝已破开一道豁口，滚烫硫磺气息中透出沁人心脾的浓郁丹香，石架上残留着数枚火候极佳、结丹修士用的宝丹！',
     choices: [
       {
         label: '催动寒冰真元硬顶地火热浪，深入丹室尽取宝丹',
@@ -7312,7 +7312,7 @@ export const WORLD_REGIONS_LOW = [
           p: 0.58,
           attrs: { 根骨: 0.015, 气运: 0.014 },
           success: {
-            text: '你身披水幕冲入赤红丹室，迅疾收走一枚结金丹、一枚破障丹与半盒星辰砂！退出来时地火轰然喷发，好险！',
+            text: '你身披水幕冲入赤红丹室，迅疾收走一包凝丹散、一枚破障丹与一袋灵石！退出来时地火轰然喷发，好险！',
             effects: { items: ['jiejin_dan', 'pozhang_dan'], stones: 360, lawExp: 16, lawId: 'pill' },
           },
           fail: {
@@ -7322,11 +7322,11 @@ export const WORLD_REGIONS_LOW = [
         },
       },
       {
-        label: '以碧海玄冰髓暂时镇压火山地火口，从容搜刮整座丹窟',
+        label: '以寒潭玄冰髓暂时镇压火山地火口，从容搜刮整座丹窟',
         hint: '消耗碧海玄冰髓 · 稳夺全窟重宝',
         cost: { item: 'bihai_xuanbing' },
         outcome: {
-          text: '玄冰髓投入地火口，白雾翻腾竟令熔岩凝固半柱香！你慢条斯理扫空全部丹架，结金丹、大还丹、养神玉清丹尽入囊中！',
+          text: '玄冰髓投入地火口，白雾翻腾竟令熔岩凝固半柱香！你慢条斯理扫空全部丹架，凝丹散、大还丹、养神玉清丹尽入囊中！',
           effects: { items: ['jiejin_dan', 'dahuan_dan', 'yangshen_dan'], stones: 520, lawExp: 22, lawId: 'pill' },
         },
       },
@@ -7761,13 +7761,13 @@ export const WORLD_REGIONS_LOW = [
           p: 0.56,
           attrs: { 气运: 0.015, 根骨: 0.014 },
           success: {
-            text: '你手疾眼快抓起紫霄雷铃、雷击木与六百灵石便御剑冲入云层！数息后雷鹏归巢发出震天怒鸣，早已望尘莫及！',
+            text: '你手疾眼快抓起紫霄雷铃、雷击木与近六百灵石便御剑冲入云层！数息后雷鹏归巢发出震天怒鸣，早已望尘莫及！',
             effects: { items: ['zixiao_ling', 'leimu'], stones: 580, exp: 480 },
           },
           fail: {
             text: '刚抓起宝物，天穹一声炸雷——裂云雷鹏恰好振翅归来，拦在崖口！',
             combat: {
-              enemy: 'thunder_roc',
+              enemy: 'thunder_roc', displayName: '裂云雷鹏',
               win: {
                 text: '恶战击退雷鹏，满巢雷宝尽归你手！',
                 effects: { items: ['leimu', 'dahuan_dan'], stones: 640, lawExp: 18, lawId: 'thunder' },
@@ -7866,15 +7866,15 @@ export const WORLD_REGIONS_LOW = [
     weight: 3,
     minRealm: 2,
     maxRealm: 5,
-    text: '浓雾裂隙间浮现出一座无根飘荡的荒凉石岛，岛上插满上千柄早已锈迹斑斑的残剑断戟，竟是上古海战陨落修士的海上剑冢。石岛中央立着一位白衣金丹长老残魂般凝实的守墓大修，冷目如电：「无剑心者，止步岛外！」',
+    text: '浓雾裂隙间浮现出一座无根飘荡的荒凉石岛，岛上插满上千柄早已锈迹斑斑的残剑断戟，竟是上古海战陨落修士的海上剑冢。石岛中央立着一位白衣守墓大修，残魂凝实如生，冷目如电：「无剑心者，止步岛外！」',
     choices: [
       {
-        label: '朗声拔剑登岛，以三招绝杀向守墓金丹长老证自身剑心',
-        hint: '以剑证道 · 战金丹长老',
+        label: '朗声拔剑登岛，以三招绝杀向守墓长老证自身剑心',
+        hint: '以剑证道 · 战结丹长老',
         combat: {
-          enemy: 'jindan_elder',
+          enemy: 'jindan_elder', displayName: '守墓长老',
           win: {
-            text: '千柄锈剑齐齐震鸣致敬！守墓长老欣慰颔首，化作一道清亮剑光没入石碑，留下一枚结金丹、星辰砂与滔天剑道真意！',
+            text: '千柄锈剑齐齐震鸣致敬！守墓长老欣慰颔首，化作一道清亮剑光没入石碑，留下一包凝丹散、一撮磁砂与滔天剑道真意！',
             effects: { items: ['jiejin_dan', 'xingchen_sha'], lawExp: 32, lawId: 'sword', reputation: 28, exp: 720 },
           },
           lose: {
@@ -7887,7 +7887,7 @@ export const WORLD_REGIONS_LOW = [
         label: '向海上千柄先烈残剑躬身三拜，焚香祭酒而不强闯',
         hint: '敬重前贤 · 得善缘与清心剑意',
         outcome: {
-          text: '白衣长老收去杀机，隔空抛出一张剑意封灵符与一瓶清心丹，浮岛随即隐回漫天海雾。',
+          text: '白衣长老收去杀机，隔空抛出一张剑意封灵符与一枚冰心雪莲丹，浮岛随即隐回漫天海雾。',
           effects: { items: ['jianqi_fu', 'bingxin_dan'], karma: 18, lawExp: 16, lawId: 'sword', exp: 420 },
         },
       },
