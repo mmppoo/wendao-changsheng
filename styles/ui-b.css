@@ -50,3 +50,15 @@
 :root[data-ui="b"] .choice-icon svg { filter: saturate(0.9); }
 :root[data-ui="b"] .topbar .icon-btn,
 :root[data-ui="b"] .topbar .brand-mark { color: #2a1e12; }
+/* 画面上浮着的斗法信息用深木框，不用宣纸，免得字看不清 */
+:root[data-ui="b"] .scene-combat-hud,
+:root[data-ui="b"] .combat-hud-row,
+:root[data-ui="b"] .combat-intent,
+:root[data-ui="b"] .toast {
+  --ui-panel: #2a1f14;
+  --ui-edge: #6b5233;
+  --ui-text: #eadcb8;
+  --ui-text-dim: #b09c78;
+  --ui-title: #f0d08a;
+  color: #eadcb8;
+}

@@ -59,6 +59,11 @@ let html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'styles/main.css'), 'utf8');
 
 html = html.replace('<link rel="stylesheet" href="styles/main.css" />', `<style>\n${css}\n</style>`);
+// 像素界面三套风格一并内联（字体仍走 CDN，离线时退回系统字体）
+for (const f of ['ui-base', 'ui-a', 'ui-b', 'ui-c']) {
+  const uiCss = fs.readFileSync(path.join(root, `styles/${f}.css`), 'utf8');
+  html = html.replace(`<link rel="stylesheet" href="styles/${f}.css" />`, `<style>\n${uiCss}\n</style>`);
+}
 html = html.replace('<script type="module" src="src/main.js"></script>', `<script>\n${bundleJs}\n</script>`);
 
 fs.mkdirSync(path.dirname(out), { recursive: true });

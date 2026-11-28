@@ -633,6 +633,80 @@ function pxDrawHeavenGate(ctx, gx, gy, H, t, withLightning = false) {
 }
 
 /** 渲染单帧 16-bit 像素实景（支持 8 大州域 + 全系统主题 + 标题画布） */
+/**
+ * 天空活起来（外景通用）：两层像素云慢慢飘、一小群飞鸟隔一阵横过天空、夜里偶有流星。
+ * 云画在远山之前（在主体场景之前调用），所以会被山挡住，有远近层次。
+ */
+const SKY_LIFE_KINDS = new Set(['qingniu', 'luoxia', 'yaosen', 'guixu', 'beihuang', 'zhongzhou', 'kunlun', 'jiuxiao', 'wild', 'sect', 'title', 'village', 'fall', 'ascend']);
+function pxCloud(ctx, x, y, w, col, colHi) {
+  // 像素云：上窄下宽三层，顶上一道亮边
+  const h1 = Math.max(2, Math.round(w * 0.08));
+  pxRect(ctx, x + Math.round(w * 0.28), y, Math.round(w * 0.36), h1, col);
+  pxRect(ctx, x + Math.round(w * 0.12), y + h1, Math.round(w * 0.7), h1 + 1, col);
+  pxRect(ctx, x, y + h1 * 2 + 1, w, h1 + 1, col);
+  pxRect(ctx, x + Math.round(w * 0.3), y, Math.round(w * 0.3), 1, colHi);
+  pxRect(ctx, x + Math.round(w * 0.14), y + h1, Math.round(w * 0.12), 1, colHi);
+}
+function pxBird(ctx, x, y, frame, col) {
+  pxRect(ctx, x, y, 1, 1, col);
+  if (frame === 0) {
+    pxRect(ctx, x - 1, y - 1, 1, 1, col); pxRect(ctx, x - 2, y - 2, 1, 1, col);
+    pxRect(ctx, x + 1, y - 1, 1, 1, col); pxRect(ctx, x + 2, y - 2, 1, 1, col);
+  } else {
+    pxRect(ctx, x - 1, y, 1, 1, col); pxRect(ctx, x - 2, y + 1, 1, 1, col);
+    pxRect(ctx, x + 1, y, 1, 1, col); pxRect(ctx, x + 2, y + 1, 1, 1, col);
+  }
+}
+function pxDrawSkyLife(ctx, W, H, t, kind) {
+  if (!SKY_LIFE_KINDS.has(kind)) return;
+  const warm = kind === 'luoxia' || kind === 'jiuxiao' || kind === 'kunlun' || kind === 'title';
+  const far = warm ? 'rgba(255,196,150,0.10)' : 'rgba(205,218,240,0.08)';
+  const farHi = warm ? 'rgba(255,214,170,0.16)' : 'rgba(225,235,250,0.14)';
+  const near = warm ? 'rgba(255,186,140,0.16)' : 'rgba(210,222,242,0.13)';
+  const nearHi = warm ? 'rgba(255,226,190,0.26)' : 'rgba(236,242,252,0.24)';
+  // 远层云：慢
+  for (let i = 0; i < 3; i++) {
+    const w = 34 + (i % 2) * 18;
+    const x = ((i * 113 + t * 2.2) % (W + w + 40)) - w - 20;
+    const y = Math.floor(H * 0.12) + (i * 11) % Math.floor(H * 0.18);
+    pxCloud(ctx, Math.round(x), y, w, far, farHi);
+  }
+  // 近层云：快一点、大一点
+  for (let i = 0; i < 2; i++) {
+    const w = 52 + i * 14;
+    const x = ((i * 167 + 60 + t * 4.6) % (W + w + 60)) - w - 30;
+    const y = Math.floor(H * 0.2) + i * Math.floor(H * 0.1);
+    pxCloud(ctx, Math.round(x), y, w, near, nearHi);
+  }
+  // 飞鸟：每 22 秒飞过一群，约 9 秒横穿
+  const cycle = t % 22;
+  if (cycle < 9 && kind !== 'fall') {
+    const p = cycle / 9;
+    const baseX = Math.round(-20 + p * (W + 40));
+    const baseY = Math.floor(H * 0.3) + Math.round(Math.sin(t * 0.9) * 3);
+    // 黄昏天亮，用深色剪影；夜里天黑，用月光照亮的浅色
+    const col = warm ? '#2a1418' : 'rgba(214,222,238,0.85)';
+    const flock = [[0, 0], [-6, 3], [-12, 6], [-6, -3], [-13, -2]];
+    flock.forEach(([dx, dy], k) => {
+      const frame = Math.floor(t * 5 + k * 0.7) % 2;
+      pxBird(ctx, baseX + dx, baseY + dy + Math.round(Math.sin(t * 3 + k) * 1), frame, col);
+    });
+  }
+  // 流星：夜景，每 13 秒一颗，划过不到一秒
+  const night = !warm;
+  const sc = t % 13;
+  if (night && sc < 0.8) {
+    const p = sc / 0.8;
+    const sx = Math.round(W * 0.85 - p * W * 0.45);
+    const sy = Math.round(H * 0.06 + p * H * 0.22);
+    for (let k = 0; k < 7; k++) {
+      const a = (1 - k / 7) * (1 - p * 0.4);
+      pxRect(ctx, sx + k * 2, sy - k, 2, 1, `rgba(255,246,214,${a.toFixed(2)})`);
+    }
+    pxRect(ctx, sx - 1, sy, 2, 2, '#fffbe8');
+  }
+}
+
 export function renderPixelScene(canvas, opts) {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
@@ -670,6 +744,9 @@ export function renderPixelScene(canvas, opts) {
   }
 
   const groundY = Math.floor(H * 0.78);
+
+  // 2.5 天空里的云、飞鸟、流星
+  pxDrawSkyLife(ctx, W, H, t, kind);
 
   // 3. 按场景绘制专属天象 + 远中景 + 像素地标 + 修士
   if (kind === 'qingniu' || kind === 'village') {

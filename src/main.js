@@ -1126,9 +1126,37 @@ function wireTopbar() {
   $('menu-save').addEventListener('click', () => { $('menu-overlay').hidden = true; openSave('save'); });
   $('menu-load').addEventListener('click', () => { $('menu-overlay').hidden = true; openSave('load'); });
   $('menu-sound').addEventListener('click', () => $('btn-sound').click());
+  // 界面风格：玄金 / 宣纸 / 青铜，当场切换并记住
+  $('menu-ui').addEventListener('click', () => cycleUiStyle());
+  $('btn-ui-title')?.addEventListener('click', () => cycleUiStyle());
+  syncUiStyleLabels();
   $('btn-load').addEventListener('click', () => openSave('load'));
   $('btn-codex').addEventListener('click', () => openCodex());
   $('btn-menu').addEventListener('click', () => { $('menu-body').innerHTML = ''; $('menu-overlay').hidden = false; });
+}
+
+const UI_STYLES = [
+  { id: 'a', name: '玄金' },
+  { id: 'b', name: '宣纸' },
+  { id: 'c', name: '青铜' },
+];
+function currentUiStyle() {
+  return document.documentElement.dataset.ui || '0';
+}
+function syncUiStyleLabels() {
+  const cur = UI_STYLES.find((x) => x.id === currentUiStyle());
+  const label = `界面风格：${cur ? cur.name : '旧版'}`;
+  if ($('menu-ui')) $('menu-ui').textContent = label;
+  if ($('btn-ui-title')) $('btn-ui-title').textContent = label;
+}
+function cycleUiStyle() {
+  const idx = UI_STYLES.findIndex((x) => x.id === currentUiStyle());
+  const next = UI_STYLES[(idx + 1) % UI_STYLES.length];
+  document.documentElement.dataset.ui = next.id;
+  try { localStorage.setItem('wd-ui', next.id); } catch { /* 存不了就只本次生效 */ }
+  syncUiStyleLabels();
+  sfx.play('click');
+  toast(`界面风格：${next.name}`, 'gold');
 }
 
 function wireOverlays() {

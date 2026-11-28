@@ -1788,3 +1788,18 @@ button { cursor: pointer; }
   .choices.is-hub-grid.is-dense .choice .label { font-size: 0.82rem; }
 }
 .rumor-bar[hidden] { display: none !important; }
+
+/* 标题页的界面风格切换（小字按钮） */
+.ui-switch {
+  margin-top: 0.9rem;
+  background: transparent;
+  border: 0;
+  color: var(--paper-faint);
+  font: inherit;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 4px;
+}
+.ui-switch:hover { color: var(--gold); }

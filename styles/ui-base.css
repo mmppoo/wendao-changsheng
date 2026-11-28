@@ -142,7 +142,8 @@
 }
 :root[data-ui] .choice.is-primary,
 :root[data-ui] .choice.is-quick,
-:root[data-ui] .btn-primary {
+:root[data-ui] .btn-primary,
+:root[data-ui] .btn-primary-outline {
   background: var(--ui-primary);
   box-shadow:
     inset 0 0 0 2px var(--ui-edge-dark),
@@ -152,7 +153,11 @@
 }
 :root[data-ui] .choice.is-primary .label,
 :root[data-ui] .choice.is-quick .label,
-:root[data-ui] .btn-primary { color: var(--ui-primary-text); }
+:root[data-ui] .btn-primary,
+:root[data-ui] .btn-primary-outline { color: var(--ui-primary-text); }
+:root[data-ui] .btn { font-size: 16px; padding: 10px 16px 12px; letter-spacing: 0.08em; }
+:root[data-ui] .btn:disabled { opacity: 0.5; }
+:root[data-ui] .ui-switch { color: var(--ui-text-dim); font-size: 12px; }
 :root[data-ui] .choice.is-primary .hint,
 :root[data-ui] .choice.is-quick .hint { color: var(--ui-primary-hint); }
 :root[data-ui] .choice.is-urgent { background: var(--ui-urgent); }
@@ -198,3 +203,154 @@
 /* 正文区内边距收紧：标题贴上来，左右留够呼吸 */
 :root[data-ui] .scene-body { padding: 4px 6px 0; }
 :root[data-ui] .scene-head { margin-bottom: 8px; }
+
+/* ================= 组件全覆盖 ================= */
+
+/* 通用像素框（弹窗、建角页、各类卡片） */
+:root[data-ui] .px-frame,
+:root[data-ui] .create-panel,
+:root[data-ui] .overlay-card,
+:root[data-ui] .roll-box {
+  background: var(--ui-panel);
+  color: var(--ui-text);
+  border: 0;
+  border-radius: 0;
+  box-shadow:
+    inset 0 0 0 2px var(--ui-edge-dark),
+    inset 0 0 0 4px var(--ui-edge),
+    inset 0 6px 0 0 var(--ui-hi),
+    inset 0 -6px 0 0 var(--ui-lo),
+    0 0 0 2px var(--ui-edge-dark);
+  clip-path: var(--px-notch);
+}
+:root[data-ui] .px-frame::before, :root[data-ui] .px-frame::after { display: none; }
+:root[data-ui] .overlay { background: rgba(4, 6, 10, 0.78); backdrop-filter: none; }
+
+/* 小标题、分组标题 */
+:root[data-ui] .section-label,
+:root[data-ui] .field > span,
+:root[data-ui] .talent-head h3,
+:root[data-ui] .create-kicker,
+:root[data-ui] .roll-kicker,
+:root[data-ui] .rail-head h3 { font-size: 12px; letter-spacing: 0.16em; color: var(--ui-title); }
+:root[data-ui] .create-head h2,
+:root[data-ui] .modal-head h3 { font-size: 24px; letter-spacing: 0.1em; color: var(--ui-title); }
+:root[data-ui] .modal-head { border-color: var(--ui-rule); }
+:root[data-ui] .talent-sub, :root[data-ui] .hint, :root[data-ui] .rail-sub { font-size: 12px; color: var(--ui-text-dim); }
+:root[data-ui] .talent-block { border-top: 2px solid var(--ui-rule); }
+
+/* 输入框 */
+:root[data-ui] .field input,
+:root[data-ui] input[type="text"] {
+  border: 0; border-radius: 0;
+  background: var(--ui-icon-bg);
+  color: var(--ui-text);
+  font-size: 16px;
+  box-shadow: inset 0 0 0 2px var(--ui-edge-dark), inset 0 4px 0 0 var(--ui-lo);
+  clip-path: var(--px-notch);
+}
+
+/* 两段切换（性别） */
+:root[data-ui] .segmented { border: 0; border-radius: 0; box-shadow: inset 0 0 0 2px var(--ui-edge-dark); clip-path: var(--px-notch); background: var(--ui-icon-bg); padding: 2px; }
+:root[data-ui] .seg { font-size: 16px; color: var(--ui-text-dim); background: transparent; border: 0; }
+:root[data-ui] .seg.is-active { background: var(--ui-primary); color: var(--ui-primary-text); box-shadow: inset 0 -4px 0 0 var(--ui-primary-lo); }
+
+/* 出身、机缘等选择标签 */
+:root[data-ui] .pick-chip,
+:root[data-ui] .tab,
+:root[data-ui] .tag,
+:root[data-ui] .menu-item,
+:root[data-ui] .bag-use-btn,
+:root[data-ui] .btn-sm,
+:root[data-ui] .file-btn {
+  border: 0; border-radius: 0;
+  background: var(--ui-btn);
+  color: var(--ui-text);
+  font-size: 12px;
+  box-shadow: inset 0 0 0 2px var(--ui-edge-dark), inset 0 -4px 0 0 var(--ui-btn-lo), inset 0 4px 0 0 var(--ui-btn-hi);
+  clip-path: var(--px-notch);
+}
+:root[data-ui] .pick-chip { padding: 6px 10px 8px; }
+:root[data-ui] .menu-item { font-size: 16px; padding: 10px 14px 12px; text-align: left; }
+:root[data-ui] .pick-chip.is-active,
+:root[data-ui] .tab.is-active,
+:root[data-ui] .tab[aria-selected="true"] {
+  background: var(--ui-primary);
+  color: var(--ui-primary-text);
+  box-shadow: inset 0 0 0 2px var(--ui-edge-dark), inset 0 0 0 4px var(--ui-primary-edge), inset 0 -6px 0 0 var(--ui-primary-lo);
+}
+:root[data-ui] .pick-chip.is-locked { opacity: 0.55; }
+:root[data-ui] .pick-detail,
+:root[data-ui] .goal-card,
+:root[data-ui] .panel-block {
+  border: 0; border-radius: 0;
+  background: var(--ui-strip);
+  color: var(--ui-text);
+  box-shadow: inset 4px 0 0 0 var(--ui-accent);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* 天赋格 */
+:root[data-ui] .talent {
+  border: 0; border-radius: 0;
+  background: var(--ui-btn);
+  color: var(--ui-text);
+  box-shadow: inset 0 0 0 2px var(--ui-edge-dark), inset 0 -4px 0 0 var(--ui-btn-lo);
+  clip-path: var(--px-notch);
+}
+:root[data-ui] .talent.is-on { background: var(--ui-primary); box-shadow: inset 0 0 0 2px var(--ui-edge-dark), inset 0 0 0 4px var(--ui-primary-edge); }
+:root[data-ui] .talent b { font-size: 12px; }
+:root[data-ui] .talent span { font-size: 12px; color: var(--ui-text-dim); }
+
+/* 存档格、背包、属性行 */
+:root[data-ui] .slot,
+:root[data-ui] .bag-item {
+  border: 0; border-radius: 0;
+  background: var(--ui-btn);
+  box-shadow: inset 0 0 0 2px var(--ui-edge-dark), inset 0 -4px 0 0 var(--ui-btn-lo);
+  clip-path: var(--px-notch);
+  color: var(--ui-text);
+}
+:root[data-ui] .stat-line { font-size: 12px; border-color: var(--ui-rule); }
+:root[data-ui] .char-name { font-size: 24px; color: var(--ui-title); }
+
+/* 结算行、数值变动 */
+:root[data-ui] .scene-lines span {
+  border: 0; border-radius: 0;
+  background: var(--ui-strip);
+  color: var(--ui-text);
+  box-shadow: inset 2px 0 0 0 var(--ui-accent);
+}
+:root[data-ui] .delta-pill {
+  border: 0; border-radius: 0; font-size: 12px;
+  background: var(--ui-strip); color: var(--ui-title);
+  box-shadow: inset 0 0 0 2px var(--ui-edge-dark);
+  clip-path: var(--px-notch);
+}
+
+/* 提示条 */
+:root[data-ui] .toast {
+  border: 0; border-radius: 0; font-size: 12px;
+  background: var(--ui-panel); color: var(--ui-text);
+  box-shadow: inset 0 0 0 2px var(--ui-edge-dark), inset 0 0 0 4px var(--ui-edge);
+  clip-path: var(--px-notch);
+}
+
+/* 斗法：敌我血条、意图 */
+:root[data-ui] .scene-combat-hud { font-size: 12px; }
+:root[data-ui] .combat-hud-row,
+:root[data-ui] .combat-intent {
+  border: 0; border-radius: 0;
+  background: var(--ui-panel);
+  color: var(--ui-text);
+  box-shadow: inset 0 0 0 2px var(--ui-edge-dark), inset 0 0 0 4px var(--ui-edge);
+  clip-path: var(--px-notch);
+}
+
+/* 子页导航 */
+:root[data-ui] .subhub-title { font-size: 16px; color: var(--ui-title); }
+:root[data-ui] .subhub-badge { font-size: 12px; border: 0; border-radius: 0; background: var(--ui-icon-bg); color: var(--ui-title); box-shadow: inset 0 0 0 2px var(--ui-edge-dark); clip-path: var(--px-notch); }
+
+/* 页脚快捷键提示：像素风下不显示 */
+@media (max-width: 1099px) { :root[data-ui] .story-foot { display: none; } }

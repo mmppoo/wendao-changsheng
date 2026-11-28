@@ -8,19 +8,21 @@
 <meta name="description" content="像素国风修仙模拟：十一种出身、九种金手指，从凡人修起，身死之后带着记忆轮回重修。" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%230d111a'/%3E%3Crect x='1' y='1' width='14' height='14' fill='none' stroke='%23e6b95c' stroke-width='1'/%3E%3Crect x='7' y='3' width='2' height='10' fill='%23e6b95c'/%3E%3Crect x='5' y='10' width='6' height='1' fill='%23d44d38'/%3E%3C/svg%3E" />
 <link rel="stylesheet" href="styles/main.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/fusion-pixel-12px-proportional-sc@5.3.0/index.css" />
+<link rel="stylesheet" href="styles/ui-base.css" />
+<link rel="stylesheet" href="styles/ui-a.css" />
+<link rel="stylesheet" href="styles/ui-b.css" />
+<link rel="stylesheet" href="styles/ui-c.css" />
 <script>
-  /* 界面风格预览：网址加 ?ui=a / b / c 切换，?ui=0 恢复原样 */
+  /* 界面风格：a 玄金（默认）/ b 宣纸 / c 青铜，菜单里可换；网址 ?ui= 也可指定，?ui=0 为旧版样式 */
   (function () {
+    var u = 'a';
     try {
       var q = new URLSearchParams(location.search).get('ui');
-      if (q === '0') localStorage.removeItem('wd-ui'); else if (q) localStorage.setItem('wd-ui', q);
-      var u = q === '0' ? null : (q || localStorage.getItem('wd-ui'));
-      if (u && /^[abc]$/.test(u)) {
-        document.documentElement.dataset.ui = u;
-        document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/fusion-pixel-12px-proportional-sc@5.3.0/index.css" />'
-          + '<link rel="stylesheet" href="styles/ui-base.css" /><link rel="stylesheet" href="styles/ui-' + u + '.css" />');
-      }
-    } catch (e) { /* 读不到本地存储就用原样 */ }
+      if (q && /^[abc0]$/.test(q)) localStorage.setItem('wd-ui', q);
+      u = localStorage.getItem('wd-ui') || 'a';
+    } catch (e) { /* 读不到本地存储就用默认 */ }
+    if (u !== '0') document.documentElement.dataset.ui = u;
   })();
 </script>
 </head>
@@ -44,6 +46,7 @@
         <button id="btn-new" class="btn btn-primary-outline">踏入仙途</button>
         <button id="btn-gallery" class="btn btn-ghost">命途图鉴</button>
       </div>
+      <button id="btn-ui-title" class="ui-switch" type="button">界面风格</button>
       <div class="title-highlights" aria-label="游戏特性">
         <span>十一种出身</span>
         <span>记住前世，改写结局</span>
@@ -286,6 +289,7 @@
         <button class="menu-item menu-mobile-only" id="menu-save">存档</button>
         <button class="menu-item menu-mobile-only" id="menu-load">读档</button>
         <button class="menu-item menu-mobile-only" id="menu-sound">音效开关</button>
+        <button class="menu-item" id="menu-ui">界面风格</button>
         <button class="menu-item" id="menu-restart">重入轮回</button>
         <button class="menu-item" id="menu-title">返回卷首</button>
         <button class="menu-item" id="menu-help">修行指引</button>
