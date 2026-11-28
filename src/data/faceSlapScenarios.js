@@ -463,7 +463,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_02_clan_seize_field',
     category: 'clan',
-    title: '强占祖传灵田',
+    title: '强占灵田',
     minRealm: 0,
     maxRealm: 3,
     regions: ['qingniu', 'luoxia'],
@@ -491,7 +491,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_03_birthday_humiliation',
     category: 'clan',
-    title: '寿宴逐出末席',
+    title: '寿宴受辱',
     minRealm: 0,
     maxRealm: 5,
     regions: null,
@@ -519,7 +519,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_04_heirloom_extortion',
     category: 'clan',
-    title: '逼交先祖遗玉',
+    title: '逼交遗玉',
     minRealm: 1,
     maxRealm: 6,
     regions: null,
@@ -577,7 +577,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_06_auction_bid_mock',
     category: 'market',
-    title: '拍卖行恶语抬价',
+    title: '拍卖抬价',
     minRealm: 1,
     maxRealm: 8,
     regions: null,
@@ -605,7 +605,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_07_snobbish_shopkeeper',
     category: 'market',
-    title: '势利掌柜逐客',
+    title: '势利掌柜',
     minRealm: 0,
     maxRealm: 5,
     regions: ['qingniu', 'luoxia', 'yaosen', 'zhongzhou'],
@@ -633,7 +633,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_08_stall_treasure_snatch',
     category: 'market',
-    title: '坊市地摊强截漏',
+    title: '地摊截漏',
     minRealm: 0,
     maxRealm: 6,
     regions: null,
@@ -663,7 +663,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_09_spirit_stone_mock',
     category: 'sect',
-    title: '测灵碑前遭嗤笑',
+    title: '测灵碑前',
     minRealm: 0,
     maxRealm: 4,
     regions: ['qingniu', 'yaosen', 'guixu'],
@@ -691,7 +691,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_10_steward_dock_stipend',
     category: 'sect',
-    title: '执事克扣月例',
+    title: '克扣月例',
     minRealm: 0,
     maxRealm: 4,
     regions: ['yaosen', 'guixu', 'zhongzhou'],
@@ -719,7 +719,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_11_arena_challenge_trap',
     category: 'sect',
-    title: '外门大比借机立威',
+    title: '外门大比',
     minRealm: 0,
     maxRealm: 5,
     regions: ['yaosen', 'guixu', 'beihuang'],
@@ -747,7 +747,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_12_scripture_pavilion_block',
     category: 'sect',
-    title: '藏经阁门前刁难',
+    title: '藏经阁前',
     minRealm: 1,
     maxRealm: 6,
     regions: ['guixu', 'zhongzhou'],
@@ -777,7 +777,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_13_herb_valley_robbery',
     category: 'realm',
-    title: '山涧采药遭截胡',
+    title: '采药截胡',
     minRealm: 0,
     maxRealm: 4,
     regions: ['qingniu', 'luoxia', 'yaosen'],
@@ -805,7 +805,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_14_spirit_vein_eviction',
     category: 'realm',
-    title: '霸占灵脉清场',
+    title: '霸占灵泉',
     minRealm: 1,
     maxRealm: 6,
     regions: ['yaosen', 'guixu', 'beihuang', 'kunlun'],
@@ -833,7 +833,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_15_ruin_gate_cannon_fodder',
     category: 'realm',
-    title: '遗迹阵前逼探路',
+    title: '逼人探路',
     minRealm: 2,
     maxRealm: 7,
     regions: ['guixu', 'beihuang', 'kunlun', 'jiuxiao'],
@@ -861,7 +861,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_16_sand_well_toll',
     category: 'realm',
-    title: '沙井渡口强索买路钱',
+    title: '买路钱',
     minRealm: 2,
     maxRealm: 8,
     regions: ['luoxia', 'kunlun', 'jiuxiao'],
@@ -891,7 +891,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_17_alchemy_furnace_mock',
     category: 'craft',
-    title: '丹坊比火遭轻蔑',
+    title: '丹坊比火',
     minRealm: 0,
     maxRealm: 6,
     regions: ['luoxia', 'yaosen', 'zhongzhou'],
@@ -919,7 +919,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_18_forge_blade_test',
     category: 'craft',
-    title: '炉坊试锋压价',
+    title: '炉坊压价',
     minRealm: 1,
     maxRealm: 6,
     regions: ['yaosen', 'guixu', 'beihuang'],
@@ -947,7 +947,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_19_antique_appraisal_scam',
     category: 'craft',
-    title: '鉴宝堂指真为赝',
+    title: '指真为赝',
     minRealm: 1,
     maxRealm: 7,
     regions: ['luoxia', 'zhongzhou', 'kunlun'],
@@ -975,7 +975,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_20_array_repair_scorn',
     category: 'craft',
-    title: '补阵台前贬斥外行',
+    title: '补阵',
     minRealm: 2,
     maxRealm: 7,
     regions: ['guixu', 'beihuang', 'zhongzhou'],
@@ -1005,7 +1005,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_21_gate_pass_extortion',
     category: 'noble',
-    title: '城门查路引刁难',
+    title: '城门刁难',
     minRealm: 0,
     maxRealm: 6,
     regions: ['luoxia', 'beihuang', 'zhongzhou', 'kunlun'],
@@ -1033,7 +1033,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_22_noble_steed_collision',
     category: 'noble',
-    title: '纵马长街反咬一口',
+    title: '纵兽伤人',
     minRealm: 0,
     maxRealm: 5,
     regions: ['qingniu', 'luoxia', 'zhongzhou'],
@@ -1061,7 +1061,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_23_tax_clerk_coercion',
     category: 'noble',
-    title: '清丈税册借官压人',
+    title: '借官压人',
     minRealm: 1,
     maxRealm: 7,
     regions: ['qingniu', 'luoxia', 'zhongzhou'],
@@ -1089,7 +1089,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_24_border_officer_arrogance',
     category: 'noble',
-    title: '关城校场轻慢外客',
+    title: '关城轻慢',
     minRealm: 2,
     maxRealm: 7,
     regions: ['beihuang', 'kunlun'],
@@ -1119,7 +1119,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_25_teahouse_genius_probe',
     category: 'genius',
-    title: '论道茶会天骄试锋',
+    title: '天骄试锋',
     minRealm: 2,
     maxRealm: 8,
     regions: ['guixu', 'zhongzhou', 'kunlun'],
@@ -1147,7 +1147,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_26_stele_ranking_dispute',
     category: 'genius',
-    title: '石碑留名争锋',
+    title: '试锋石',
     minRealm: 3,
     maxRealm: 9,
     regions: ['guixu', 'zhongzhou', 'beihuang'],
@@ -1175,7 +1175,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_27_old_monster_seize_seat',
     category: 'genius',
-    title: '流沙古驿老怪压场',
+    title: '老怪压场',
     minRealm: 4,
     maxRealm: 9,
     regions: ['zhongzhou', 'kunlun', 'jiuxiao'],
@@ -1203,7 +1203,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_28_ancient_ruin_monopoly',
     category: 'genius',
-    title: '赤霞残殿霸主清场',
+    title: '残殿清场',
     minRealm: 5,
     maxRealm: 9,
     regions: ['kunlun', 'jiuxiao'],
@@ -1233,7 +1233,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_29_hometown_ferry_scorn',
     category: 'return',
-    title: '故地重游旧邻嘲讽',
+    title: '故地旧邻',
     minRealm: 1,
     maxRealm: 9,
     regions: ['qingniu', 'luoxia'],
@@ -1261,7 +1261,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_30_former_bully_reunion',
     category: 'return',
-    title: '狭路重逢昔日恶少',
+    title: '昔日恶少',
     minRealm: 1,
     maxRealm: 9,
     regions: null,
@@ -1289,7 +1289,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_31_ancestral_hall_reckoning',
     category: 'return',
-    title: '重返祠堂讨还旧债',
+    title: '重返祠堂',
     minRealm: 2,
     maxRealm: 9,
     regions: ['qingniu', 'luoxia', 'zhongzhou'],
@@ -1317,7 +1317,7 @@ export const FACESLAP_SCENARIOS = [
   {
     id: 'fs_32_expelled_sect_return',
     category: 'return',
-    title: '重临旧门清算旧账',
+    title: '重临旧门',
     minRealm: 3,
     maxRealm: 9,
     regions: ['yaosen', 'guixu', 'zhongzhou'],

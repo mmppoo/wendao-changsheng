@@ -406,7 +406,7 @@ export function buildGrudgeBookNode(game) {
 
   return {
     id: 'grudgeBook',
-    title: `恩怨簿（待报 ${pending.length} · 已了 ${settled.length}）`,
+    title: '恩怨簿',
     text: bodyLines.join('\n'),
     choices,
     subhub: true,
@@ -659,7 +659,7 @@ export function buildFaceSlapNode(game) {
     );
     return {
       id: 'faceSlap',
-      title: `护短风波 · ${backing.elderTitle}现身`,
+      title: `${backing.elderTitle}现身`,
       text: body,
       choices,
     };
@@ -840,7 +840,7 @@ export function buildFaceSlapNode(game) {
   const noteText = fs.note ? `${fs.note.join('\n')}\n\n` : '';
   return {
     id: 'faceSlap',
-    title: fs.isGrudge ? `旧怨清算 · ${fs.provokerName}（${REL_LABELS[rTier]}）` : `${sc.title} · ${REL_LABELS[rTier]}`,
+    title: fs.isGrudge ? `冤家路窄` : sc.title,
     text: `${noteText}${setupText}\n\n${provokeText}\n\n${stanceNote}${dreadText}${heatNote}`,
     choices,
   };

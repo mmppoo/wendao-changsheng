@@ -1095,7 +1095,7 @@ test('v8.1 网文流派出身、气机姿态与万象因果打脸引擎（四档
   startFaceSlapEncounter(gElder, { context: 'city', forceRelTier: 'much_higher' });
   gElder.state.faceSlap.stage = 'elder';
   const elderNode = buildFaceSlapNode(gElder);
-  assert.ok(elderNode.title.includes('护短风波'));
+  assert.ok(elderNode.title.endsWith('现身'));
   resolveFaceSlapChoice(gElder, 'elder_show');
   assert.ok((gElder.state.counters.elder_slaps || 0) >= 1, '高阶主角应直接震服护短长老并记 elder_slaps');
 });
