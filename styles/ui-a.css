@@ -1,0 +1,33 @@
+/* 风格 A · 玄金：深墨蓝面板 + 古金描边，朱砂为重点色。沿用现有色调，做实做精。 */
+:root[data-ui="a"] {
+  --ui-bg: #090c15;
+  --ui-bg-dot: #0d1220;
+  --ui-panel: #141a2a;
+  --ui-edge-dark: #04060b;
+  --ui-edge: #8a6a2c;
+  --ui-hi: #1f2840;
+  --ui-lo: #0e1320;
+  --ui-strip: #10162400;
+  --ui-text: #efe4c8;
+  --ui-text-dim: #98a0b2;
+  --ui-title: #f2c76a;
+  --ui-rule: #3a3220;
+  --ui-accent: #e8b85a;
+  --ui-tag: #b8402e;
+  --ui-tag-lo: #7c2618;
+  --ui-tag-text: #fff0d8;
+  --ui-btn: #18203a;
+  --ui-btn-edge: #3a4566;
+  --ui-btn-hi: #25304e;
+  --ui-btn-lo: #0f1526;
+  --ui-btn-hover: #1e2846;
+  --ui-icon-bg: #0c111e;
+  --ui-primary: #3a2e16;
+  --ui-primary-edge: #e0b052;
+  --ui-primary-hi: #57441f;
+  --ui-primary-lo: #241c0c;
+  --ui-primary-text: #ffe6a8;
+  --ui-primary-hint: #c9ad78;
+  --ui-urgent: #6e2016;
+}
+:root[data-ui="a"] .rumor-bar { background: #0f1422; }

@@ -1,0 +1,52 @@
+/* 风格 B · 宣纸：上方夜景，下方宣纸卷册；墨色粗描边，朱砂印章做重点。 */
+:root[data-ui="b"] {
+  --ui-bg: #1b140d;
+  --ui-bg-dot: #221910;
+  --ui-panel: #e6d8b6;
+  --ui-edge-dark: #1c140c;
+  --ui-edge: #3a2a1a;
+  --ui-hi: #f4ead1;
+  --ui-lo: #cbb88e;
+  --ui-strip: #2a1f14;
+  --ui-text: #2a1e12;
+  --ui-text-dim: #6c5840;
+  --ui-title: #2a1e12;
+  --ui-rule: #b9a47a;
+  --ui-accent: #b23a26;
+  --ui-tag: #b23a26;
+  --ui-tag-lo: #7a2214;
+  --ui-tag-text: #f8ecd2;
+  --ui-btn: #ece0c2;
+  --ui-btn-edge: #8a7350;
+  --ui-btn-hi: #faf3e0;
+  --ui-btn-lo: #cdb98f;
+  --ui-btn-hover: #f2e8cf;
+  --ui-icon-bg: #d6c49c;
+  --ui-primary: #b23a26;
+  --ui-primary-edge: #e3a06a;
+  --ui-primary-hi: #cc5238;
+  --ui-primary-lo: #7a2214;
+  --ui-primary-text: #fbefd6;
+  --ui-primary-hint: #f1c8a8;
+  --ui-urgent: #8a1f12;
+}
+/* 顶栏、导航用深木色，与宣纸册页区分 */
+:root[data-ui="b"] .topbar,
+:root[data-ui="b"] .mobile-hud,
+:root[data-ui="b"] .mobile-nav {
+  --ui-panel: #2a1f14;
+  --ui-edge: #6b5233;
+  --ui-hi: #3a2c1c;
+  --ui-lo: #1e160e;
+  --ui-text: #eadcb8;
+  --ui-text-dim: #b09c78;
+  --ui-title: #f0d08a;
+  color: #eadcb8;
+}
+:root[data-ui="b"] .mobile-hud .mhud-bar-head span,
+:root[data-ui="b"] .mobile-hud .mhud-meta { color: #b09c78; }
+:root[data-ui="b"] .rumor-bar { color: #d8c49c; }
+:root[data-ui="b"] .scene-title { text-shadow: none; }
+:root[data-ui="b"] .choice-icon svg { filter: saturate(0.9); }
+:root[data-ui="b"] .topbar .icon-btn,
+:root[data-ui="b"] .topbar .brand-mark { color: #2a1e12; }

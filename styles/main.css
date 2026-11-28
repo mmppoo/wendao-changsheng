@@ -1015,11 +1015,13 @@ button { cursor: pointer; }
 
 .scene-text {
   font-size: clamp(0.94rem, 1.08vw, 1.02rem);
-  line-height: 1.92;
+  line-height: 1.62;
   color: #eae2cc;
   white-space: pre-wrap;
   min-height: 2.2em;
 }
+.scene-text p { margin: 0 0 0.5em; }
+.scene-text p:last-child { margin-bottom: 0; }
 .scene-text.is-reveal { animation: fade 0.15s steps(4) both; }
 
 .scene-lines {

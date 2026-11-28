@@ -1,0 +1,44 @@
+/* 风格 C · 青铜：铜绿描边的暗青面板，琥珀色字，四角铆钉；偏经典像素 RPG 菜单窗。 */
+:root[data-ui="c"] {
+  --ui-bg: #071012;
+  --ui-bg-dot: #0a1719;
+  --ui-panel: #0f2226;
+  --ui-edge-dark: #030809;
+  --ui-edge: #3d8a78;
+  --ui-hi: #17343a;
+  --ui-lo: #0a181b;
+  --ui-strip: #0b1a1d;
+  --ui-text: #ecdfbf;
+  --ui-text-dim: #86a69c;
+  --ui-title: #e6a855;
+  --ui-rule: #1f4a47;
+  --ui-accent: #e6a855;
+  --ui-tag: #2e6e60;
+  --ui-tag-lo: #1a463d;
+  --ui-tag-text: #f3e6c4;
+  --ui-btn: #12292e;
+  --ui-btn-edge: #2a5a55;
+  --ui-btn-hi: #1b3b41;
+  --ui-btn-lo: #0b1a1d;
+  --ui-btn-hover: #163238;
+  --ui-icon-bg: #08161a;
+  --ui-primary: #6a3e17;
+  --ui-primary-edge: #e6a855;
+  --ui-primary-hi: #8a5524;
+  --ui-primary-lo: #42260c;
+  --ui-primary-text: #ffe9bf;
+  --ui-primary-hint: #e3c08c;
+  --ui-urgent: #6e2a16;
+}
+/* 面板四角铆钉 */
+:root[data-ui="c"] .topbar,
+:root[data-ui="c"] .mobile-hud,
+:root[data-ui="c"] .story-scroll,
+:root[data-ui="c"] .mobile-nav {
+  background-image:
+    linear-gradient(#e6a855, #e6a855), linear-gradient(#e6a855, #e6a855),
+    linear-gradient(#e6a855, #e6a855), linear-gradient(#e6a855, #e6a855);
+  background-size: 4px 4px;
+  background-repeat: no-repeat;
+  background-position: 6px 6px, calc(100% - 6px) 6px, 6px calc(100% - 6px), calc(100% - 6px) calc(100% - 6px);
+}

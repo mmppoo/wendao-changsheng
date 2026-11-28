@@ -869,7 +869,8 @@ function renderStory(deltas = []) {
     .join('');
 
   const el = $('scene-text');
-  el.textContent = text;
+  // 按段落排：段与段之间留半行，不再用整行空白隔开
+  el.innerHTML = String(text || '').split(/\n{2,}/).filter((para) => para.trim()).map((para) => `<p>${escapeHtml(para)}</p>`).join('');
   // 子菜单没有正文时不留空框（标题已在上方导航条里）
   const empty = !String(text || '').trim() && !(game.state.scene.result?.lines || []).length && !deltas.length;
   $('story-scroll').classList.toggle('is-empty', empty);
