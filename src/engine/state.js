@@ -331,7 +331,7 @@ export function petBonuses(char) {
   const zero = { atk: 0, def: 0, stones: 0, luck: 0, explore: 0, demonResist: 0, tribResist: 0, lifespan: 0 };
   if (!char?.petId || !PET_BY_ID[char.petId]) return zero;
   const lvl = clamp(Number(char.petLevel) || 1, 1, 5);
-  const beastBoost = 1 + (sectPerks(char).beast || 0);
+  const beastBoost = (1 + (sectPerks(char).beast || 0)) * (char.goldenFingerId === 'gf_beast' ? 1.5 : 1);
   const scale = (1 + (lvl - 1) * 0.35) * beastBoost;
   switch (char.petId) {
     case 'pet_turtle':
@@ -476,6 +476,7 @@ export function createRun({ seed, name, gender, originId, rootId, goldenFingerId
     for (const id of ap.items || []) addItemRaw(char, id, 1);
     for (const tech of ap.techniques || []) addStartingTech(tech);
     if (ap.title && !char.titles.includes(ap.title)) char.titles.push(ap.title);
+    if (ap.pet) { char.petId = ap.pet; char.petLevel = ap.petLevel || 1; }
     if (ap.flag) Object.assign(talentFlags, ap.flag);
   }
 
@@ -825,6 +826,11 @@ export function sectPerks(char) {
   return SECT_BY_ID[char.sectId]?.perks || {};
 }
 
+/** 修仙面板：每活过一年熟练度 +1，最多 60。 */
+export function panelMastery(char) {
+  return Math.max(0, Math.min(60, Math.floor(((char?.age || START_AGE_MONTHS) - START_AGE_MONTHS) / 12)));
+}
+
 export function monthlyExp(state) {
   const char = state.char;
   const realm = REALMS[char.realm];
@@ -849,7 +855,8 @@ export function monthlyExp(state) {
     * (1 + buff);
   const demonPenalty = 1 - clamp(char.demon / 260, 0, 0.7);
   const jMult = jieshuMods(char.jieshu || 0).speedMult;
-  return Math.max(1, Math.round(base * speed * realm.monthly * demonPenalty * jMult));
+  const panel = char.goldenFingerId === 'gf_panel' ? 1 + panelMastery(char) / 100 : 1;
+  return Math.max(1, Math.round(base * speed * realm.monthly * demonPenalty * jMult * panel));
 }
 
 export function gainExp(state, amount) {

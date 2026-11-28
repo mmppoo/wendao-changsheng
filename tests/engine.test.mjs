@@ -15,8 +15,8 @@ const SU = (await import('../src/data/npcs.js')).NPC_BY_ID.npc_su.relationKey;
 function fresh(opts = {}) {
   const g = new Game();
   g.newRun({ seed: 12345, name: '阿禾', gender: '女', originId: 'farmer', rootId: 'shuangling', ...opts });
-  // v8：开局直接进本地第一件大事；单元测试从主界面开始，并撤销这次开场记录
-  assert.ok(g.currentNode()?.history, '开局应直接进入第一件大事');
+  // 开局进入出身开场；单元测试从主界面开始
+  assert.equal(g.state.scene.id, `open_${g.state.char.originId}`, '开局应进入出身开场');
   g.state.scene = { id: 'hub', result: null };
   g.state.currentHistoryKey = null;
   g.state.history = {};
@@ -919,11 +919,19 @@ test('v8 审计漏洞回归：套利、灵脉、论道、祭炼、喂兽、门�
 });
 
 test('v8 大历史：亲历、风闻、前世手札、先知只认前世', async () => {
-  const { tickHistory, historyIndex } = await import('../src/engine/history.js');
+  const { tickHistory, historyIndex, FORCED_HISTORY, localHistory } = await import('../src/engine/history.js');
   const g = fresh();
   const list = historyIndex(g.registry);
   assert.ok(list.length > 100, `历史事件应已注册，当前 ${list.length}`);
-  const ev = list.find((e) => e.history.major && e.history.regions?.length);
+  const ev = list.find((e) => FORCED_HISTORY.has(e.id) && e.history.regions?.length);
+  // 0. 非强制的大事不打断，只在当地闲逛时可撞上
+  const g0 = fresh();
+  const minor = list.find((e) => !FORCED_HISTORY.has(e.id) && e.history.regions?.includes('qingniu'));
+  g0.state.history = Object.fromEntries(list.filter((e) => e !== minor && e.history.window[0] <= minor.history.window[0]).map((e) => [e.history.key, { outcome: 'baseline' }]));
+  g0.state.char.age = 192 + (minor.history.window[0] - 1) * 12;
+  g0.state.char.regionId = 'qingniu';
+  assert.equal(tickHistory(g0.state, g0.registry).open, null, '非强制大事不插播');
+  assert.equal(localHistory(g0.state, g0.registry)?.id, minor.id, '闲逛时可撞上');
   g.state.history = {};
   // 1. 窗口已过、人不在场：化为风闻并写进手札
   g.state.char.regionId = ev.history.regions[0] === 'qingniu' ? 'beihuang' : 'qingniu';
@@ -985,7 +993,7 @@ test('v8 存档：旧世界进行中的存档不载入；老玩家已开放的�
   assert.ok(originUnlocked(old, 'outsider'), '记过一世之后也不能锁回去');
   const fresh0 = { runs: 0 };
   migrateMeta(fresh0);
-  assert.equal(originUnlocked(fresh0, 'outsider'), false, '新玩家要靠成就解锁');
+  assert.equal(originUnlocked(fresh0, 'outsider'), true, '出身一开始全部开放');
 });
 
 test('v8 审计修复：做过的宗门任务冷却，不会连着上榜', () => {

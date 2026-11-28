@@ -8,7 +8,7 @@
  *     regions: ['qingniu', 'luoxia'],        // 主角身在这些地区时亲历；为空则同域即可亲历
  *     window: [1, 3],                        // 发生年份（第一纪元第几年，含首尾）
  *     baseline: '若无人干预时的走向（一两句）', // 不在场时以风闻传来，也写进手札
- *     major: true,                           // 大事：亲历时强制插入；非大事只在当地探索时遇到
+ *     major: true,                           // 剧本标记；是否强制发生见 FORCED_HISTORY
  *     minRealm: 0,                           // 可选：境界门槛（凡人碰不到的山上之事）
  *   }
  *
@@ -29,6 +29,31 @@ export function worldYear(state) {
 
 export function playerDomain(state) {
   return REGION_DOMAIN[state.char?.regionId || 'qingniu'] || 'nanze';
+}
+
+/**
+ * 剧本只当背景：绝大多数大事不打断玩家，只在当地闲逛时偶尔撞上，错过就化为风闻。
+ * 只有下面几件天下皆知的大灾会在主角身处其地时直接发生。
+ */
+export const FORCED_HISTORY = new Set([
+  'c1_y018_nanze_baseline_flood',
+  'c1_y019_century_judgement',
+  'e1b_b044_nz_juekou',
+  'e1d_b088_zhongzhou_zhezhu',
+  'e1d_b100_finale',
+]);
+
+/** 当地闲逛时可能撞上的一件大事（窗口内、在场、未经历）。 */
+export function localHistory(state, registry) {
+  state.history = state.history || {};
+  const year = worldYear(state);
+  for (const ev of historyIndex(registry)) {
+    const h = ev.history;
+    if (year < h.window[0]) break;
+    if (state.history[h.key] || year > h.window[1]) continue;
+    if (presentAt(state, ev)) return ev;
+  }
+  return null;
 }
 
 let HISTORY_INDEX = null;
@@ -88,14 +113,14 @@ export function tickHistory(state, registry) {
     if (year > h.window[1]) {
       state.history[h.key] = { outcome: 'baseline', year: h.window[1], source: '风闻' };
       const sameDomain = !h.domain || h.domain === playerDomain(state);
-      if (h.major || sameDomain) {
-        const prefix = h.domain ? `【${DOMAIN_NAMES[h.domain]}风闻 · 第${h.window[1]}年】` : `【天下大事 · 第${h.window[1]}年】`;
+      remember(state, ev, '风闻');
+      if (sameDomain || FORCED_HISTORY.has(ev.id)) {
+        const prefix = h.domain ? `【${DOMAIN_NAMES[h.domain]}风闻】` : '【天下大事】';
         notes.push(`${prefix}${ev.title}：${h.baseline}`);
-        remember(state, ev, '风闻');
       }
       continue;
     }
-    if (!open && presentAt(state, ev) && (h.major || state.scene?.id === 'regionHub')) open = ev;
+    if (!open && FORCED_HISTORY.has(ev.id) && presentAt(state, ev)) open = ev;
   }
   return { open, notes };
 }

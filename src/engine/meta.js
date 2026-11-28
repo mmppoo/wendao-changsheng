@@ -99,21 +99,10 @@ function endingCount(meta) { return (meta?.unlockedEndings || []).length; }
 function cleared(meta) { return (meta?.maxYear || 0) >= CLEAR_YEAR; }
 
 /** 解锁条件：{ test(meta) → bool, hint 文案 }。未列出的默认开放。 */
-export const ORIGIN_UNLOCKS = {
-  fallen_clan: { hint: '任意一世修至筑基', test: (m) => (m.maxRealm || 0) >= 1 },
-  wanderer: { hint: '走完两世', test: (m) => (m.runs || 0) >= 2 },
-  merchant: { hint: '任意一世修至结丹', test: (m) => (m.maxRealm || 0) >= 2 },
-  royal: { hint: '收录 5 个结局', test: (m) => endingCount(m) >= 5 },
-  demon_child: { hint: '历世累计斩敌 300', test: (m) => (m.totalKills || 0) >= 300 },
-  artifact_spirit: { hint: '任意一世修至元婴', test: (m) => (m.maxRealm || 0) >= 3 },
-  outsider: { hint: '任意一世活过第一千年', test: (m) => cleared(m) },
-};
+/** 解锁条件：{ test(meta) → bool, hint 文案 }。出身与金手指一开始全部开放（未列出的默认开放）。 */
+export const ORIGIN_UNLOCKS = {};
 
-export const GF_UNLOCKS = {
-  gf_karma_mirror: { hint: '收录 3 个结局', test: (m) => endingCount(m) >= 3 },
-  gf_stealth: { hint: '任意一世活过三百岁', test: (m) => (m.maxAge || 0) >= 300 },
-  gf_signin: { hint: '任意一世到过五个地方', test: (m) => (m.maxRegions || 0) >= 5 },
-};
+export const GF_UNLOCKS = {};
 
 /** 旧存档（v8 之前）已经玩过的人，全部开放，不收回已有内容。 */
 function legacyOpen(meta) {

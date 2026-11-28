@@ -24,7 +24,7 @@ import { ITEM_BY_ID, ALCHEMY_RECIPES, ALCHEMY_RECIPE_BY_ID } from '../data/items
 import { ACHIEVEMENTS, ACHIEVEMENT_BY_ID } from '../data/achievements.js';
 import { ENDINGS, ENDING_BY_ID, pickEnding } from '../data/endings.js';
 import { ENEMY_BY_ID, scaleEnemy } from '../data/enemies.js';
-import { tickHistory, beginHistoryEvent, worldYear } from './history.js';
+import { tickHistory, beginHistoryEvent, worldYear, localHistory } from './history.js';
 import { NEMESIS_ARCHETYPES } from '../data/events/nemesis.js';
 import { freshCentury1World } from '../data/history/index.js';
 import { jieshuMods, chooseEnding, endingKarma, recordLifeStats, refreshUnlocks, legacyOptions, setLegacy } from './meta.js';
@@ -84,7 +84,7 @@ export class Game {
     this.state = s;
     this.meta = s.meta;
     this.state.scene = { id: 'hub', result: null };
-    this.state.rumors = [`【青石镇】河湾渡口晨钟又响。第一纪元第一年，${s.char.name}睁开了眼。`];
+    this.state.rumors = [`【风闻】又有一个${ROOT_BY_ID[s.char.rootId]?.name || '凡体'}的少年人踏上了仙途，名叫「${s.char.name}」。`];
     this.state.rumorAt = s.char.age;
     // v8：每一世分到一个宿敌（六种之一），名字按原型的姓名池生成
     const mix = Math.imul((s.seed >>> 0) ^ 0x9e3779b9, 2654435761) >>> 0;
@@ -93,10 +93,10 @@ export class Game {
       this.state.flags['宿敌'] = arch.id;
       this.state.flags['宿敌名'] = this.rng.pick(arch.surnames) + this.rng.pick(arch.givenNames);
     }
-    // v8：不放「篇章导语」，开局直接进第一件事
+    // 开局进入出身开场
     this.state.chapterId = 'B001';
     this.state.lingqiWord = lingqiWord(lingqiAt(1));
-    this.openFirstHistory();
+    this.openScene(`open_${this.state.char.originId}`);
     this.checkAchievements();
     this.emit();
     return s;
@@ -1025,6 +1025,18 @@ export class Game {
       this.pushRumor(`【风闻】${c.name}走遍了${region.name}。`);
     }
 
+    // 剧本里的当地大事：闲逛时偶尔撞上
+    if (this.rng.chance(0.15)) {
+      const hev = localHistory(s, this.registry);
+      if (hev) {
+        const preface = beginHistoryEvent(s, hev);
+        this.openScene(hev.id);
+        if (preface) s.scene.preface = preface;
+        this.afterAction();
+        this.emit();
+        return;
+      }
+    }
     const ev = pickEvent(s, this.rng, this, this.rng.chance(0.7) ? 'wild' : 'world', region.id);
     const petExp = petBonuses(c).explore || 0;
     const freedomBonus = (sectPerks(c).freedom || 0) * 0.35;
@@ -3228,6 +3240,10 @@ export class Game {
         c.realm++;
         c.layer = 0;
         const extraMajor = [];
+        if (c.goldenFingerId === 'gf_panel') {
+          c.attrs.悟性 += 2;
+          extraMajor.push('【修仙面板】大境界突破，悟性 +2。');
+        }
         if (s.flags['前世秘藏'] && !s.flags[`秘藏已领:${c.realm}`]) {
           s.flags[`秘藏已领:${c.realm}`] = true;
           const legacy = Math.round(1500 * Math.pow(REALMS[c.realm].powerMult || 1, 0.5));
@@ -3851,7 +3867,8 @@ export class Game {
       const gap = (c.realm || 0) - (e.realm || 0);
       const upset = gap < 0 ? 1 + 0.8 * Math.min(3, -gap) : 1;
       const jLoot = jieshuMods(c.jieshu || 0).lootMult;
-      const exp = Math.round(e.exp * (1 + c.attrs.气运 * 0.01) * eraLoot * upset);
+      const devour = c.goldenFingerId === 'gf_devour';
+      const exp = Math.round(e.exp * (1 + c.attrs.气运 * 0.01) * eraLoot * upset * (devour ? 1.6 : 1));
       const stones = Math.round(e.stones * (1 + (petBonuses(c).stones || 0)) * eraLoot * upset * jLoot);
       c.stones += stones;
       const gained = gainExp(s, exp);
@@ -3869,6 +3886,14 @@ export class Game {
         this.pushRumor(`【风闻】「${c.name}」以${REALMS[c.realm]?.name}修为越阶斩了${e.name}。`);
       }
       log.push(`${e.name}伏诛。搜得灵石 +${stones.toLocaleString()}，实战修为 +${gained.toLocaleString()}。`);
+      if (devour) {
+        c.demon = Math.min(100, (c.demon || 0) + 2);
+        if (this.rng.chance(0.25)) {
+          const k = this.rng.chance(0.5) ? '根骨' : '神识';
+          c.attrs[k] += 1;
+          log.push(`【吞天魔功】吞下${e.name}残存的精元，${k} +1。心魔 +2。`);
+        } else log.push('【吞天魔功】精元入体，修为涨得更快。心魔 +2。');
+      }
       if (e.realm >= 2) this.pushRumor(`【风闻】「${c.name}」在${c.location}斩了${e.name}。`);
       const onWin = cb.onWin;
       s.combat = null;
