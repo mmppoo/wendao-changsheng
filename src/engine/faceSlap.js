@@ -89,6 +89,39 @@ export function heatOf(state) {
   return Math.max(0, h.v - Math.max(0, (state.char.age - h.at) / 6));
 }
 
+/**
+ * 场景前提：写到「你家祖田」「当年驱逐你的山门」「你的月例」的场景，主角得真有这段过去、这个身份，
+ * 否则就是凭空编造。once：这类旧怨一世只翻一次，不会隔几年就冒出一个新的「当年恶少」。
+ */
+const HOME_REGIONS = ['qingniu', 'luoxia'];
+// 孤儿、魔道遗孤没有可争的祖产，皇子的家业不是乡下祠堂与祖田
+const hasFamily = (c) => !['orphan', 'demon_child', 'royal'].includes(c.originId);
+const sectJunior = (c, maxRank) => Boolean(c.sectId && c.sectId !== 'sanxiu' && c.sectId !== 'player_sect' && (c.sectRank || 0) <= maxRank);
+const SCENARIO_GATES = {
+  fs_02_clan_seize_field: { once: true, ok: (c) => hasFamily(c) && HOME_REGIONS.includes(c.regionId) },
+  fs_04_heirloom_extortion: { once: true, ok: (c) => c.originId !== 'orphan' },
+  fs_09_spirit_stone_mock: { ok: (c) => (c.realm || 0) <= 1 },
+  fs_10_steward_dock_stipend: { ok: (c) => sectJunior(c, 1) },
+  fs_11_arena_challenge_trap: { ok: (c) => sectJunior(c, 1) },
+  fs_12_scripture_pavilion_block: { ok: (c) => sectJunior(c, 2) },
+  fs_29_hometown_ferry_scorn: { once: true, ok: (c) => HOME_REGIONS.includes(c.regionId) },
+  fs_30_former_bully_reunion: { once: true, ok: () => true },
+  fs_31_ancestral_hall_reckoning: { once: true, ok: (c) => hasFamily(c) && HOME_REGIONS.includes(c.regionId) },
+  fs_32_expelled_sect_return: { once: true, ok: (c) => c.originId === 'wanderer' || (c.betrayCount || 0) > 0 || Object.keys(c.sectBlacklist || {}).length > 0 },
+};
+function scenarioAllowed(state, sc) {
+  const gate = SCENARIO_GATES[sc.id];
+  if (!gate) return true;
+  if (gate.once && (state.faceSlapOnce || []).includes(sc.id)) return false;
+  return gate.ok(state.char);
+}
+
+/** 风波升级（护短长老现身）：有家底撑腰的更爱喊人，看不出深浅的毛头小子多半没人管。 */
+function escalateRoll(game, fs, base) {
+  const adj = fs?.motive === 'backed' ? 0.2 : fs?.motive === 'blind' ? -0.15 : 0;
+  return game.rng.chance(clamp(base + adj, 0.05, 0.9));
+}
+
 function interp(tpl, vars) {
   if (!tpl) return '';
   let out = String(tpl);
@@ -149,6 +182,22 @@ export function recordGrudge(state, fs, reason = '旧日受辱') {
     else break;
   }
   return entry;
+}
+
+/** 仇人也会老死：按其境界寿元，记仇时大约还剩六成寿数，过了就不在人世了。 */
+export function expireGrudges(state) {
+  const out = [];
+  for (const g of state?.grudges || []) {
+    if (g.status !== 'owe') continue;
+    const years = ((state.char?.age || 0) - (g.atAge || 0)) / 12;
+    const left = (REALMS[g.provokerRealm || 0]?.lifespan || 120) * 0.6;
+    if (years > left) {
+      g.status = 'expired';
+      g.expiredYear = yearOf(state);
+      out.push(g);
+    }
+  }
+  return out;
 }
 
 export function settleGrudge(state, grudgeId) {
@@ -277,6 +326,7 @@ export function compareRealmTier(char, targetRealm) {
 export function startGrudgeRevenge(game, grudgeId, { returnTo = 'grudgeBook', note = null } = {}) {
   const s = game.state;
   const c = s.char;
+  expireGrudges(s);
   const g = (s.grudges || []).find((x) => x.id === grudgeId && x.status === 'owe');
   if (!g) return null;
   const backing = BACKING_FACTIONS.find((b) => b.id === g.backingId) || BACKING_FACTIONS[0];
@@ -322,8 +372,10 @@ export function startGrudgeRevenge(game, grudgeId, { returnTo = 'grudgeBook', no
 export function buildGrudgeBookNode(game) {
   const s = game.state;
   const c = s.char;
+  expireGrudges(s);
   const pending = (s.grudges || []).filter((g) => g.status === 'owe');
   const settled = (s.grudges || []).filter((g) => g.status === 'settled');
+  const expired = (s.grudges || []).filter((g) => g.status === 'expired');
   const dreadList = BACKING_FACTIONS
     .map((b) => ({ b, d: getFactionDread(s, b.id) }))
     .filter((x) => x.d > 0)
@@ -348,6 +400,7 @@ export function buildGrudgeBookNode(game) {
       ? `簿上尚有 ${pending.length} 笔未报之账。当年修为未足暂且忍下，如今随时可登门清算（每笔旧账仅可清算一次）。`
       : '眼下恩怨簿干干净净，尚无未了之仇。若日后遇事暂避或一时失手，皆会记入此簿，留待来日翻盘。',
     settled.length ? `已了结旧怨：${settled.length} 笔。` : '',
+    expired.length ? `仇家已寿终、无从清算：${expired.slice(-3).map((g) => g.provokerName).join('、')}${expired.length > 3 ? ` 等 ${expired.length} 人` : ''}。` : '',
     dreadList.length ? `\n【五域靠山威慑】\n${dreadList.join('　·　')}` : '\n【五域靠山威慑】各地门阀与恶霸尚未尝过你的厉害。',
   ].filter(Boolean);
 
@@ -375,6 +428,7 @@ export function startFaceSlapEncounter(game, {
 
   // 若无指定场景/档位，在当地有超过 1 年的未报旧怨且你如今不弱于对方时，18% 概率自然触发「狭路相逢」
   if (!forceRelTier && !forceScenarioId && Array.isArray(s.grudges)) {
+    expireGrudges(s);
     const due = s.grudges.filter((g) => g.status === 'owe' && g.regionId === region.id && c.age - (g.atAge || 0) >= 12 && c.realm >= g.provokerRealm);
     if (due.length && rng.chance(0.18)) {
       const pickedG = rng.pick(due);
@@ -390,16 +444,17 @@ export function startFaceSlapEncounter(game, {
       if (sc.maxRealm != null && c.realm > sc.maxRealm) return false;
       if (sc.regions && !sc.regions.includes(region.id)) return false;
       if (sc.contexts && !sc.contexts.includes(context)) return false;
-      return true;
+      return scenarioAllowed(s, sc);
     });
     if (!pool.length) {
-      pool = FACESLAP_SCENARIOS.filter((sc) => (sc.minRealm ?? 0) <= c.realm && c.realm <= (sc.maxRealm ?? 9));
+      pool = FACESLAP_SCENARIOS.filter((sc) => (sc.minRealm ?? 0) <= c.realm && c.realm <= (sc.maxRealm ?? 9) && scenarioAllowed(s, sc));
     }
-    if (!pool.length) pool = FACESLAP_SCENARIOS;
+    if (!pool.length) pool = FACESLAP_SCENARIOS.filter((sc) => !SCENARIO_GATES[sc.id]);
     const fresh = pool.filter((sc) => !recent.includes(sc.id));
     scenario = rng.pick(fresh.length ? fresh : pool);
   }
   s.faceSlapRecent = [scenario.id, ...(s.faceSlapRecent || []).filter((id) => id !== scenario.id)].slice(0, 12);
+  if (SCENARIO_GATES[scenario.id]?.once) s.faceSlapOnce = [...new Set([...(s.faceSlapOnce || []), scenario.id])];
   s.faceSlapHeat = { v: heatOf(s) + 1, at: c.age };
   blockedAttrs = new Set();
 
@@ -415,9 +470,16 @@ export function startFaceSlapEncounter(game, {
 
   const elderRealm = Math.min(9, provokerRealm + 1);
   const elderRealmLabel = `${REALMS[elderRealm].name}${elderRealm === 9 ? '' : '中期'}`;
+  // 没敛息却被修为更低的人挑衅，必须有个说得通的缘由：要么境界差太远看不出深浅，要么家底厚有恃无恐
+  let motive = null;
+  if (stance !== 'hide' && (relTier === 'much_higher' || relTier === 'higher')) {
+    const gap = (c.realm || 0) - provokerRealm;
+    motive = gap >= 2 && rng.chance(provokerRealm === 0 ? 0.7 : 0.5) ? 'blind' : 'backed';
+  }
 
   s.faceSlap = {
     scenarioId: scenario.id,
+    motive,
     stage: 'junior',
     context,
     returnTo,
@@ -635,6 +697,12 @@ export function buildFaceSlapNode(game) {
     } else {
       stanceNote = `你此刻「敛息藏锋」，外人眼中只见你【${fs.seenRealm}】的微弱气机。对方真实修为约在【${fs.provokerRealmLabel}】（${REL_LABELS[rTier]}）。`;
     }
+  } else if (fs.motive === 'blind') {
+    stanceNote = fs.stance === 'show'
+      ? `你虽威压外放，可对方修为不过【${fs.provokerRealmLabel}】，与你差得太远，反倒感应不出深浅，只当你是个故作姿态的过路人。`
+      : `对方修为不过【${fs.provokerRealmLabel}】，与你差得太远，根本看不出你的深浅，只当你是寻常过路人。`;
+  } else if (fs.motive === 'backed') {
+    stanceNote = `对方修为约在【${fs.provokerRealmLabel}】（${REL_LABELS[rTier]}），${fs.stance === 'show' ? '分明被你的威压逼得脸色发白' : '看得出你修为不浅'}，却仗着「${backing.name}」家大业大，腰间还挂着长辈赐的护身玉符，认定没人敢动他。`;
   } else if (fs.stance === 'show') {
     stanceNote = `你此刻「威压外放」，修为毫无遮掩。对方修为约在【${fs.provokerRealmLabel}】（${REL_LABELS[rTier]}），仍仗着「${backing.name}」的势头挑衅。`;
   } else {
@@ -843,7 +911,7 @@ function launchFaceSlapCombat(game, fs, sc, backing, isElder = false, introLines
   else if (relTier === 'lower') scaleMult = 0.62;
 
   const rew = rewardScale(game, fs, isElder ? 1.2 : 1.0);
-  const shouldEscalate = !isElder && sc.canEscalate && !fs.isGrudge && game.rng.chance(0.42);
+  const shouldEscalate = !isElder && sc.canEscalate && !fs.isGrudge && escalateRoll(game, fs, 0.42);
   const winBody = isElder
     ? `${interp(backing.elderFightText, vars)}\n\n连靠山都被你当场打服，四周${sc.crowd}鸦雀无声，再无人敢轻视你半分。`
     : interp(sc.fightWin, vars);
@@ -1119,7 +1187,7 @@ export function resolveFaceSlapChoice(game, tactic) {
       s.counters.faceslap_wins = (s.counters.faceslap_wins || 0) + 1;
       s.counters.lowkey_wins = (s.counters.lowkey_wins || 0) + 1;
       const loot = maybeLootItem(game, fs, 0.48);
-      const shouldEscalate = sc.canEscalate && !fs.isGrudge && game.rng.chance(0.45);
+      const shouldEscalate = sc.canEscalate && !fs.isGrudge && escalateRoll(game, fs, 0.45);
       lines.push(`【扮猪吃虎】诱敌加码后反手掀桌：灵石 +${rew.stones.toLocaleString()}，声望 +${rew.rep}，修为 +${gotExp.toLocaleString()}，道心 +1${loot ? `，顺走战利「${loot}」×1` : ''}。`);
       game.pushRumor(`【五域风闻】「${c.name}」在${fs.loc}扮猪吃虎，把「${backing.name}」的${fs.provokerName}坑得颜面尽失、血本无归。`);
       return finalizeFaceSlap(game, {
@@ -1167,7 +1235,7 @@ export function resolveFaceSlapChoice(game, tactic) {
       s.counters.faceslap_wins = (s.counters.faceslap_wins || 0) + 1;
       s.counters.flex_wins = (s.counters.flex_wins || 0) + 1;
       const loot = maybeLootItem(game, fs, 0.35);
-      const shouldEscalate = sc.canEscalate && !fs.isGrudge && game.rng.chance(0.45);
+      const shouldEscalate = sc.canEscalate && !fs.isGrudge && escalateRoll(game, fs, 0.45);
       lines.push(`【绝对威压】全场跪服赔礼：灵石 +${rew.stones.toLocaleString()}，声望 +${Math.round(rew.rep * 1.25)}，道心 +1${loot ? `，赔礼「${loot}」×1` : ''}。`);
       game.pushRumor(`【五域风闻】${fs.loc}有不长眼之辈冲撞了${realmLabel(c)}大修「${c.name}」，仅凭一缕威压便跪地求饶。`);
       return finalizeFaceSlap(game, {
@@ -1186,7 +1254,7 @@ export function resolveFaceSlapChoice(game, tactic) {
       s.counters.faceslap_wins = (s.counters.faceslap_wins || 0) + 1;
       s.counters.flex_wins = (s.counters.flex_wins || 0) + 1;
       const loot = maybeLootItem(game, fs, 0.35);
-      const shouldEscalate = sc.canEscalate && !fs.isGrudge && game.rng.chance(0.4);
+      const shouldEscalate = sc.canEscalate && !fs.isGrudge && escalateRoll(game, fs, 0.4);
       lines.push(`【高境压制】对方脸色剧变赔礼退让：灵石 +${rew.stones.toLocaleString()}，声望 +${rew.rep}，修为 +${gotExp.toLocaleString()}${loot ? `，获得「${loot}」×1` : ''}。`);
       return finalizeFaceSlap(game, {
         text: interp(sc.showWin.higher, vars),
@@ -1206,7 +1274,7 @@ export function resolveFaceSlapChoice(game, tactic) {
         bumpFaceSlapAttr(game, '道心', 2);
         s.counters.faceslap_wins = (s.counters.faceslap_wins || 0) + 1;
         s.counters.flex_wins = (s.counters.flex_wins || 0) + 1;
-        const shouldEscalate = sc.canEscalate && !fs.isGrudge && game.rng.chance(0.35);
+        const shouldEscalate = sc.canEscalate && !fs.isGrudge && escalateRoll(game, fs, 0.35);
         lines.push(`【同境碾压】你一身浑厚底蕴（${fScore}）生生压垮同境对手：灵石 +${rew.stones.toLocaleString()}，声望 +${Math.round(rew.rep * 1.15)}，修为 +${gotExp.toLocaleString()}，道心 +2。`);
         return finalizeFaceSlap(game, {
           text: interp(sc.showWin.equal, vars),
@@ -1252,7 +1320,7 @@ export function resolveFaceSlapChoice(game, tactic) {
       s.counters.faceslap_wins = (s.counters.faceslap_wins || 0) + 1;
       if (rTier === 'lower') s.counters.underdog_slaps = (s.counters.underdog_slaps || 0) + 1;
       const loot = maybeLootItem(game, fs, 0.42);
-      const shouldEscalate = sc.canEscalate && !fs.isGrudge && game.rng.chance(0.38);
+      const shouldEscalate = sc.canEscalate && !fs.isGrudge && escalateRoll(game, fs, 0.38);
       lines.push(`【出身破局】灵石 +${rew.stones.toLocaleString()}，声望 +${rew.rep + (oc.bonus?.reputation || 12)}，修为 +${gotExp.toLocaleString()}${loot ? `，另获「${loot}」×1` : ''}。`);
       return finalizeFaceSlap(game, {
         text: `${interp(oc.successLines[rTier] || oc.successLines.equal, vars)}\n\n${interp(oc.crowdReact, vars)}`,
@@ -1284,7 +1352,7 @@ export function resolveFaceSlapChoice(game, tactic) {
     else s.counters.flex_wins = (s.counters.flex_wins || 0) + 1;
     if (rTier === 'lower') s.counters.underdog_slaps = (s.counters.underdog_slaps || 0) + 1;
     const loot = maybeLootItem(game, fs, 0.5);
-    const shouldEscalate = sc.canEscalate && !fs.isGrudge && c.goldenFingerId !== 'gf_stealth' && game.rng.chance(0.36);
+    const shouldEscalate = sc.canEscalate && !fs.isGrudge && c.goldenFingerId !== 'gf_stealth' && escalateRoll(game, fs, 0.36);
     lines.push(`【机缘显威】灵石 +${rew.stones.toLocaleString()}，声望 +${rew.rep + (gc.bonus?.reputation || 15)}，修为 +${gotExp.toLocaleString()}${loot ? `，额外所得「${loot}」×1` : ''}。`);
     game.pushRumor(`【五域风闻】「${c.name}」在${fs.loc}以惊人手段压倒${fs.provokerName}，满堂皆惊。`);
     return finalizeFaceSlap(game, {

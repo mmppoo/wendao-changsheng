@@ -1213,3 +1213,49 @@ test('v8.2 逻辑消冲突与可玩性深化：地域靠山、同门清理门户
   }
   assert.ok(BACKING_FACTIONS.every((b) => Array.isArray(b.homeRegions) && b.homeRegions.length > 0));
 });
+
+test('v8.2 逻辑审查：高境界不碰凡人伤人事件、低阶挑衅必有缘由、仇人会老死、晚成归来物是人非', async () => {
+  const { pickEvent } = await import('../src/engine/narrative.js');
+  const { startFaceSlapEncounter, buildFaceSlapNode, buildGrudgeBookNode, recordGrudge } = await import('../src/engine/faceSlap.js');
+  const { STORY_TRIGGERS } = await import('../src/data/events/index.js');
+  const { compileCondition } = await import('../src/engine/expr.js');
+  const { contextOf } = await import('../src/engine/narrative.js');
+  // 1. 元婴不会再被护院砸晕、被差役架走、在码头扛包
+  const g = fresh();
+  g.state.char.realm = 3;
+  const mortal = new Set(['ev_x_slave_market', 'ev_road_bandit', 'ev_x_magistrate', 'ev_x_prisoner_escort', 'c1_r_grain_dock', 'ev_x_chicken']);
+  for (let i = 0; i < 400; i++) {
+    for (const kind of ['wild', 'world']) {
+      const ev = pickEvent(g.state, g.rng, g, kind, 'qingniu');
+      assert.ok(!ev || !mortal.has(ev.id), `元婴不应撞上凡人伤人事件 ${ev?.id}`);
+    }
+  }
+  // 2. 不敛息却被低境界的人挑衅：文中写明是看不出深浅，还是家底撑腰
+  for (const stance of ['normal', 'show']) {
+    for (let i = 0; i < 12; i++) {
+      const gi = fresh({ seed: 300 + i });
+      gi.state.char.realm = 4; gi.state.char.auraStance = stance;
+      startFaceSlapEncounter(gi, { context: 'city', returnTo: 'hub', forceRelTier: 'much_higher' });
+      const fs = gi.state.faceSlap;
+      assert.ok(fs.motive === 'blind' || fs.motive === 'backed');
+      const t = buildFaceSlapNode(gi).text;
+      assert.ok(fs.motive === 'blind' ? t.includes('看不出') || t.includes('感应不出') : t.includes('家大业大'), t);
+    }
+  }
+  // 3. 仇人按其境界寿元老死，不能几百年后还去找一个炼气散修算账
+  const gg = fresh();
+  startFaceSlapEncounter(gg, { context: 'city', returnTo: 'hub', forceRelTier: 'equal' });
+  gg.state.faceSlap.provokerRealm = 0;
+  const entry = recordGrudge(gg.state, gg.state.faceSlap, '测试');
+  gg.state.faceSlap = null;
+  gg.state.char.age += 12 * 100;
+  buildGrudgeBookNode(gg);
+  assert.equal(entry.status, 'expired');
+  // 4. 第 45 年后才筑基：走「物是人非」，不走开局故人原样等你打脸
+  const gl = fresh({ originId: 'royal' });
+  gl.state.char.realm = 1;
+  gl.state.char.age = 192 + 60 * 12;
+  const ctx = contextOf(gl.state, gl);
+  const live = STORY_TRIGGERS.filter((t) => t.id.startsWith('cb_') && compileCondition(t.when)(ctx)).map((t) => t.id);
+  assert.deepEqual(live, ['cb_late']);
+});

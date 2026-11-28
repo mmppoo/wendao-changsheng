@@ -430,6 +430,11 @@ export class Game {
       const lines = applyEffects(s, node.onEnter, this.effectCtx());
       if (lines.length) s.scene.lines = lines;
     }
+    // 归来清算时对方会认出你的修为：敛息着的话，此刻主动散去敛息（文中交代一句）
+    if (node.revealsRealm && s.char.auraStance === 'hide') {
+      s.char.auraStance = 'normal';
+      s.scene.preface = '你散去敛息，不再藏着修为。';
+    }
     s.stats.events++;
     s.stats.encounters = (s.stats.encounters || 0) + 1;
     this.pushLog(node.title || id);

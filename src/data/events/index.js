@@ -58,6 +58,35 @@ export const ALL_EVENTS = [
  * 日后按新世界改写后再放回）。判定口径：事件全文含下列任一旧专名。
  */
 export const LEGACY_TERMS = ['九州', '青牛', '落霞', '妖森', '归墟', '北荒', '昆仑', '九霄', '天门', '飞升', '太玄', '青云', '丹霞', '天音', '万象', '寒山', '万宝', '万兽', '机关城', '血魔', '合欢', '幽冥', '苏晚晴', '陆沉舟', '药尘子', '顾青衣', '血煞', '林昊', '云霓', '玄机老人', '墨衡', '白幽', '青莲', '司命', '东海', '中州圣域', '魔域', '仙城', '大梁', '仙界', '上界', '仙帝'];
+/**
+ * 境界上限补丁：凡人世界里能伤到你、或者把你当打零工后生的事件，境界高了还撞上就说不通
+ * （化神被护院砸晕、元婴被差役架出县衙）。这里统一补上 maxRealm，不改各文件原文。
+ */
+const REALM_CAPS = {
+  // 只在炼气期：凡人、野兽、地痞就能伤到你或拿捏你
+  ev_road_bandit: 0, ev_x_chicken: 0, ev_x_wolf_pack: 0, ev_x_slave_market: 0, ev_x_prisoner_escort: 0,
+  ev_x_magistrate: 0, ev_x_conscription: 0, ev_x_dice_house: 0, ev_x_escort_job: 0, ev_x_arena: 0,
+  ev_x_river_pirates: 0, ev_x_herb_slope: 0, ev_herb_garden: 0,
+  // 青石镇一带的短工与镇上琐事：扛包、拉风箱、押车、巡堤
+  c1_r_ferry_help: 0, c1_r_east_ditch: 0, c1_r_qian_san_price: 0, c1_r_xu_niang_herbs: 0, c1_r_shen_yan_workshop: 0,
+  c1_r_zhao_shou_levy: 0, c1_r_old_kiln: 0, c1_r_lu_qing_cargo: 0, c1_r_refugee_shed: 0, c1_r_after_flood: 0,
+  c1_r_grain_dock: 0, c1_r_south_polder: 0, c1_r_heifeng_toll: 0, c1_r_linhe_market: 0, c1_r_garrison_pay: 0,
+  c1_r_dike_patrol: 0,
+  // 到筑基为止：蛇窟、同门欺生
+  ev_x_snake_den: 1, ev_sect_bully: 1,
+  // 到结丹为止：外门差事、杂役、守炉试药之类
+  ev_sect_mission: 2, ev_sect_library: 2, ev_sect_pill_room: 2,
+  ev_s_taixuan_borrow_sword: 2, ev_s_danxia_watch_fire: 2, ev_s_danxia_taste_drug: 2, ev_s_danxia_herb_garden: 2,
+  ev_s_tianyin_sutra: 2, ev_s_wanxiang_frozen_ink: 2, ev_s_hanshan_snow_house: 2, ev_s_wanbao_ledger: 2,
+  ev_s_wanshou_cub: 2, ev_s_wanshou_three_months: 2, ev_s_youming_ferry: 2, ev_s_youming_grave: 2,
+  ev_s_monthly_wage: 2, ev_s_chore_board: 2, ev_s_law_hall: 2, wsa_ws_01: 2, wsa_ym_01: 2, wsa_sx_02: 2,
+  wsa_sx_07: 3,
+};
+for (const ev of ALL_EVENTS) {
+  const cap = REALM_CAPS[ev.id];
+  if (cap != null && (ev.maxRealm == null || ev.maxRealm > cap)) ev.maxRealm = cap;
+}
+
 export const LEGACY_EVENT_IDS = new Set(ALL_EVENTS.filter((ev) => {
   const txt = JSON.stringify(ev, (k, v) => (typeof v === 'function' ? v.toString() : v));
   return LEGACY_TERMS.some((t) => txt.includes(t));
