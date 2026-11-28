@@ -53,6 +53,31 @@ const TIER_REWARD_MULT = {
   lower: 2.1,
 };
 
+/** 遇事所得属性：每个大境界至多 +8（各项合计），用完后不再涨，结算文字里也不再写。 */
+const FS_ATTR_BUDGET = 8;
+let blockedAttrs = new Set(); // 本次结算里被额度挡掉的属性（模块内暂存，不进存档）
+function bumpAttr(game, key, n) {
+  const s = game.state;
+  const c = s.char;
+  if (!n) return 0;
+  if (n < 0) { c.attrs[key] = (c.attrs[key] || 0) + n; return n; }
+  s.faceSlapAttr = s.faceSlapAttr || {};
+  const used = s.faceSlapAttr[c.realm] || 0;
+  const give = Math.max(0, Math.min(n, FS_ATTR_BUDGET - used));
+  if (give < n) blockedAttrs.add(key);
+  if (!give) return 0;
+  s.faceSlapAttr[c.realm] = used + give;
+  c.attrs[key] = (c.attrs[key] || 0) + give;
+  return give;
+}
+
+/** 风头：短时间里连着惹事，敢来的多是没油水的小角色，所得递减；每半年消退一档。 */
+function heatOf(state) {
+  const h = state.faceSlapHeat;
+  if (!h) return 0;
+  return Math.max(0, h.v - Math.max(0, (state.char.age - h.at) / 6));
+}
+
 function interp(tpl, vars) {
   if (!tpl) return '';
   let out = String(tpl);
@@ -181,6 +206,7 @@ export function startFaceSlapEncounter(game, {
   returnTo = 'hub',
   forceRelTier = null,
   forceScenarioId = null,
+  note = null,
 } = {}) {
   const s = game.state;
   const c = s.char;
@@ -205,6 +231,8 @@ export function startFaceSlapEncounter(game, {
     scenario = rng.pick(fresh.length ? fresh : pool);
   }
   s.faceSlapRecent = [scenario.id, ...(s.faceSlapRecent || []).filter((id) => id !== scenario.id)].slice(0, 12);
+  s.faceSlapHeat = { v: heatOf(s) + 1, at: c.age };
+  blockedAttrs = new Set();
 
   const { relTier, provokerRealm, provokerRealmLabel } = rollProvokerTier(c, rng, forceRelTier);
   const backing = rng.pick(BACKING_FACTIONS);
@@ -238,6 +266,7 @@ export function startFaceSlapEncounter(game, {
     elderRelTier: compareRealmTier(c, elderRealm),
     raisedStakes: false, // 是否在第一段套话抬高了彩头/留下把柄
     evidenceHeld: false, // 是否抓到了对方的把柄
+    note: Array.isArray(note) && note.length ? note.filter(Boolean) : null, // 本次行动先前的结算（交差所得、走遍奖励等），不能被遇事吞掉
   };
   s.scene = { id: 'faceSlap', result: null };
   s.stats.events++;
@@ -273,7 +302,8 @@ function rewardScale(game, fs, extraMult = 1) {
   const c = game.state.char;
   const pm = REALMS[c.realm]?.powerMult || 1;
   const tierMult = TIER_REWARD_MULT[fs.stage === 'elder' ? fs.elderRelTier : fs.relTier] || 1;
-  const stakeMult = (fs.raisedStakes ? 1.45 : 1) * (fs.stage === 'elder' ? 1.55 : 1) * extraMult;
+  const heatMult = Math.max(0.3, 1 - 0.14 * heatOf(game.state));
+  const stakeMult = (fs.raisedStakes ? 1.45 : 1) * (fs.stage === 'elder' ? 1.55 : 1) * extraMult * heatMult;
   return {
     stones: Math.round((85 + c.realm * 50) * Math.pow(pm, 0.5) * tierMult * stakeMult),
     exp: Math.round(monthlyExp(game.state) * (1.1 + c.realm * 0.12) * tierMult * stakeMult),
@@ -487,10 +517,12 @@ export function buildFaceSlapNode(game) {
     },
   );
 
+  const heatNote = heatOf(s) >= 3 ? '\n\n（你近来接连惹事，坊间已认得你，敢凑上来的多是没什么油水的小角色。）' : '';
+  const noteText = fs.note ? `${fs.note.join('\n')}\n\n` : '';
   return {
     id: 'faceSlap',
     title: `${sc.title} · ${REL_LABELS[rTier]}`,
-    text: `${setupText}\n\n${provokeText}\n\n${stanceNote}`,
+    text: `${noteText}${setupText}\n\n${provokeText}\n\n${stanceNote}${heatNote}`,
     choices,
   };
 }
@@ -498,6 +530,11 @@ export function buildFaceSlapNode(game) {
 function finalizeFaceSlap(game, { text, lines = [], fx = null, escalate = false }) {
   const s = game.state;
   const fs = s.faceSlap;
+  if (blockedAttrs.size) {
+    const re = new RegExp(`[，、]?(${[...blockedAttrs].join('|')}) \\+\\d+`, 'g');
+    lines = lines.map((l) => l.replace(re, '').replace(/：，/g, '：').replace(/，。/g, '。').replace(/：。/g, '。'));
+  }
+  blockedAttrs = new Set();
   if (escalate && fs && fs.stage === 'junior') {
     fs.stage = 'elder';
     s.scene.result = {
@@ -566,7 +603,7 @@ function launchFaceSlapCombat(game, fs, sc, backing, isElder = false) {
         stones: rew.stones,
         exp: rew.exp,
         reputation: rew.rep,
-        attrs: { 道心: relTier === 'lower' ? 3 : 1 },
+        attrs: relTier === 'lower' ? { 道心: 2 } : {},
         counter: isElder
           ? { faceslap_wins: 1, elder_slaps: 1, ...(relTier === 'lower' ? { underdog_slaps: 1 } : {}) }
           : { faceslap_wins: 1, ...(relTier === 'lower' ? { underdog_slaps: 1 } : {}) },
@@ -581,7 +618,6 @@ function launchFaceSlapCombat(game, fs, sc, backing, isElder = false) {
       text: loseBody,
       effects: {
         injury: 1,
-        attrs: { 道心: 2, 悟性: 1 },
         reputation: -Math.round(rew.rep * 0.3),
       },
       faceSlapClear: true,
@@ -609,7 +645,7 @@ export function resolveFaceSlapChoice(game, tactic) {
 
     if (tactic === 'elder_leave') {
       lines.push('你收起战利品从容离去，道心 +1。');
-      c.attrs.道心 += 1;
+      bumpAttr(game, '道心', 1);
       return finalizeFaceSlap(game, {
         text: `你扫了一眼气势汹汹的${backing.elderTitle}，拱手一笑：「小辈无礼，我已替贵方管教过了。后会有期。」说罢御风离去，留下一地目瞪口呆的看客。`,
         lines,
@@ -625,7 +661,7 @@ export function resolveFaceSlapChoice(game, tactic) {
         c.stones += rew.stones;
         c.reputation += rew.rep;
         const gotExp = gainExp(s, Math.round(rew.exp * 0.6));
-        c.attrs.道心 += 2;
+        bumpAttr(game, '道心', 2);
         s.counters.faceslap_wins = (s.counters.faceslap_wins || 0) + 1;
         s.counters.flex_wins = (s.counters.flex_wins || 0) + 1;
         s.counters.elder_slaps = (s.counters.elder_slaps || 0) + 1;
@@ -640,7 +676,7 @@ export function resolveFaceSlapChoice(game, tactic) {
       }
       if (eTier === 'lower' && fScore >= 72 && game.rng.chance(0.55)) {
         c.reputation += rew.rep;
-        c.attrs.道心 += 3;
+        bumpAttr(game, '道心', 3);
         s.counters.faceslap_wins = (s.counters.faceslap_wins || 0) + 1;
         s.counters.elder_slaps = (s.counters.elder_slaps || 0) + 1;
         lines.push(`你一身惊人底蕴竟震得高阶长老疑心背后有大能护道，对方惊疑退走！声望 +${rew.rep}，道心 +3。`);
@@ -659,7 +695,7 @@ export function resolveFaceSlapChoice(game, tactic) {
       if (game.rng.chance(p)) {
         c.stones += rew.stones;
         c.reputation += Math.round(rew.rep * 1.2);
-        c.attrs.悟性 += 1;
+        bumpAttr(game, '悟性', 1);
         s.counters.faceslap_wins = (s.counters.faceslap_wins || 0) + 1;
         s.counters.lowkey_wins = (s.counters.lowkey_wins || 0) + 1;
         s.counters.elder_slaps = (s.counters.elder_slaps || 0) + 1;
@@ -695,11 +731,13 @@ export function resolveFaceSlapChoice(game, tactic) {
     if (tactic === 'elder_gf') {
       const gfC = GF_COUNTERS[c.goldenFingerId];
       if (!gfC) return launchFaceSlapCombat(game, fs, sc, backing, true);
+      const gfP = { much_higher: 1, higher: 0.95, equal: 0.75, lower: 0.45 }[eTier] ?? 0.75;
+      if (!game.rng.chance(gfP)) return launchFaceSlapCombat(game, fs, sc, backing, true);
       const text = interp(gfC.successLines[eTier] || gfC.successLines.equal, vars);
       c.stones += Math.round(rew.stones * (gfC.bonus?.stonesMult || 1));
       c.reputation += rew.rep + (gfC.bonus?.reputation || 10);
       const gotExp = gainExp(s, Math.round(rew.exp * (gfC.bonus?.expMult || 0.7)));
-      if (gfC.bonus?.daoxin) c.attrs.道心 += gfC.bonus.daoxin;
+      if (gfC.bonus?.daoxin) bumpAttr(game, '道心', gfC.bonus.daoxin);
       if (gfC.bonus?.demon) c.demon = clamp(c.demon + gfC.bonus.demon, 0, 100);
       s.counters.faceslap_wins = (s.counters.faceslap_wins || 0) + 1;
       s.counters.elder_slaps = (s.counters.elder_slaps || 0) + 1;
@@ -718,7 +756,7 @@ export function resolveFaceSlapChoice(game, tactic) {
   const rTier = fs.relTier;
 
   if (tactic === 'walk') {
-    c.attrs.道心 += 1;
+    bumpAttr(game, '道心', 1);
     if (rTier === 'much_higher' || rTier === 'higher') {
       lines.push('你不屑与井蛙纠缠，拂袖而去，道心 +1。');
       return finalizeFaceSlap(game, {
@@ -726,8 +764,7 @@ export function resolveFaceSlapChoice(game, tactic) {
         lines,
       });
     }
-    c.attrs.悟性 += 1;
-    lines.push('审时度势暂避锋芒，道心 +1，悟性 +1。');
+    lines.push('审时度势暂避锋芒，道心 +1。');
     return finalizeFaceSlap(game, {
       text: `你压下心头火气，淡然退后一步转身离去。身后传来${fs.provokerName}的嗤笑，你把这张脸与「${backing.name}」一并记在心底——修仙路长，来日方长。`,
       lines,
@@ -747,7 +784,7 @@ export function resolveFaceSlapChoice(game, tactic) {
       c.stones += rew.stones;
       c.reputation += rew.rep;
       const gotExp = gainExp(s, Math.round(rew.exp * 0.65));
-      c.attrs.道心 += 1;
+      bumpAttr(game, '道心', 1);
       s.counters.faceslap_wins = (s.counters.faceslap_wins || 0) + 1;
       s.counters.lowkey_wins = (s.counters.lowkey_wins || 0) + 1;
       const loot = maybeLootItem(game, fs, 0.48);
@@ -768,8 +805,8 @@ export function resolveFaceSlapChoice(game, tactic) {
       const rew = rewardScale(game, fs, 0.95);
       c.stones += rew.stones;
       c.reputation += Math.round(rew.rep * 0.85);
-      c.attrs.悟性 += 1;
-      c.attrs.神识 += 1;
+      bumpAttr(game, '悟性', 1);
+      bumpAttr(game, '神识', 1);
       s.counters.faceslap_wins = (s.counters.faceslap_wins || 0) + 1;
       s.counters.lowkey_wins = (s.counters.lowkey_wins || 0) + 1;
       lines.push(`【藏锋智取】示弱套出对方破绽反客为主：灵石 +${rew.stones.toLocaleString()}，声望 +${Math.round(rew.rep * 0.85)}，悟性 +1，神识 +1。`);
@@ -779,7 +816,7 @@ export function resolveFaceSlapChoice(game, tactic) {
         fx: 'alchemy',
       });
     }
-    c.attrs.道心 += 2;
+    bumpAttr(game, '道心', 2);
     lines.push('对方老奸巨猾识破了你的试探，你顺势抽身退走，道心 +2。');
     return finalizeFaceSlap(game, {
       text: `${fs.provokerName}虽狂却不傻，察觉你在套话，冷哼一声拂袖作罢。你虽未讨到彩头，却把他的功法路数看清了大半。`,
@@ -793,7 +830,7 @@ export function resolveFaceSlapChoice(game, tactic) {
       const rew = rewardScale(game, fs, 1.05);
       c.stones += rew.stones;
       c.reputation += Math.round(rew.rep * 1.25);
-      c.attrs.道心 += 1;
+      bumpAttr(game, '道心', 1);
       s.counters.faceslap_wins = (s.counters.faceslap_wins || 0) + 1;
       s.counters.flex_wins = (s.counters.flex_wins || 0) + 1;
       const loot = maybeLootItem(game, fs, 0.35);
@@ -832,7 +869,7 @@ export function resolveFaceSlapChoice(game, tactic) {
         c.stones += rew.stones;
         c.reputation += Math.round(rew.rep * 1.15);
         const gotExp = gainExp(s, Math.round(rew.exp * 0.55));
-        c.attrs.道心 += 2;
+        bumpAttr(game, '道心', 2);
         s.counters.faceslap_wins = (s.counters.faceslap_wins || 0) + 1;
         s.counters.flex_wins = (s.counters.flex_wins || 0) + 1;
         const shouldEscalate = sc.canEscalate && game.rng.chance(0.35);
@@ -851,7 +888,7 @@ export function resolveFaceSlapChoice(game, tactic) {
     if (fScore >= 65 && game.rng.chance(0.45)) {
       const rew = rewardScale(game, fs, 1.1);
       c.reputation += rew.rep;
-      c.attrs.道心 += 3;
+      bumpAttr(game, '道心', 3);
       s.counters.faceslap_wins = (s.counters.faceslap_wins || 0) + 1;
       s.counters.underdog_slaps = (s.counters.underdog_slaps || 0) + 1;
       lines.push(`【以弱慑强】你虽低一境，却凭惊人根基与道心震慑对方生疑：声望 +${rew.rep}，道心 +3。`);
@@ -877,8 +914,8 @@ export function resolveFaceSlapChoice(game, tactic) {
       c.stones += rew.stones;
       c.reputation += rew.rep + (oc.bonus?.reputation || 12);
       const gotExp = gainExp(s, Math.round(rew.exp * 0.6));
-      if (oc.bonus?.daoxin) c.attrs.道心 += oc.bonus.daoxin;
-      if (oc.bonus?.attrGain) c.attrs[oc.attrKey] = (c.attrs[oc.attrKey] || 10) + oc.bonus.attrGain;
+      if (oc.bonus?.daoxin) bumpAttr(game, '道心', oc.bonus.daoxin);
+      if (oc.bonus?.attrGain) bumpAttr(game, oc.attrKey, oc.bonus.attrGain);
       s.counters.faceslap_wins = (s.counters.faceslap_wins || 0) + 1;
       if (rTier === 'lower') s.counters.underdog_slaps = (s.counters.underdog_slaps || 0) + 1;
       const loot = maybeLootItem(game, fs, 0.42);
@@ -899,11 +936,17 @@ export function resolveFaceSlapChoice(game, tactic) {
   if (tactic === 'gf') {
     const gc = GF_COUNTERS[c.goldenFingerId];
     if (!gc) return launchFaceSlapCombat(game, fs, sc, backing, false);
+    // 底牌也有压不住的时候：对方高你一境，多半得真打一场
+    const gfP = { much_higher: 1, higher: 0.95, equal: 0.8, lower: 0.5 }[rTier] ?? 0.8;
+    if (!game.rng.chance(gfP)) {
+      lines.push('底牌亮了出来，对方却不吃这一套。');
+      return launchFaceSlapCombat(game, fs, sc, backing, false);
+    }
     const rew = rewardScale(game, fs, gc.bonus?.stonesMult || 1.2);
     c.stones += rew.stones;
     c.reputation += rew.rep + (gc.bonus?.reputation || 15);
     const gotExp = gainExp(s, Math.round(rew.exp * (gc.bonus?.expMult || 0.75)));
-    if (gc.bonus?.daoxin) c.attrs.道心 += gc.bonus.daoxin;
+    if (gc.bonus?.daoxin) bumpAttr(game, '道心', gc.bonus.daoxin);
     if (gc.bonus?.demon) c.demon = clamp(c.demon + gc.bonus.demon, 0, 100);
     s.counters.faceslap_wins = (s.counters.faceslap_wins || 0) + 1;
     if (c.goldenFingerId === 'gf_stealth') s.counters.lowkey_wins = (s.counters.lowkey_wins || 0) + 1;

@@ -499,7 +499,7 @@ export class Game {
         hint: c.auraStance === 'hide'
           ? `对外仅显「${perceivedRealmLabel(c)}」· 点此切换（扮猪吃虎/如常/威压外放）`
           : c.auraStance === 'show'
-            ? '修为威压外放，宵小不敢轻犯 · 点此切换'
+            ? '威压外放：闲逛少遇挑衅和野怪，敢来的多是同阶以上 · 点此切换'
             : '如实显露当前境界 · 点此切换为敛息藏锋或威压外放',
         action: 'cycleAuraStance',
       },
@@ -1062,9 +1062,10 @@ export class Game {
       }
     }
     // v8.1 万象因果遇事：按境界/气机姿态/出身/金手指动态演化打脸与博弈
-    const fsChance = c.auraStance === 'hide' ? 0.38 : c.auraStance === 'show' ? 0.34 : 0.30;
+    // 敛息藏锋招惹是非；威压外放则宵小不敢近身
+    const fsChance = c.auraStance === 'hide' ? 0.36 : c.auraStance === 'show' ? 0.12 : 0.26;
     if (this.rng.chance(fsChance)) {
-      startFaceSlapEncounter(this, { context: 'explore', returnTo: ch.params?.returnTo || 'regionHub' });
+      startFaceSlapEncounter(this, { context: 'explore', returnTo: ch.params?.returnTo || 'regionHub', note: lines });
       this.afterAction();
       this.emit();
       return;
@@ -1080,7 +1081,7 @@ export class Game {
       return;
     }
 
-    if (this.rng.chance(0.45) && region.enemies?.length) {
+    if (this.rng.chance(c.auraStance === 'show' ? 0.22 : 0.45) && region.enemies?.length) {
       const eid = this.rng.pick(region.enemies);
       lines.push(`你在${region.name}深处撞见了盘踞此地的妖邪。`);
       return this.startCombat(eid, { lines });
@@ -2011,8 +2012,8 @@ export class Game {
   /** v8.1：坊间走动，触发酒楼/摊位/丹坊/拍卖等网文打脸遇事。 */
   act_cityEncounter(ch = {}) {
     const s = this.state;
-    advanceMonths(s, 2, this.rng);
-    startFaceSlapEncounter(this, { context: 'city', returnTo: ch.params?.returnTo || 'cityHub' });
+    const lines = advanceMonths(s, 2, this.rng);
+    startFaceSlapEncounter(this, { context: 'city', returnTo: ch.params?.returnTo || 'cityHub', note: lines });
     this.afterAction();
     this.emit();
   }
@@ -3021,7 +3022,7 @@ export class Game {
     lines.push(`${flavor}。贡献 +${contribution}，灵石 +${stones}，修为 +${got.toLocaleString()}。`);
     if (this.rng.chance(0.12)) s.counters.slack = (s.counters.slack || 0) + 1;
     if (this.rng.chance(0.22)) {
-      startFaceSlapEncounter(this, { context: 'sect', returnTo: ch.params?.returnTo || 'sectHall' });
+      startFaceSlapEncounter(this, { context: 'sect', returnTo: ch.params?.returnTo || 'sectHall', note: lines });
       this.afterAction();
       this.emit();
       return;
@@ -3828,6 +3829,7 @@ export class Game {
         log.push(c.rootId === 'feng' ? '风灵根御风而起，瞬息千里脱身。' : hasTalisman ? '神行符化作青风托身，你瞬息千里。' : '你寻隙抽身而退。');
         s.stats.escapes = (s.stats.escapes || 0) + 1;
         s.combat = null;
+        s.faceSlap = null; // 逃出遇事斗法，这场风波就算了结
         if (s.delve) {
           const escapeLines = this.bankDelveHaul(0.5, false);
           s.scene = { id: 'regionHub', result: { text: '你催动遁术强行脱离秘境，保住性命并带出半数战利。', lines: [...log.slice(-1), ...escapeLines], returnTo: 'regionHub' } };
@@ -4410,6 +4412,10 @@ export class Game {
   }
 
   afterAction() {
+    // 遇事若已离场（逃走、读档、被别的场景顶掉）而没结算，就地了结，免得一直挡住大事与剧情触发
+    if (this.state?.faceSlap && !this.state.combat && this.state.scene?.id !== 'faceSlap' && this.state.scene?.result?.returnTo !== 'faceSlap') {
+      this.state.faceSlap = null;
+    }
     const s = this.state;
     if (!s || s.flags.finished) return;
     if (s.char.demon >= 100) return this.finishEnding(this.pickNaturalEnding());

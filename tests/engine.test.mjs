@@ -1099,3 +1099,38 @@ test('v8.1 网文流派出身、气机姿态与万象因果打脸引擎（四档
   resolveFaceSlapChoice(gElder, 'elder_show');
   assert.ok((gElder.state.counters.elder_slaps || 0) >= 1, '高阶主角应直接震服护短长老并记 elder_slaps');
 });
+
+test('v8.1 遇事漏洞：逃跑了结风波、底牌会失手、交差所得不被吞、属性有额度', async () => {
+  const { startFaceSlapEncounter, resolveFaceSlapChoice, buildFaceSlapNode } = await import('../src/engine/faceSlap.js');
+  // 1. 遇事斗法中逃走：风波了结，不会一直挡住大事触发
+  const g = fresh();
+  g.state.char.rootId = 'feng'; // 风灵根必定逃脱
+  startFaceSlapEncounter(g, { context: 'city', returnTo: 'hub', forceRelTier: 'equal' });
+  resolveFaceSlapChoice(g, 'fight');
+  assert.ok(g.state.combat, '应进入斗法');
+  g.act_combatFlee();
+  assert.equal(g.state.combat, null);
+  assert.equal(g.state.faceSlap, null, '逃走后遇事应了结');
+  // 2. 金手指底牌对高一境的人会失手（转入斗法）
+  let fights = 0;
+  for (let i = 0; i < 40; i++) {
+    const gi = fresh({ goldenFingerId: 'gf_bottle', seed: 900 + i });
+    startFaceSlapEncounter(gi, { context: 'city', returnTo: 'hub', forceRelTier: 'lower' });
+    resolveFaceSlapChoice(gi, 'gf');
+    if (gi.state.combat) fights++;
+  }
+  assert.ok(fights >= 8 && fights <= 32, `对高一境的人亮底牌应有约一半失手，实际 ${fights}/40`);
+  // 3. 门户差事撞上遇事：交差所得写在遇事开头
+  const gs = fresh();
+  startFaceSlapEncounter(gs, { context: 'sect', returnTo: 'hub', note: ['巡山。贡献 +50，灵石 +30。'] });
+  assert.ok(buildFaceSlapNode(gs).text.startsWith('巡山。贡献 +50'));
+  // 4. 反复遇事，属性涨幅有额度
+  const ga = fresh({ goldenFingerId: 'gf_none' });
+  const before = ga.state.char.attrs.道心;
+  for (let i = 0; i < 30; i++) {
+    startFaceSlapEncounter(ga, { context: 'city', returnTo: 'hub', forceRelTier: 'much_higher' });
+    resolveFaceSlapChoice(ga, 'walk');
+    if (ga.state.scene.result) ga.proceed();
+  }
+  assert.ok(ga.state.char.attrs.道心 - before <= 8, `一个大境界内遇事所得道心不超过 8，实际 +${ga.state.char.attrs.道心 - before}`);
+});
