@@ -212,7 +212,7 @@ export const ENDGAME_EXPANSION = [
       {
         label: '以洗髓丹作药引，开炉炼续命丹', hint: '三月 · 耗丹材',
         cost: { month: 3, item: 'xisui_dan' },
-        outcome: { text: '你把洗髓丹当药引押在炉里，又搭进四百灵石的辅药，守了三个月。开炉时丹只有两枚，比指甲盖小。她服下一枚，咳声停了，另一枚你收着。剩下的药渣你收进袖里，一直留着。', effects: { removeItems: ['xisui_dan'], items: ['jiuzhuan_dan'], relation: { 道侣: 40 }, flag: { 道侣: true }, stones: -400 } },
+        outcome: { text: '你把洗髓丹当药引押在炉里，又搭进四百灵石的辅药，守了三个月。开炉时丹只有两枚，比指甲盖小。她服下一枚，咳声停了，另一枚你收着。剩下的药渣你收进袖里，一直留着。', effects: { items: ['jiuzhuan_dan'], relation: { 道侣: 40 }, flag: { 道侣: true }, stones: -400 } },
       },
       {
         label: '什么也不做，陪着她', hint: '她的时间不多了',
@@ -611,7 +611,7 @@ export const ENDGAME_EXPANSION = [
       {
         label: '买一张神行符', hint: '两百灵石 · 一月',
         cost: { stones: 200, month: 1 },
-        outcome: { text: '摊主收了灵石，把符卷好递给你，说：「这符不认路，只认急。」你问她怎么知道谁急。她指了指自己的眼睛，那双眼睛很干净。', effects: { stones: -200, items: ['shenxing_fu'], attrs: { 气运: 2 } } },
+        outcome: { text: '摊主收了灵石，把符卷好递给你，说：「这符不认路，只认急。」你问她怎么知道谁急。她指了指自己的眼睛，那双眼睛很干净。', effects: { items: ['shenxing_fu'], attrs: { 气运: 2 } } },
       },
       {
         label: '什么也不卖，看一天', hint: '一月 · 看人交易',
