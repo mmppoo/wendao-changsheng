@@ -519,6 +519,8 @@ function renderSubhubBar() {
     techShop: { icon: 'book', title: '书肆', badge: `灵石 ${formatNum(c.stones)}`, cls: '', back: 'cityHub', backLabel: '← 市集' },
     auction: { icon: 'treasury', title: '商会拍卖', badge: `灵石 ${formatNum(c.stones)}`, cls: '', back: 'cityHub', backLabel: '← 市集' },
     arena: { icon: 'sword', title: '问道擂台', badge: `${s.counters?.arena_win || 0} 胜`, cls: '', back: 'cityHub', backLabel: '← 市集' },
+    fairHub: { icon: 'city', title: '坊间盛会', badge: `灵石 ${formatNum(c.stones)}`, cls: '', back: 'cityHub', backLabel: '← 市集' },
+    grudgeBook: { icon: 'fate', title: '恩怨簿', badge: `待报 ${(s.grudges || []).filter((g) => g.status === 'owe').length} 笔`, cls: 'jade', back: 'cityHub', backLabel: '← 市集' },
     tianji: { icon: 'fate', title: '坊间名录', badge: `声望 ${c.reputation}`, cls: 'jade', back: 'cityHub', backLabel: '← 市集' },
     npcHub: { icon: 'npc', title: '故人', badge: `${NPCS.length} 位`, cls: 'jade', back: 'hub', backLabel: '← 主界' },
     npcDetail: { icon: 'npc', title: '故人', badge: `灵石 ${formatNum(c.stones)}`, cls: 'jade', back: 'npcHub', backLabel: '← 故人' },
@@ -655,6 +657,8 @@ function kickerFor(node) {
   if (id === 'faceSlap') return game.state.faceSlap?.stage === 'elder' ? '护短风波' : '遇事交锋';
   if (id === 'sectHall' || id === 'sectMissions' || id === 'sectLibrary' || id === 'sectTreasury' || id === 'sectPromote') return game.currentSectName();
   if (id === 'cityHub' || id === 'tianji' || id === 'techShop' || id === 'arena') return '市集坊间';
+  if (id === 'fairHub') return '坊间盛会';
+  if (id === 'grudgeBook') return '恩怨簿';
   if (id === 'npcHub' || id === 'npcDetail') return '故人';
   if (id === 'combat') return '斗法';
   if (id === 'tribulation') return '天劫';
@@ -886,6 +890,7 @@ function choiceIconFor(ch) {
     openSectTreasury: 'treasury', buySectTreasury: 'treasury',
     sectVein: 'vein', openSectPromote: 'promote', sectPromote: 'promote',
     openCity: 'city', market: 'city', buyItem: 'city', sellMenu: 'city', sellItem: 'city', sellBulkLow: 'treasury', openTechShop: 'book', buyWorldTech: 'book', auction: 'treasury', bidItem: 'treasury', openArena: 'sword', arenaFight: 'sword', openTianji: 'fate',
+    cityEncounter: 'city', openFair: 'treasury', fairPlay: 'treasury', openGrudgeBook: 'fate', grudgeRevenge: 'sword', cycleAuraStance: 'guard', faceSlapResolve: 'sword',
     openNpcHub: 'npc', openNpc: 'npc', npcChat: 'npc', npcGift: 'treasury', npcSpar: 'sword', npcTeach: 'book', npcBond: 'npc',
     fate: 'fate',
     combatAttack: 'sword', combatSpell: 'spell', combatArt: 'art', combatGuard: 'guard', combatTalisman: 'spell', combatDomain: 'breakthrough', combatPill: 'pill', combatFlee: 'flee',

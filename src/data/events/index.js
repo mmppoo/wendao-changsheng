@@ -17,6 +17,7 @@ import { WORLD_SECTS_ALL } from './world_sects_all.js';
 import { WORLD_KARMA_NPCS } from './world_karma_npcs.js';
 import { NEMESIS_EVENTS, NEMESIS_TRIGGERS } from './nemesis.js';
 import { ORIGIN_OPENINGS } from './origin_openings.js';
+import { ORIGIN_COMEBACK_EVENTS, ORIGIN_COMEBACK_TRIGGERS } from './origin_comebacks.js';
 import { ERA1_EVENTS_A } from '../history/era1_b002_b025.js';
 import { ERA1_EVENTS_B } from '../history/era1_b026_b050.js';
 import { ERA1_EVENTS_C } from '../history/era1_b051_b075.js';
@@ -43,6 +44,7 @@ export const ALL_EVENTS = [
   ...WORLD_KARMA_NPCS,
   ...NEMESIS_EVENTS,
   ...ORIGIN_OPENINGS,
+  ...ORIGIN_COMEBACK_EVENTS,
   ...ERA1_EVENTS_A,
   ...ERA1_EVENTS_B,
   ...ERA1_EVENTS_C,
@@ -61,7 +63,7 @@ export const LEGACY_EVENT_IDS = new Set(ALL_EVENTS.filter((ev) => {
   return LEGACY_TERMS.some((t) => txt.includes(t));
 }).map((ev) => ev.id));
 
-export const ALL_STORY_TRIGGERS = [...STORY_TRIGGERS, ...WEBNOVEL_TRIGGERS, ...NEMESIS_TRIGGERS].filter((t) => !LEGACY_EVENT_IDS.has(t.id));
+export const ALL_STORY_TRIGGERS = [...STORY_TRIGGERS, ...WEBNOVEL_TRIGGERS, ...NEMESIS_TRIGGERS, ...ORIGIN_COMEBACK_TRIGGERS].filter((t) => !LEGACY_EVENT_IDS.has(t.id));
 export { ALL_STORY_TRIGGERS as STORY_TRIGGERS };
 
 export const POOL_COUNTS = ALL_EVENTS.reduce((acc, ev) => {

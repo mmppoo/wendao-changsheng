@@ -342,7 +342,7 @@ export function sceneThemeFor(node, state) {
   if (id === 'breakthrough' || id === 'cave' || id === 'techEquip' || id === 'alchemy') return SCENE_THEMES.breakthrough;
   if (id === 'auction') return SCENE_THEMES.auction;
   if (id === 'arena') return SCENE_THEMES.combat;
-  if (id === 'market' || id === 'sell' || id === 'cityHub' || id === 'tianji' || id === 'techShop') {
+  if (id === 'market' || id === 'sell' || id === 'cityHub' || id === 'tianji' || id === 'techShop' || id === 'fairHub' || id === 'grudgeBook') {
     return state.char?.regionId === 'luoxia' ? SCENE_THEMES.luoxia : SCENE_THEMES.market;
   }
   if (id === 'faceSlap') {

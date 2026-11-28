@@ -74,7 +74,7 @@ export function policy(g) {
     const higher = list.filter((ch) => !ch.label.includes('返回'));
     return higher[higher.length - 1] || by('返回') || list[0];
   }
-  if (s.scene.id === 'cityHub') return by('离开') || list[list.length - 1];
+  if (s.scene.id === 'cityHub' || s.scene.id === 'fairHub' || s.scene.id === 'grudgeBook') return by('离开') || by('合上') || list[list.length - 1];
   if (s.scene.id === 'faceSlap') {
     return list.find((ch) => ch.effect === 'primary') || byId('fs_gf') || byId('fs_lowkey') || byId('fs_show') || list[0];
   }

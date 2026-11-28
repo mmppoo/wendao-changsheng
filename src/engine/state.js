@@ -545,6 +545,7 @@ export function createRun({ seed, name, gender, originId, rootId, goldenFingerId
     counters: {
       roots_seen: rootsSeen.length, stay_home: 0, laws: 0, delves: 0,
       faceslap_wins: 0, flex_wins: 0, lowkey_wins: 0, elder_slaps: 0, underdog_slaps: 0,
+      revenge_wins: 0, fair_stone_wins: 0, fair_craft_wins: 0, fair_salon_wins: 0, origin_comeback: 0,
     },
     recent: [],
     achievements: {},
@@ -554,6 +555,10 @@ export function createRun({ seed, name, gender, originId, rootId, goldenFingerId
     delve: null,
     faceSlap: null,
     faceSlapRecent: [],
+    grudges: [],
+    factionDread: {},
+    factionTributeAt: {},
+    fairCooldowns: {},
     sectBoard: null,
     scene: { id: 'hub', result: null },
     log: [],

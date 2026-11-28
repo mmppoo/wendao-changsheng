@@ -10,7 +10,9 @@ import {
 } from './state.js';
 import {
   startFaceSlapEncounter, buildFaceSlapNode, resolveFaceSlapChoice, AURA_STANCES,
+  buildGrudgeBookNode, startGrudgeRevenge, addFactionDread, recordGrudge, settleGrudge,
 } from './faceSlap.js';
+import { buildFairHubNode, resolveFairPlay } from './fair.js';
 import { applyEffects } from './effects.js';
 import {
   EVENTS, buildRegistry, buildHub, choiceAvailable, markChoiceTaken, pickEvent,
@@ -127,6 +129,10 @@ export class Game {
     if (state.delve === undefined) state.delve = null;
     if (state.faceSlap === undefined) state.faceSlap = null;
     if (!Array.isArray(state.faceSlapRecent)) state.faceSlapRecent = [];
+    if (!Array.isArray(state.grudges)) state.grudges = [];
+    if (!state.factionDread || typeof state.factionDread !== 'object') state.factionDread = {};
+    if (!state.factionTributeAt || typeof state.factionTributeAt !== 'object') state.factionTributeAt = {};
+    if (!state.fairCooldowns || typeof state.fairCooldowns !== 'object') state.fairCooldowns = {};
     if (!c.auraStance) c.auraStance = c.goldenFingerId === 'gf_stealth' ? 'hide' : 'normal';
     if (!state.world) state.world = freshCentury1World();
     if (!state.history) state.history = {};
@@ -162,6 +168,8 @@ export class Game {
       case 'regionMap': return this.buildRegionMapNode();
       case 'delve': return this.buildDelveNode();
       case 'faceSlap': return buildFaceSlapNode(this) || buildHub(this);
+      case 'grudgeBook': return buildGrudgeBookNode(this);
+      case 'fairHub': return buildFairHubNode(this);
       case 'sectHall': return this.buildSectHallNode();
       case 'sectMissions': return this.buildSectMissionsNode();
       case 'sectLibrary': return this.buildSectLibraryNode();
@@ -337,6 +345,20 @@ export class Game {
     }
     if (outcome.delveEscape && s.delve) {
       lines.push(...this.bankDelveHaul(0.5, false));
+    }
+    if (outcome.faceSlapAttrSpend) {
+      s.faceSlapAttr = s.faceSlapAttr || {};
+      s.faceSlapAttr[s.char.realm] = (s.faceSlapAttr[s.char.realm] || 0) + outcome.faceSlapAttrSpend;
+    }
+    if (outcome.faceSlapDread?.backingId) {
+      addFactionDread(s, outcome.faceSlapDread.backingId, outcome.faceSlapDread.delta || 1);
+    }
+    if (outcome.faceSlapSettleGrudge) {
+      const doneG = settleGrudge(s, outcome.faceSlapSettleGrudge);
+      if (doneG) lines.push(`【旧怨了结】第${doneG.year}年的账已一笔勾销。`);
+    }
+    if (outcome.faceSlapRecordGrudge && s.faceSlap) {
+      recordGrudge(s, s.faceSlap, outcome.faceSlapRecordGrudge);
     }
     if (outcome.faceSlapEscalate && s.faceSlap) {
       s.faceSlap.stage = 'elder';
@@ -2018,6 +2040,33 @@ export class Game {
     this.emit();
   }
 
+  /** v8.2：坊间盛会（赌石鉴宝 / 丹器斗法 / 天骄茶会）。 */
+  act_openFair() {
+    this.state.scene = { id: 'fairHub', result: null };
+    this.emit();
+  }
+
+  act_fairPlay(ch = {}) {
+    return resolveFairPlay(this, ch.params || {});
+  }
+
+  /** v8.2：恩怨簿（查看未报旧怨并主动登门清算 + 查看六大靠山威慑）。 */
+  act_openGrudgeBook() {
+    this.state.scene = { id: 'grudgeBook', result: null };
+    this.emit();
+  }
+
+  act_grudgeRevenge(ch = {}) {
+    const s = this.state;
+    const gid = ch.params?.grudgeId;
+    if (!gid) return this.act_openGrudgeBook();
+    const lines = advanceMonths(s, 1, this.rng);
+    const fs = startGrudgeRevenge(this, gid, { returnTo: 'grudgeBook', note: lines });
+    if (!fs) return this.act_openGrudgeBook();
+    this.afterAction();
+    this.emit();
+  }
+
   /** v8.1：动态遇事（万象打脸引擎）策略结算入口。 */
   act_faceSlapResolve(ch = {}) {
     return resolveFaceSlapChoice(this, ch.params?.tactic || 'walk');
@@ -2061,13 +2110,16 @@ export class Game {
     const aucHint = aucOpen
       ? '十年一次，四件拍品'
       : `下一次还需 ${Math.max(1, Math.ceil((nextAuc - c.age) / 12))} 年`;
+    const pendingGrudges = (s.grudges || []).filter((g) => g.status === 'owe').length;
     return {
       id: 'cityHub',
       title: `${region.name} · 市集坊间`,
-      text: `长街灯火通明，商行、书肆、商会拍卖、擂台都在这里。\n\n身上灵石：${c.stones.toLocaleString()}　·　各地货色不同。`,
+      text: `长街灯火通明，商行、书肆、商会拍卖、坊间盛会与擂台都在这里。\n\n身上灵石：${c.stones.toLocaleString()}　·　各地货色不同。`,
       choices: [
         { id: 'city_market', label: `${region.name}商行`, hint: '一月 · 买卖当地特产、丹药与灵材', action: 'market' },
         { id: 'city_stroll', label: '坊间走动 · 听风遇事', hint: '两月 · 酒楼/摊位/丹坊/拍卖风云，撞见不长眼之辈', action: 'cityEncounter', effect: 'primary' },
+        { id: 'city_fair', label: '坊间盛会 · 赌石 / 斗丹 / 茶会', hint: '一月 · 每年可登台一回，凭真本事与眼光打脸夺彩', action: 'openFair' },
+        { id: 'city_grudge', label: pendingGrudges ? `恩怨簿（待报 ${pendingGrudges} 笔）` : '恩怨簿 · 五域威慑', hint: pendingGrudges ? '点此查看旧怨，随时登门清算' : '查看昔日恩怨与各地靠山对你的忌惮', action: 'openGrudgeBook' },
         { id: 'city_techs', label: '书肆', hint: '用灵石买功法残卷', action: 'openTechShop' },
         { id: 'city_auction', label: '通远商会 · 拍卖', hint: aucHint, action: 'auction' },
         { id: 'city_arena', label: '问道擂台', hint: `一月 · 与同境界的人比试（已胜 ${s.counters.arena_win || 0} 场），赢声望与灵石`, action: 'openArena' },
@@ -3125,7 +3177,8 @@ export class Game {
         `根基：道基【${daoName}】· 结丹【${coreName}】· 在用功法 ${active.length}/${maxTechSlots(c.realm)}`,
         `法则领悟：${lawList}`,
         `此生记录：抉择 ${s.stats.actions} 次 · 奇遇 ${s.stats.events} 次 · 斩敌 ${s.stats.kills} · 花费灵石 ${(s.stats.goldSpent || 0).toLocaleString()}`,
-        `遇事打脸：胜 ${s.counters.faceslap_wins || 0} 次（扮猪吃虎 ${s.counters.lowkey_wins || 0} · 威压震场 ${s.counters.flex_wins || 0} · 连收拾靠山 ${s.counters.elder_slaps || 0}）`,
+        `遇事打脸：胜 ${s.counters.faceslap_wins || 0} 次（扮猪吃虎 ${s.counters.lowkey_wins || 0} · 威压震场 ${s.counters.flex_wins || 0} · 连收拾靠山 ${s.counters.elder_slaps || 0} · 清算旧怨 ${s.counters.revenge_wins || 0}）`,
+        `坊间盛会：赌石 ${s.counters.fair_stone_wins || 0} 胜 · 丹器 ${s.counters.fair_craft_wins || 0} 胜 · 茶会 ${s.counters.fair_salon_wins || 0} 胜 · 待报旧怨 ${(s.grudges || []).filter((g) => g.status === 'owe').length} 笔`,
         `已解锁结局：${s.meta.unlockedEndings.length} / ${ENDINGS.length} · 成就：${Object.keys(s.meta.achievements).length} / ${ACHIEVEMENTS.length}`,
       ],
     };
@@ -4166,6 +4219,7 @@ export class Game {
     s.counters.roots_seen = (s.counters.roots_seen || 0);
     s.counters.laws = Object.values(s.char.laws || {}).reduce((a, b) => a + Number(b || 0), 0);
     s.counters.handbook_size = Object.keys(s.meta?.handbook || {}).length;
+    s.counters.max_faction_dread = Math.max(0, ...Object.values(s.factionDread || {}).map(Number));
     // v8：第一纪元终局（五种纪元结局）记进跨世存档
     if (s.flags.e1d_end && !(s.meta.era1Endings || []).includes(s.flags.e1d_end)) {
       s.meta.era1Endings = [...(s.meta.era1Endings || []), s.flags.e1d_end];

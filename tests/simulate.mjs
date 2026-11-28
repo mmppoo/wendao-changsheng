@@ -99,7 +99,7 @@ function run(seed) {
   const g = new Game();
   g.newRun({ seed, name: '模拟', gender: '男', originId: 'scholar', rootId: 'shuangling', goldenFingerId: 'gf_bottle' });
   const seen = new Set();
-  const uiScenes = new Set(['hub', 'cave', 'regionHub', 'regionMap', 'sectHall', 'sectMissions', 'sectLibrary', 'sectTreasury', 'sectPromote', 'cityHub', 'tianji', 'npcHub', 'npcDetail', 'market', 'auction', 'sell', 'recruit', 'combat', 'tribulation', 'breakthrough', 'delve', 'techEquip', 'alchemy', 'techShop', 'arena', 'faceSlap']);
+  const uiScenes = new Set(['hub', 'cave', 'regionHub', 'regionMap', 'sectHall', 'sectMissions', 'sectLibrary', 'sectTreasury', 'sectPromote', 'cityHub', 'tianji', 'npcHub', 'npcDetail', 'market', 'auction', 'sell', 'recruit', 'combat', 'tribulation', 'breakthrough', 'delve', 'techEquip', 'alchemy', 'techShop', 'arena', 'faceSlap', 'fairHub', 'grudgeBook']);
   let guard = 0;
   const first = {};
   while (guard++ < 12000) {

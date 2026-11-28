@@ -383,6 +383,13 @@ export const ACHIEVEMENTS = [
   { id: 'a5_elder_1', name: '打了小的来老的', desc: '连对方护短出头的长老靠山一并收拾。', check: 'counter("elder_slaps") >= 1', tier: '地' },
   { id: 'a5_elder_10', name: '连根拔起', desc: '一世之中十次压服护短长老靠山。', check: 'counter("elder_slaps") >= 10', tier: '天', karmaReward: 2 },
   { id: 'a5_underdog_slap', name: '以弱逆伐', desc: '在修为低于对方时正面打脸翻盘。', check: 'counter("underdog_slaps") >= 1', tier: '地', hidden: true },
+  // —— v8.2 恩怨簿、势力威慑、坊间盛会与流派归来 ——
+  { id: 'a5_revenge_1', name: '君子报仇', desc: '从恩怨簿登门或狭路相逢，第一次亲手清算旧怨。', check: 'counter("revenge_wins") >= 1' },
+  { id: 'a5_revenge_5', name: '恩怨分明', desc: '一世之中亲手清算五笔旧怨，欠账全数收回。', check: 'counter("revenge_wins") >= 5', tier: '地' },
+  { id: 'a5_dread_1', name: '闻风丧胆', desc: '让五域中任一靠山势力对你的威慑度达到四重。', check: 'counter("max_faction_dread") >= 4', tier: '地' },
+  { id: 'a5_fair_stone', name: '赌石惊全场', desc: '在坊间赌石鉴宝会上切出灵宝、赢下对赌。', check: 'counter("fair_stone_wins") >= 1' },
+  { id: 'a5_fair_craft', name: '炉火纯青', desc: '在丹器斗法台以真本事力压骄子夺得头筹。', check: 'counter("fair_craft_wins") >= 1', tier: '地' },
+  { id: 'a5_origin_comeback', name: '风水轮流转', desc: '筑基之后归来清算昔日停滞两年间的轻视与旧账。', check: 'counter("origin_comeback") >= 1', tier: '地' },
 ].map((a) => ({
   ...a,
   ...(a.karmaReward != null

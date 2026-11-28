@@ -1134,3 +1134,82 @@ test('v8.1 遇事漏洞：逃跑了结风波、底牌会失手、交差所得不
   }
   assert.ok(ga.state.char.attrs.道心 - before <= 8, `一个大境界内遇事所得道心不超过 8，实际 +${ga.state.char.attrs.道心 - before}`);
 });
+
+test('v8.2 逻辑消冲突与可玩性深化：地域靠山、同门清理门户、恩怨簿清算、势力威慑、坊间盛会冷却与11流派归来', async () => {
+  const {
+    startFaceSlapEncounter, buildFaceSlapNode, resolveFaceSlapChoice,
+    getFactionDread, addFactionDread, buildGrudgeBookNode, startGrudgeRevenge,
+  } = await import('../src/engine/faceSlap.js');
+  const { BACKING_FACTIONS } = await import('../src/data/faceSlapScenarios.js');
+  const { buildFairHubNode, resolveFairPlay } = await import('../src/engine/fair.js');
+  const { ORIGINS } = await import('../src/data/origins.js');
+
+  // 1. 地域靠山合理性：青石镇(南泽)不会抽到西陲沙盗团伙；白驼(西陲)不会抽到芦洲黑风寨
+  const gSouth = fresh({ seed: 501 });
+  gSouth.state.char.regionId = 'qingniu';
+  for (let i = 0; i < 20; i++) {
+    startFaceSlapEncounter(gSouth, { context: 'city', forceRelTier: 'equal' });
+    assert.notEqual(gSouth.state.faceSlap.backingId, 'shadao_gang', '南泽青石镇不应出现西陲沙盗');
+    gSouth.state.faceSlap = null;
+  }
+  const gWest = fresh({ seed: 502 });
+  gWest.state.char.regionId = 'kunlun';
+  for (let i = 0; i < 20; i++) {
+    startFaceSlapEncounter(gWest, { context: 'city', forceRelTier: 'equal' });
+    assert.notEqual(gWest.state.faceSlap.backingId, 'heifeng_band', '西陲沙州不应出现芦洲黑风寨');
+    gWest.state.faceSlap = null;
+  }
+
+  // 2. 同门清理门户：玄衡宗长老遇玄衡外门执事一脉，直接亮明本门印信清理门户（零逻辑冲突）
+  const gBoss = fresh({ seed: 503 });
+  gBoss.state.char.sectId = 'taixuan';
+  gBoss.state.char.sectRank = 4; // 长老
+  startFaceSlapEncounter(gBoss, { context: 'city', forceRelTier: 'much_higher' });
+  gBoss.state.faceSlap.backingId = 'xuanheng_outer';
+  const bossNode = buildFaceSlapNode(gBoss);
+  assert.ok(bossNode.choices.some((ch) => ch.id === 'fs_boss'), '本门高阶应出现「清理门户」分支');
+  const contribBefore = gBoss.state.char.contribution;
+  resolveFaceSlapChoice(gBoss, 'same_boss');
+  assert.ok(gBoss.state.char.contribution > contribBefore, '清理门户应奖励门户贡献');
+
+  // 3. 恩怨簿：暂避强敌记入恩怨簿 → 破境后主动登门清算 → 状态置为 settled（仅可清算一次）
+  const gRev = fresh({ seed: 504 });
+  gRev.state.char.realm = 0;
+  startFaceSlapEncounter(gRev, { context: 'city', forceRelTier: 'lower' });
+  resolveFaceSlapChoice(gRev, 'walk');
+  assert.equal(gRev.state.grudges.filter((x) => x.status === 'owe').length, 1, '弱势暂避应记入恩怨簿');
+  const gid = gRev.state.grudges[0].id;
+  gRev.state.char.realm = 3; // 元婴归来
+  const gbNode = buildGrudgeBookNode(gRev);
+  assert.ok(gbNode.choices.some((ch) => ch.id === `revenge_${gid}`), '恩怨簿应列出登门清算入口');
+  startGrudgeRevenge(gRev, gid);
+  resolveFaceSlapChoice(gRev, 'show');
+  assert.equal(gRev.state.grudges[0].status, 'settled', '清算后应标记已了结');
+  assert.equal(gRev.state.counters.revenge_wins, 1);
+
+  // 4. 势力威慑度：达 4 重后触发闻风丧胆不战而屈，且写入 1 年冷却防刷
+  const gDread = fresh({ seed: 505 });
+  addFactionDread(gDread.state, 'heluo_clan', 4);
+  assert.equal(getFactionDread(gDread.state, 'heluo_clan'), 4);
+  startFaceSlapEncounter(gDread, { context: 'city', forceRelTier: 'equal' });
+  gDread.state.faceSlap.backingId = 'heluo_clan';
+  assert.ok(buildFaceSlapNode(gDread).choices.some((ch) => ch.id === 'fs_dread'), '威慑>=4 应解锁不战而屈');
+  resolveFaceSlapChoice(gDread, 'dread_name');
+  assert.ok((gDread.state.factionTributeAt.heluo_clan || 0) > gDread.state.char.age, '不战而屈应写入冷却防刷');
+
+  // 5. 坊间盛会（赌石/丹器/茶会）正常结算且严格执行 12 月冷却防刷
+  const gFair = fresh({ seed: 506, originId: 'merchant', goldenFingerId: 'gf_karma_mirror' });
+  gFair.state.char.stones = 5000;
+  const fNode = buildFairHubNode(gFair);
+  assert.ok(fNode.choices.length >= 5, '坊间盛会应包含赌石稳/豪赌、丹器与茶会');
+  resolveFairPlay(gFair, { kind: 'stone', mode: 'gamble', cost: 180 });
+  assert.ok(gFair.state.scene.result?.text.length > 20);
+  const blocked = resolveFairPlay(gFair, { kind: 'stone', mode: 'steady', cost: 180 });
+  assert.ok(blocked?.error, '赌石 12 个月冷却内不得连刷');
+
+  // 6. 11 大流派归来里程碑事件均已注册且可被筑基角色触发
+  for (const o of ORIGINS) {
+    assert.ok(gFair.registry.has(`cb_${o.id}`), `应注册流派归来事件 cb_${o.id}`);
+  }
+  assert.ok(BACKING_FACTIONS.every((b) => Array.isArray(b.homeRegions) && b.homeRegions.length > 0));
+});

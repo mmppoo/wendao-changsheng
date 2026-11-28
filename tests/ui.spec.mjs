@@ -315,6 +315,13 @@ async function main() {
       }
       await click('#choices .choice:not([disabled])');
       await finishTyping();
+      await client.eval('window.__game.act_openFair(); window.__render();');
+      const fairState = await state();
+      await client.eval('window.__game.act_openGrudgeBook(); window.__render();');
+      const gbState = await state();
+      if (fairState.scene !== 'fairHub' || gbState.scene !== 'grudgeBook') {
+        throw new Error(`v8.2 subhub error fair=${fairState.scene} gb=${gbState.scene}`);
+      }
       await client.eval('window.__game.act_openNpcHub(); window.__render();');
       const npcState = await state();
       if (regState.scene !== 'regionHub' || delveState.scene !== 'delve' || npcState.scene !== 'npcHub') {
