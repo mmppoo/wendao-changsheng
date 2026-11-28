@@ -1022,7 +1022,8 @@ test('v8.1 网文流派出身、气机姿态与万象因果打脸引擎（四档
   assert.equal(ORIGINS.length, 11);
   assert.ok(FACESLAP_SCENARIOS.length >= 32, `打脸场景至少 32 个，当前 ${FACESLAP_SCENARIOS.length}`);
   for (const o of ORIGINS) {
-    assert.ok(o.trope && o.flags?.重生停滞, `${o.id} 应有网文流派标签与重生停滞标记`);
+    assert.ok(o.flags?.重生停滞, `${o.id} 应有重生停滞标记`);
+    assert.ok(!/流|·/.test(o.name + o.desc), `${o.id} 出身只写身份，不写流派`);
     const gO = new Game();
     gO.newRun({ seed: 101, name: '试道', gender: '男', originId: o.id, rootId: 'shuangling', goldenFingerId: 'gf_bottle' });
     assert.equal(gO.state.scene.id, `open_${o.id}`, `${o.id} 开局应直入专属开场`);

@@ -26,7 +26,7 @@ function policy(g) {
     }
     const art = by('绝招');
     if (art && c.mp > c.maxMp * 0.45) return art;
-    return by('出剑') || list[0];
+    return by('出手') || list[0];
   }
   if (s.scene.id === 'tribulation') return by('吞服天劫丹') || by('本命法宝') || by('肉身硬抗') || list[0];
   if (s.scene.id === 'breakthrough') {

@@ -60,7 +60,7 @@ export function buildFairHubNode(game) {
       label: `赌石鉴宝 · 豪赌角落废料原石（入场 ${stoneCost.toLocaleString()} 石）`,
       hint: cdStone > 0
         ? `今年已开过石，还需 ${cdStone} 月`
-        : '全场嘲笑你买石头渣子 · 切出灵宝即翻倍打脸赢大彩',
+        : '众人只当你买了块废石',
       action: 'fairPlay',
       params: { kind: 'stone', mode: 'gamble', cost: stoneCost },
       disabled: cdStone > 0 || c.stones < stoneCost,
@@ -84,7 +84,7 @@ export function buildFairHubNode(game) {
       hint: cdSalon > 0
         ? `今年已赴过会，还需 ${cdSalon} 月`
         : isHide
-          ? `你正敛息显「${perceivedRealmLabel(c)}」，会被排到末席受嘲，正合打脸翻盘`
+          ? `你正敛息显「${perceivedRealmLabel(c)}」，会被排到末席`
           : `凭底蕴（${foundationScore(s)}）与法则（${LAW_STAGES[maxLawLevel(c)]}）压服诸域才俊`,
       action: 'fairPlay',
       params: { kind: 'salon', mode: isHide ? 'underdog' : 'prestige', cost: salonCost },

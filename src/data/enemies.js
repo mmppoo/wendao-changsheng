@@ -18,6 +18,17 @@ export const ENEMIES = [
     trait: '快刀',
     desc: '穿着洗得发白的道袍，手里那把刀倒是很快。',
   },
+  // 凡俗对手：没有修为，只靠拳脚兵刃。开局场景里用，炼气一层打得过是合理的。
+  {
+    id: 'mortal_guard', name: '护院武夫', realm: 0, mortal: true, hp: 70, atk: 9, def: 3, exp: 20, stones: 10,
+    trait: '横练',
+    desc: '练了十几年硬功的凡人，膀大腰圆，出手只认蛮力。',
+  },
+  {
+    id: 'mortal_swordsman', name: '剑馆武人', realm: 0, mortal: true, hp: 75, atk: 10, def: 3, exp: 22, stones: 12,
+    trait: '快剑',
+    desc: '凡俗剑馆出身，剑招练得熟，身上却没有一丝灵气。',
+  },
   {
     id: 'rogue', name: '邪修', realm: 0, hp: 145, atk: 18, def: 5, exp: 95, stones: 68,
     trait: '噬灵', isDemon: true,

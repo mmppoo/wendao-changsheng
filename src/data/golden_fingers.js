@@ -1,12 +1,12 @@
 /**
- * 金手指：覆盖网文常见流派（随身瓶、老爷爷、面板、鉴宝、苟道、签到、吞噬、御兽、凡骨）。
+ * 金手指：随身瓶、戒中残魂、面板、鉴宝镜、藏锋诀、道碑、吞噬、御兽、凡骨。tag 只写一句它做什么，不写流派。
  * perk 只写引擎里真实生效的效果；flag 键（金手指_*）被事件引用。
  */
 export const GOLDEN_FINGERS = [
   {
     id: 'gf_bottle',
     name: '掌天小绿瓶',
-    tag: '随身瓶 · 炼药流',
+    tag: '催熟灵草',
     icon: '瓶',
     color: '#58b98a',
     desc: '一只来历成谜的墨绿小瓶。子夜承接星月清辉，凝露成液，滴一滴在灵草上，百年药性一夜长成。',
@@ -16,7 +16,7 @@ export const GOLDEN_FINGERS = [
   {
     id: 'gf_sword_elder',
     name: '戒中老祖',
-    tag: '随身老爷爷 · 剑道',
+    tag: '残魂指点',
     icon: '戒',
     color: '#e6b95c',
     desc: '母亲留下的旧戒指里，睡着一缕上古剑修的残魂。嘴毒，眼光极高，危急关头会骂着你指出敌人的破绽。',
@@ -31,7 +31,7 @@ export const GOLDEN_FINGERS = [
   {
     id: 'gf_panel',
     name: '修仙面板',
-    tag: '熟练度 · 肝帝流',
+    tag: '熟练度',
     icon: '板',
     color: '#5fb3c4',
     desc: '某天睁眼，眼前多了一块只有你看得见的面板。吐纳一年，「吐纳熟练度」就往上跳一格。别人靠天赋，你靠肝。',
@@ -41,7 +41,7 @@ export const GOLDEN_FINGERS = [
   {
     id: 'gf_karma_mirror',
     name: '天机因果镜',
-    tag: '鉴宝捡漏 · 趋吉避凶',
+    tag: '鉴宝避凶',
     icon: '镜',
     color: '#7ab8d9',
     desc: '一面蒙尘的古铜镜，照得出三息之后的吉凶，也照得出一件东西的真成色。坊市捡漏、拍卖压价，你总先人一步。',
@@ -51,7 +51,7 @@ export const GOLDEN_FINGERS = [
   {
     id: 'gf_stealth',
     name: '龟息藏锋诀',
-    tag: '苟道 · 稳健流',
+    tag: '藏匿修为',
     icon: '龟',
     color: '#a3b88c',
     desc: '一卷上古散修的匿息法门，外人看你永远低两个小境界。不争、不露、不死，熬到最后的才是赢家。',
@@ -61,7 +61,7 @@ export const GOLDEN_FINGERS = [
   {
     id: 'gf_signin',
     name: '万界道碑',
-    tag: '签到 · 游历流',
+    tag: '行路得赏',
     icon: '碑',
     color: '#c08ae8',
     desc: '识海深处立着一座无字古碑。每踏上一片没去过的地界、每破一次大境界，碑上就多一道纹，掉下一份造化。',
@@ -71,7 +71,7 @@ export const GOLDEN_FINGERS = [
   {
     id: 'gf_devour',
     name: '吞天魔功',
-    tag: '吞噬 · 魔道流',
+    tag: '吞噬精元',
     icon: '噬',
     color: '#b0466a',
     desc: '一篇刻在兽骨上的残缺魔功。斩一个敌人，就吞一口他的精元。越战越强，只是心里那团火，也越烧越旺。',
@@ -81,7 +81,7 @@ export const GOLDEN_FINGERS = [
   {
     id: 'gf_beast',
     name: '御兽灵契',
-    tag: '御兽 · 灵宠流',
+    tag: '灵宠相伴',
     icon: '兽',
     color: '#d9925a',
     desc: '你天生带着一道兽契。山里捡到的那只青鸾雏鸟，第一眼就认了你做主人。它长，你也长。',
@@ -90,8 +90,8 @@ export const GOLDEN_FINGERS = [
   },
   {
     id: 'gf_none',
-    name: '凡骨 · 不借外物',
-    tag: '孤勇 · 本心问道',
+    name: '凡骨',
+    tag: '本心问道',
     icon: '心',
     color: '#d44d38',
     desc: '不倚异宝，不托残魂，只凭一颗向道之心和三尺青锋，自己走出一条路。',

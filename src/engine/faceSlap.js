@@ -1,3 +1,4 @@
+import { cleanHint } from '../data/events/hintClean.js';
 /**
  * 千变因果「打脸·装逼·博弈」动态剧本矩阵引擎（v8.2）：
  *
@@ -556,7 +557,14 @@ function isSameSectBoss(state, backing) {
 }
 
 /** 构造动态遇事节点（包含阶段一挑衅者、旧怨清算 & 阶段二护短长老）。 */
+// 遇事选项的提示同样只写做法与考验，不写结果
 export function buildFaceSlapNode(game) {
+  const node = buildFaceSlapNodeRaw(game);
+  if (node?.choices) for (const ch of node.choices) if (typeof ch.hint === 'string') ch.hint = cleanHint(ch.hint);
+  return node;
+}
+
+function buildFaceSlapNodeRaw(game) {
   const s = game.state;
   const c = s.char;
   const fs = s.faceSlap;
@@ -751,7 +759,7 @@ export function buildFaceSlapNode(game) {
         ? (isHide ? '继续敛息装弱，诱他抬高赌注再反手收网' : '骤然收起气机示弱，诱他抬高赌注再反手收网')
         : '收起锋芒示弱套话，暗记对方破绽与把柄',
       hint: rTier === 'much_higher' || rTier === 'higher'
-        ? '扮猪吃虎 · 彩头与打脸爽度翻倍，且能留下把柄'
+        ? '扮猪吃虎 · 先忍一手'
         : '隐匿锋芒 · 智谋检定，避实击虚',
       action: 'faceSlapResolve',
       params: { tactic: 'lowkey' },
@@ -767,7 +775,7 @@ export function buildFaceSlapNode(game) {
             ? `亮出${realmLabel(c)}气息与一身底蕴正面硬压`
             : `硬顶着对方威压，亮出${realmLabel(c)}气势寸步不让`,
       hint: rTier === 'much_higher'
-        ? '降维震慑 · 无需出剑即可镇服全场'
+        ? '降维震慑 · 无需出手'
         : rTier === 'higher'
           ? '高一境压制 · 直接震退对方赔礼'
           : rTier === 'equal'
@@ -818,7 +826,7 @@ export function buildFaceSlapNode(game) {
   choices.push(
     {
       id: 'fs_fight',
-      label: rTier === 'much_higher' ? '懒得多言，反手一招教他做人' : rTier === 'lower' ? '不服便战 · 以弱撼强越阶打脸' : '废话少说，手底下见真章',
+      label: rTier === 'much_higher' ? '懒得多言，反手一招教他做人' : rTier === 'lower' ? '不服便战，越阶一搏' : '废话少说，手底下见真章',
       hint: rTier === 'much_higher'
         ? `实战碾压【${fs.provokerRealmLabel}】· 几乎一招毙敌`
         : rTier === 'lower'
@@ -945,7 +953,7 @@ function launchFaceSlapCombat(game, fs, sc, backing, isElder = false, introLines
       faceSlapClear: !shouldEscalate,
       returnTo: shouldEscalate ? 'faceSlap' : (fs.returnTo || 'hub'),
       fx: 'breakthrough',
-      log: isElder ? `当众击败护短的${backing.elderTitle}` : `在${sc.title}中打脸${fs.provokerName}`,
+      log: isElder ? `当众击败护短的${backing.elderTitle}` : `在${sc.title}中教训了${fs.provokerName}`,
     },
     lose: {
       text: loseBody,

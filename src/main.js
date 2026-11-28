@@ -134,7 +134,7 @@ function renderCreateChoices() {
     grid.appendChild(btn);
   });
   const curO = ORIGINS.find((o) => o.id === ui.originId);
-  if (curO) showPickDetail('origin-detail', curO.name, curO.desc, curO.hook);
+  if (curO) showPickDetail('origin-detail', curO.name, curO.desc, originStart(curO));
   $('btn-roll').disabled = !ui.originId;
 
   if (!goldenFingerUnlocked(meta, ui.goldenFingerId)) ui.goldenFingerId = 'gf_bottle';
@@ -279,7 +279,7 @@ function buyTalent(id) {
 function selectOrigin(id) {
   ui.originId = id;
   const o = ORIGINS.find((x) => x.id === id);
-  if (o) showPickDetail('origin-detail', o.name, o.desc, o.hook);
+  if (o) showPickDetail('origin-detail', o.name, o.desc, originStart(o));
   document.querySelectorAll('.origin-card').forEach((c) => {
     const on = c.dataset.origin === id;
     c.classList.toggle('is-active', on);
@@ -851,6 +851,17 @@ function renderRightPanel() {
   $('log-sub').textContent = `${Math.floor(c.age / 12)}岁 · ${allEntries.length}条`;
 }
 
+function originStart(o) {
+  const parts = [];
+  const attrs = Object.entries(o.attrs || {}).map(([k, v]) => `${k}${v > 0 ? '+' : ''}${v}`);
+  if (attrs.length) parts.push(attrs.join(' '));
+  if (o.stones) parts.push(`灵石 ${o.stones}`);
+  const items = {};
+  for (const id of o.items || []) items[id] = (items[id] || 0) + 1;
+  for (const [id, n] of Object.entries(items)) parts.push(`${ITEM_BY_ID[id]?.name || id}${n > 1 ? `×${n}` : ''}`);
+  return `起始：${parts.join(' · ')}`;
+}
+
 function originName(id) {
   return ORIGINS.find((o) => o.id === id)?.name || '';
 }
@@ -1279,7 +1290,7 @@ function wireOverlays() {
   $('menu-about').addEventListener('click', () => {
     $('menu-body').innerHTML = `
       <h4>关于《问道长生》</h4>
-      <p>世界、年表与人物取自《长生模拟器》第一纪元剧本。像素画面随地域、境界与年代变化。</p>
+      <p>像素画面随地域、境界与年代变化。</p>
     `;
   });
 }

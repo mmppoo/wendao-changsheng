@@ -1,3 +1,4 @@
+import { cleanHint } from './hintClean.js';
 import { WILD_EVENTS } from './wild.js';
 import { WORLD_EVENTS } from './world.js';
 import { SECT_EVENTS } from './sect.js';
@@ -171,7 +172,13 @@ const TITLE_BY_TEXT = {
   '冰川半截杀伐剑': '半截剑',
   '洪荒异兽饮星潭': '异兽饮星',
 };
+const cleanChoices = (chs) => (Array.isArray(chs) ? chs : []).forEach((ch) => { if (typeof ch.hint === 'string') ch.hint = cleanHint(ch.hint); });
 for (const ev of ALL_EVENTS) {
+  // 纪元史事件的提示是叙事句，本身不剧透，保持原样
+  if (!/^(c\d|e\d)/.test(ev.id || '')) {
+    cleanChoices(ev.choices);
+    for (const n of Object.values(ev.nodes || {})) cleanChoices(n.choices);
+  }
   if (typeof ev.title === 'string' && ev.title.includes(' · ')) ev.title = ev.title.split(' · ').slice(1).join(' · ');
   if (TITLE_BY_TEXT[ev.title]) ev.title = TITLE_BY_TEXT[ev.title];
   if (TITLE_OVERRIDES[ev.id]) ev.title = TITLE_OVERRIDES[ev.id];
